@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminBucketInfoFlags = []cli.Flag{}
 
 var adminBucketInfoCmd = cli.Command{
-	Name:            "info",
-	Usage:           "display bucket information",
-	Action:          mainAdminBucketInfo,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(adminBucketInfoFlags, globalFlags...),
-	HideHelpCommand: true,
+    Name:            "info",
+    Usage:           "display bucket information",
+    Action:          mainAdminBucketInfo,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(adminBucketInfoFlags, globalFlags...),
+    HideHelpCommand: true,
 }
 
 // mainAdminBucketInfo is the handler for "mc admin bucket info" command.
 func mainAdminBucketInfo(_ *cli.Context) error {
-	deprecatedError("mc stat")
-	return nil
+    deprecatedError("mc stat")
+    return nil
 }

@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminConfigRestoreCmd = cli.Command{
-	Name:         "restore",
-	Usage:        "rollback back changes to a specific config history",
-	Before:       setGlobalsFromContext,
-	Action:       mainAdminConfigRestore,
-	OnUsageError: onUsageError,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "restore",
+    Usage:        "rollback back changes to a specific config history",
+    Before:       setGlobalsFromContext,
+    Action:       mainAdminConfigRestore,
+    OnUsageError: onUsageError,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -51,57 +51,57 @@ EXAMPLES:
 
 // configRestoreMessage container to hold locks information.
 type configRestoreMessage struct {
-	Status      string `json:"status"`
-	RestoreID   string `json:"restoreID"`
-	targetAlias string
+    Status      string `json:"status"`
+    RestoreID   string `json:"restoreID"`
+    targetAlias string
 }
 
 // String colorized service status message.
 func (u configRestoreMessage) String() (msg string) {
-	suggestion := fmt.Sprintf("mc admin service restart %s", u.targetAlias)
-	msg += console.Colorize("ConfigRestoreMessage",
-		fmt.Sprintf("Please restart your server with `%s`.\n", suggestion))
-	msg += console.Colorize("ConfigRestoreMessage", "Restored "+u.RestoreID+" kv successfully.")
-	return msg
+    suggestion := fmt.Sprintf("mc admin service restart %s", u.targetAlias)
+    msg += console.Colorize("ConfigRestoreMessage",
+        fmt.Sprintf("Please restart your server with `%s`.\n", suggestion))
+    msg += console.Colorize("ConfigRestoreMessage", "Restored "+u.RestoreID+" kv successfully.")
+    return msg
 }
 
 // JSON jsonified service status Message message.
 func (u configRestoreMessage) JSON() string {
-	u.Status = "success"
-	statusJSONBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    statusJSONBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(statusJSONBytes)
+    return string(statusJSONBytes)
 }
 
 // checkAdminConfigRestoreSyntax - validate all the passed arguments
 func checkAdminConfigRestoreSyntax(ctx *cli.Context) {
-	if !ctx.Args().Present() || len(ctx.Args()) > 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if !ctx.Args().Present() || len(ctx.Args()) > 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainAdminConfigRestore(ctx *cli.Context) error {
-	checkAdminConfigRestoreSyntax(ctx)
+    checkAdminConfigRestoreSyntax(ctx)
 
-	console.SetColor("ConfigRestoreMessage", color.New(color.FgGreen))
+    console.SetColor("ConfigRestoreMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	// Call get config API
-	fatalIf(probe.NewError(client.RestoreConfigHistoryKV(globalContext, args.Get(1))), "Unable to restore server configuration.")
+    // Call get config API
+    fatalIf(probe.NewError(client.RestoreConfigHistoryKV(globalContext, args.Get(1))), "Unable to restore server configuration.")
 
-	// Print
-	printMsg(configRestoreMessage{
-		RestoreID:   args.Get(1),
-		targetAlias: aliasedURL,
-	})
+    // Print
+    printMsg(configRestoreMessage{
+        RestoreID:   args.Get(1),
+        targetAlias: aliasedURL,
+    })
 
-	return nil
+    return nil
 }

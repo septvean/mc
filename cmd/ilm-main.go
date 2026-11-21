@@ -18,49 +18,49 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var ilmSubcommands = []cli.Command{
-	ilmRuleCmd,
-	ilmTierCmd,
-	ilmRestoreCmd,
+    ilmRuleCmd,
+    ilmTierCmd,
+    ilmRestoreCmd,
 }
 
 var ilmCmd = cli.Command{
-	Name:            "ilm",
-	Usage:           "manage bucket lifecycle",
-	Action:          mainILM,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	Subcommands:     append(ilmSubcommands, ilmDepCmds...),
+    Name:            "ilm",
+    Usage:           "manage bucket lifecycle",
+    Action:          mainILM,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    Subcommands:     append(ilmSubcommands, ilmDepCmds...),
 }
 
 const (
-	ilmMainHeader         string = "Main-Heading"
-	ilmThemeHeader        string = "Row-Header"
-	ilmThemeRow           string = "Row-Normal"
-	ilmThemeTick          string = "Row-Tick"
-	ilmThemeExpiry        string = "Row-Expiry"
-	ilmThemeResultSuccess string = "SuccessOp"
-	ilmThemeResultFailure string = "FailureOp"
+    ilmMainHeader         string = "Main-Heading"
+    ilmThemeHeader        string = "Row-Header"
+    ilmThemeRow           string = "Row-Normal"
+    ilmThemeTick          string = "Row-Tick"
+    ilmThemeExpiry        string = "Row-Expiry"
+    ilmThemeResultSuccess string = "SuccessOp"
+    ilmThemeResultFailure string = "FailureOp"
 )
 
 func mainILM(ctx *cli.Context) error {
-	commandNotFound(ctx, ilmSubcommands)
-	return nil
+    commandNotFound(ctx, ilmSubcommands)
+    return nil
 }
 
 // Color scheme for the table
 func setILMDisplayColorScheme() {
-	console.SetColor(ilmMainHeader, color.New(color.Bold, color.FgHiRed))
-	console.SetColor(ilmThemeRow, color.New(color.FgHiWhite))
-	console.SetColor(ilmThemeHeader, color.New(color.Bold, color.FgHiGreen))
-	console.SetColor(ilmThemeTick, color.New(color.FgGreen))
-	console.SetColor(ilmThemeExpiry, color.New(color.BlinkRapid, color.FgGreen))
-	console.SetColor(ilmThemeResultSuccess, color.New(color.FgGreen, color.Bold))
-	console.SetColor(ilmThemeResultFailure, color.New(color.FgHiYellow, color.Bold))
+    console.SetColor(ilmMainHeader, color.New(color.Bold, color.FgHiRed))
+    console.SetColor(ilmThemeRow, color.New(color.FgHiWhite))
+    console.SetColor(ilmThemeHeader, color.New(color.Bold, color.FgHiGreen))
+    console.SetColor(ilmThemeTick, color.New(color.FgGreen))
+    console.SetColor(ilmThemeExpiry, color.New(color.BlinkRapid, color.FgGreen))
+    console.SetColor(ilmThemeResultSuccess, color.New(color.FgGreen, color.Bold))
+    console.SetColor(ilmThemeResultFailure, color.New(color.FgHiYellow, color.Bold))
 }

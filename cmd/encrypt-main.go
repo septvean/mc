@@ -20,24 +20,24 @@ package cmd
 import "github.com/minio/cli"
 
 var encryptSubcommands = []cli.Command{
-	encryptSetCmd,
-	encryptClearCmd,
-	encryptInfoCmd,
+    encryptSetCmd,
+    encryptClearCmd,
+    encryptInfoCmd,
 }
 
 var encryptCmd = cli.Command{
-	Name:            "encrypt",
-	Usage:           "manage bucket encryption config",
-	HideHelpCommand: true,
-	Action:          mainEncrypt,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     encryptSubcommands,
+    Name:            "encrypt",
+    Usage:           "manage bucket encryption config",
+    HideHelpCommand: true,
+    Action:          mainEncrypt,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     encryptSubcommands,
 }
 
 // mainEncrypt is the handle for "mc encrypt" command.
 func mainEncrypt(ctx *cli.Context) error {
-	commandNotFound(ctx, encryptSubcommands)
-	return nil
-	// Sub-commands like "info", "set", "clear" have their own main.
+    commandNotFound(ctx, encryptSubcommands)
+    return nil
+    // Sub-commands like "info", "set", "clear" have their own main.
 }

@@ -18,66 +18,66 @@
 package cmd
 
 import (
-	"os"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminTierEditFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "access-key",
-		Value: "",
-		Usage: "AWS S3 or compatible object storage access-key",
-	},
-	cli.StringFlag{
-		Name:  "secret-key",
-		Value: "",
-		Usage: "AWS S3 or compatible object storage secret-key",
-	},
-	cli.BoolFlag{
-		Name:  "use-aws-role",
-		Usage: "use AWS S3 role",
-	},
-	cli.StringFlag{
-		Name:  "account-key",
-		Value: "",
-		Usage: "Azure Blob Storage account key",
-	},
-	cli.StringFlag{
-		Name:  "az-sp-tenant-id",
-		Value: "",
-		Usage: "Directory ID for the Azure service principal account",
-	},
-	cli.StringFlag{
-		Name:  "az-sp-client-id",
-		Value: "",
-		Usage: "The client ID of the Azure service principal account",
-	},
-	cli.StringFlag{
-		Name:  "az-sp-client-secret",
-		Value: "",
-		Usage: "The client secret of the Azure service principal account",
-	},
-	cli.StringFlag{
-		Name:  "credentials-file",
-		Value: "",
-		Usage: "path to Google Cloud Storage credentials file",
-	},
+    cli.StringFlag{
+        Name:  "access-key",
+        Value: "",
+        Usage: "AWS S3 or compatible object storage access-key",
+    },
+    cli.StringFlag{
+        Name:  "secret-key",
+        Value: "",
+        Usage: "AWS S3 or compatible object storage secret-key",
+    },
+    cli.BoolFlag{
+        Name:  "use-aws-role",
+        Usage: "use AWS S3 role",
+    },
+    cli.StringFlag{
+        Name:  "account-key",
+        Value: "",
+        Usage: "Azure Blob Storage account key",
+    },
+    cli.StringFlag{
+        Name:  "az-sp-tenant-id",
+        Value: "",
+        Usage: "Directory ID for the Azure service principal account",
+    },
+    cli.StringFlag{
+        Name:  "az-sp-client-id",
+        Value: "",
+        Usage: "The client ID of the Azure service principal account",
+    },
+    cli.StringFlag{
+        Name:  "az-sp-client-secret",
+        Value: "",
+        Usage: "The client secret of the Azure service principal account",
+    },
+    cli.StringFlag{
+        Name:  "credentials-file",
+        Value: "",
+        Usage: "path to Google Cloud Storage credentials file",
+    },
 }
 
 var adminTierEditCmd = cli.Command{
-	Name:         "edit",
-	Usage:        "update an existing remote tier configuration",
-	Action:       mainAdminTierEdit,
-	Hidden:       true,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(globalFlags, adminTierEditFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "edit",
+    Usage:        "update an existing remote tier configuration",
+    Action:       mainAdminTierEdit,
+    Hidden:       true,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(globalFlags, adminTierEditFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -103,71 +103,71 @@ EXAMPLES:
 
 // checkAdminTierEditSyntax - validate all the postitional arguments
 func checkAdminTierEditSyntax(ctx *cli.Context) {
-	argsNr := len(ctx.Args())
-	if argsNr < 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
-	if argsNr > 2 {
-		fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
-			"Incorrect number of arguments for tier-edit subcommand.")
-	}
+    argsNr := len(ctx.Args())
+    if argsNr < 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
+    if argsNr > 2 {
+        fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
+            "Incorrect number of arguments for tier-edit subcommand.")
+    }
 }
 
 func mainAdminTierEdit(ctx *cli.Context) error {
-	checkAdminTierEditSyntax(ctx)
+    checkAdminTierEditSyntax(ctx)
 
-	console.SetColor("TierMessage", color.New(color.FgGreen))
+    console.SetColor("TierMessage", color.New(color.FgGreen))
 
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	tierName := args.Get(1)
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    tierName := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, cerr := newAdminClient(aliasedURL)
-	fatalIf(cerr, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, cerr := newAdminClient(aliasedURL)
+    fatalIf(cerr, "Unable to initialize admin connection.")
 
-	var creds madmin.TierCreds
-	accessKey := ctx.String("access-key")
-	secretKey := ctx.String("secret-key")
-	credsPath := ctx.String("credentials-file")
-	useAwsRole := ctx.IsSet("use-aws-role")
+    var creds madmin.TierCreds
+    accessKey := ctx.String("access-key")
+    secretKey := ctx.String("secret-key")
+    credsPath := ctx.String("credentials-file")
+    useAwsRole := ctx.IsSet("use-aws-role")
 
-	// Azure, either account-key or one of the 3 service principal flags are required
-	accountKey := ctx.String("account-key")
-	azSPTenantID := ctx.String("az-sp-tenant-id")
-	azSPClientID := ctx.String("az-sp-client-id")
-	azSPClientSecret := ctx.String("az-sp-client-secret")
+    // Azure, either account-key or one of the 3 service principal flags are required
+    accountKey := ctx.String("account-key")
+    azSPTenantID := ctx.String("az-sp-tenant-id")
+    azSPClientID := ctx.String("az-sp-client-id")
+    azSPClientSecret := ctx.String("az-sp-client-secret")
 
-	switch {
-	case accessKey != "" && secretKey != "" && !useAwsRole: // S3 tier
-		creds.AccessKey = accessKey
-		creds.SecretKey = secretKey
-	case useAwsRole:
-		creds.AWSRole = true
-	case accountKey != "": // Azure tier, account key given
-		creds.SecretKey = accountKey
-	case azSPTenantID != "" || azSPClientID != "" || azSPClientSecret != "": // Azure tier, SP creds given
-		creds.AzSP = madmin.ServicePrincipalAuth{
-			TenantID:     azSPTenantID,
-			ClientID:     azSPClientID,
-			ClientSecret: azSPClientSecret,
-		}
-	case credsPath != "": // GCS tier
-		credsBytes, e := os.ReadFile(credsPath)
-		fatalIf(probe.NewError(e), "Unable to read credentials file at %s", credsPath)
+    switch {
+    case accessKey != "" && secretKey != "" && !useAwsRole: // S3 tier
+        creds.AccessKey = accessKey
+        creds.SecretKey = secretKey
+    case useAwsRole:
+        creds.AWSRole = true
+    case accountKey != "": // Azure tier, account key given
+        creds.SecretKey = accountKey
+    case azSPTenantID != "" || azSPClientID != "" || azSPClientSecret != "": // Azure tier, SP creds given
+        creds.AzSP = madmin.ServicePrincipalAuth{
+            TenantID:     azSPTenantID,
+            ClientID:     azSPClientID,
+            ClientSecret: azSPClientSecret,
+        }
+    case credsPath != "": // GCS tier
+        credsBytes, e := os.ReadFile(credsPath)
+        fatalIf(probe.NewError(e), "Unable to read credentials file at %s", credsPath)
 
-		creds.CredsJSON = credsBytes
-	default:
-		fatalIf(errInvalidArgument().Trace(args.Tail()...), "Insufficient credential information supplied to update remote tier target credentials")
-	}
+        creds.CredsJSON = credsBytes
+    default:
+        fatalIf(errInvalidArgument().Trace(args.Tail()...), "Insufficient credential information supplied to update remote tier target credentials")
+    }
 
-	e := client.EditTier(globalContext, tierName, creds)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to edit remote tier")
+    e := client.EditTier(globalContext, tierName, creds)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to edit remote tier")
 
-	printMsg(&tierMessage{
-		op:       ctx.Command.Name,
-		Status:   "success",
-		TierName: tierName,
-	})
-	return nil
+    printMsg(&tierMessage{
+        op:       ctx.Command.Name,
+        Status:   "success",
+        TierName: tierName,
+    })
+    return nil
 }

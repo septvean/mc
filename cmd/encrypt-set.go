@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"strings"
+    "context"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var encryptSetCmd = cli.Command{
-	Name:         "set",
-	Usage:        "set encryption config",
-	Action:       mainEncryptSet,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "set",
+    Usage:        "set encryption config",
+    Action:       mainEncryptSet,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
    
 USAGE:
@@ -56,64 +56,64 @@ EXAMPLES:
 
 // checkEncryptSetSyntax - validate all the passed arguments
 func checkEncryptSetSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) < 2 || len(ctx.Args()) > 3 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) < 2 || len(ctx.Args()) > 3 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type encryptSetMessage struct {
-	Op         string `json:"op"`
-	Status     string `json:"status"`
-	URL        string `json:"url"`
-	Encryption struct {
-		Algorithm string `json:"algorithm,omitempty"`
-		KeyID     string `json:"keyId,omitempty"`
-	} `json:"encryption,omitempty"`
+    Op         string `json:"op"`
+    Status     string `json:"status"`
+    URL        string `json:"url"`
+    Encryption struct {
+        Algorithm string `json:"algorithm,omitempty"`
+        KeyID     string `json:"keyId,omitempty"`
+    }   `json:"encryption,omitempty"`
 }
 
 func (v encryptSetMessage) JSON() string {
-	v.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    v.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (v encryptSetMessage) String() string {
-	return console.Colorize("encryptSetMessage", fmt.Sprintf("Auto encryption configuration has been set successfully for %s", v.URL))
+    return console.Colorize("encryptSetMessage", fmt.Sprintf("Auto encryption configuration has been set successfully for %s", v.URL))
 }
 
 func mainEncryptSet(cliCtx *cli.Context) error {
-	ctx, cancelencryptSet := context.WithCancel(globalContext)
-	defer cancelencryptSet()
+    ctx, cancelencryptSet := context.WithCancel(globalContext)
+    defer cancelencryptSet()
 
-	console.SetColor("encryptSetMessage", color.New(color.FgGreen))
+    console.SetColor("encryptSetMessage", color.New(color.FgGreen))
 
-	checkEncryptSetSyntax(cliCtx)
+    checkEncryptSetSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(len(args) - 1)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	var algorithm, keyID string
-	switch len(args) {
-	case 3:
-		algorithm = strings.ToLower(args[0])
-		keyID = args[1]
-	case 2:
-		algorithm = strings.ToLower(args[0])
-	}
-	if algorithm != "sse-s3" && algorithm != "sse-kms" {
-		fatalIf(probe.NewError(fmt.Errorf("Unknown argument `%s` passed", algorithm)), "Invalid encryption algorithm")
-	}
-	fatalIf(client.SetEncryption(ctx, algorithm, keyID), "Unable to enable auto encryption")
-	msg := encryptSetMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	}
-	msg.Encryption.Algorithm = algorithm
-	printMsg(msg)
-	return nil
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(len(args) - 1)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    var algorithm, keyID string
+    switch len(args) {
+    case 3:
+        algorithm = strings.ToLower(args[0])
+        keyID = args[1]
+    case 2:
+        algorithm = strings.ToLower(args[0])
+    }
+    if algorithm != "sse-s3" && algorithm != "sse-kms" {
+        fatalIf(probe.NewError(fmt.Errorf("Unknown argument `%s` passed", algorithm)), "Invalid encryption algorithm")
+    }
+    fatalIf(client.SetEncryption(ctx, algorithm, keyID), "Unable to enable auto encryption")
+    msg := encryptSetMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    }
+    msg.Encryption.Algorithm = algorithm
+    printMsg(msg)
+    return nil
 }

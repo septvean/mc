@@ -21,26 +21,26 @@ import "time"
 
 // HealthReportInfo - interface to be implemented by health report schema struct
 type HealthReportInfo interface {
-	GetTimestamp() time.Time
-	GetStatus() string
-	GetError() string
-	message
+    GetTimestamp() time.Time
+    GetStatus() string
+    GetError() string
+    message
 }
 
 // HealthReportHeader - Header of the subnet health report
 // expected to generate JSON output of the form
 // {"subnet":{"health":{"version":"v1"}}}
 type HealthReportHeader struct {
-	Subnet Health `json:"subnet"`
+    Subnet Health `json:"subnet"`
 }
 
 // Health - intermediate struct for subnet health header
 // Just used to achieve the JSON structure we want
 type Health struct {
-	Health SchemaVersion `json:"health"`
+    Health SchemaVersion `json:"health"`
 }
 
 // SchemaVersion - version of the health report schema
 type SchemaVersion struct {
-	Version string `json:"version"`
+    Version string `json:"version"`
 }

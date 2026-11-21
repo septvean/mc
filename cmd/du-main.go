@@ -18,52 +18,52 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"net/url"
-	"path"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "net/url"
+    "path"
+    "strings"
+    "time"
 
-	"github.com/dustin/go-humanize"
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/dustin/go-humanize"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 // du specific flags.
 var (
-	duFlags = []cli.Flag{
-		cli.IntFlag{
-			Name:  "depth, d",
-			Usage: "print the total for a folder prefix only if it is N or fewer levels below the command line argument",
-		},
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "recursively print the total for a folder prefix",
-		},
-		cli.StringFlag{
-			Name:  "rewind",
-			Usage: "include all object versions no later than specified date",
-		},
-		cli.BoolFlag{
-			Name:  "versions",
-			Usage: "include all object versions",
-		},
-	}
+    duFlags = []cli.Flag{
+        cli.IntFlag{
+            Name:  "depth, d",
+            Usage: "print the total for a folder prefix only if it is N or fewer levels below the command line argument",
+        },
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "recursively print the total for a folder prefix",
+        },
+        cli.StringFlag{
+            Name:  "rewind",
+            Usage: "include all object versions no later than specified date",
+        },
+        cli.BoolFlag{
+            Name:  "versions",
+            Usage: "include all object versions",
+        },
+    }
 )
 
 // Summarize disk usage.
 var duCmd = cli.Command{
-	Name:         "du",
-	Usage:        "summarize disk usage recursively",
-	Action:       mainDu,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(duFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "du",
+    Usage:        "summarize disk usage recursively",
+    Action:       mainDu,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(duFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -90,164 +90,164 @@ EXAMPLES:
 
 // Structured message depending on the type of console.
 type duMessage struct {
-	Prefix     string `json:"prefix"`
-	Size       int64  `json:"size"`
-	Objects    int64  `json:"objects"`
-	Status     string `json:"status"`
-	IsVersions bool   `json:"isVersions"`
+    Prefix     string `json:"prefix"`
+    Size       int64  `json:"size"`
+    Objects    int64  `json:"objects"`
+    Status     string `json:"status"`
+    IsVersions bool   `json:"isVersions"`
 }
 
 // Colorized message for console printing.
 func (r duMessage) String() string {
-	humanSize := strings.Join(strings.Fields(humanize.IBytes(uint64(r.Size))), "")
-	cnt := fmt.Sprintf("%d object", r.Objects)
-	if r.IsVersions {
-		cnt = fmt.Sprintf("%d version", r.Objects)
-	}
-	if r.Objects != 1 {
-		cnt += "s" // pluralize
-	}
-	return fmt.Sprintf("%s\t%s\t%s", console.Colorize("Size", humanSize),
-		console.Colorize("Objects", cnt),
-		console.Colorize("Prefix", r.Prefix))
+    humanSize := strings.Join(strings.Fields(humanize.IBytes(uint64(r.Size))), "")
+    cnt := fmt.Sprintf("%d object", r.Objects)
+    if r.IsVersions {
+        cnt = fmt.Sprintf("%d version", r.Objects)
+    }
+    if r.Objects != 1 {
+        cnt += "s" // pluralize
+    }
+    return fmt.Sprintf("%s\t%s\t%s", console.Colorize("Size", humanSize),
+        console.Colorize("Objects", cnt),
+        console.Colorize("Prefix", r.Prefix))
 }
 
 // JSON'ified message for scripting.
 func (r duMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 func du(ctx context.Context, urlStr string, timeRef time.Time, withVersions bool, depth int) (sz, objs int64, err error) {
-	targetAlias, targetURL, _ := mustExpandAlias(urlStr)
+    targetAlias, targetURL, _ := mustExpandAlias(urlStr)
 
-	if !strings.HasSuffix(targetURL, "/") {
-		targetURL += "/"
-	}
+    if !strings.HasSuffix(targetURL, "/") {
+        targetURL += "/"
+    }
 
-	clnt, pErr := newClientFromAlias(targetAlias, targetURL)
-	if pErr != nil {
-		errorIf(pErr.Trace(urlStr), "Failed to summarize disk usage `%s`.", urlStr)
-		return 0, 0, exitStatus(globalErrorExitStatus) // End of journey.
-	}
+    clnt, pErr := newClientFromAlias(targetAlias, targetURL)
+    if pErr != nil {
+        errorIf(pErr.Trace(urlStr), "Failed to summarize disk usage `%s`.", urlStr)
+        return 0, 0, exitStatus(globalErrorExitStatus) // End of journey.
+    }
 
-	// No disk usage details below this level,
-	// just do a recursive listing
-	recursive := depth == 1
+    // No disk usage details below this level,
+    // just do a recursive listing
+    recursive := depth == 1
 
-	targetAbsolutePath := path.Clean(clnt.GetURL().String())
+    targetAbsolutePath := path.Clean(clnt.GetURL().String())
 
-	contentCh := clnt.List(ctx, ListOptions{
-		TimeRef:           timeRef,
-		WithOlderVersions: withVersions,
-		Recursive:         recursive,
-		ShowDir:           DirFirst,
-	})
-	size := int64(0)
-	objects := int64(0)
-	for content := range contentCh {
-		if content.Err != nil {
-			switch content.Err.ToGoError().(type) {
-			// handle this specifically for filesystem related errors.
-			case BrokenSymlink, TooManyLevelsSymlink, PathNotFound, ObjectOnGlacier:
-				continue
-			case PathInsufficientPermission:
-				errorIf(content.Err.Trace(clnt.GetURL().String()), "Unable to list folder.")
-				continue
-			}
-			errorIf(content.Err.Trace(urlStr), "Failed to find disk usage of `%s` recursively.", urlStr)
-			return 0, 0, exitStatus(globalErrorExitStatus)
-		}
+    contentCh := clnt.List(ctx, ListOptions{
+        TimeRef:           timeRef,
+        WithOlderVersions: withVersions,
+        Recursive:         recursive,
+        ShowDir:           DirFirst,
+    })
+    size := int64(0)
+    objects := int64(0)
+    for content := range contentCh {
+        if content.Err != nil {
+            switch content.Err.ToGoError().(type) {
+            // handle this specifically for filesystem related errors.
+            case BrokenSymlink, TooManyLevelsSymlink, PathNotFound, ObjectOnGlacier:
+                continue
+            case PathInsufficientPermission:
+                errorIf(content.Err.Trace(clnt.GetURL().String()), "Unable to list folder.")
+                continue
+            }
+            errorIf(content.Err.Trace(urlStr), "Failed to find disk usage of `%s` recursively.", urlStr)
+            return 0, 0, exitStatus(globalErrorExitStatus)
+        }
 
-		if content.URL.Path == targetAbsolutePath {
-			continue
-		}
+        if content.URL.Path == targetAbsolutePath {
+            continue
+        }
 
-		if content.Type.IsDir() && !recursive {
-			depth := depth
-			if depth > 0 {
-				depth--
-			}
+        if content.Type.IsDir() && !recursive {
+            depth := depth
+            if depth > 0 {
+                depth--
+            }
 
-			subDirAlias := content.URL.Path
-			if targetAlias != "" {
-				subDirAlias = targetAlias + "/" + content.URL.Path
-			}
-			used, n, err := du(ctx, subDirAlias, timeRef, withVersions, depth)
-			if err != nil {
-				return 0, 0, err
-			}
-			size += used
-			objects += n
-		} else {
-			if !content.IsDeleteMarker && !content.Type.IsDir() {
-				size += content.Size
-				objects++
-			}
-		}
-	}
+            subDirAlias := content.URL.Path
+            if targetAlias != "" {
+                subDirAlias = targetAlias + "/" + content.URL.Path
+            }
+            used, n, err := du(ctx, subDirAlias, timeRef, withVersions, depth)
+            if err != nil {
+                return 0, 0, err
+            }
+            size += used
+            objects += n
+        } else {
+            if !content.IsDeleteMarker && !content.Type.IsDir() {
+                size += content.Size
+                objects++
+            }
+        }
+    }
 
-	if depth != 0 {
-		u, e := url.Parse(targetURL)
-		if e != nil {
-			panic(e)
-		}
+    if depth != 0 {
+        u, e := url.Parse(targetURL)
+        if e != nil {
+            panic(e)
+        }
 
-		printMsg(duMessage{
-			Prefix:     strings.Trim(u.Path, "/"),
-			Size:       size,
-			Objects:    objects,
-			Status:     "success",
-			IsVersions: withVersions,
-		})
-	}
+        printMsg(duMessage{
+            Prefix:     strings.Trim(u.Path, "/"),
+            Size:       size,
+            Objects:    objects,
+            Status:     "success",
+            IsVersions: withVersions,
+        })
+    }
 
-	return size, objects, nil
+    return size, objects, nil
 }
 
 // main for du command.
 func mainDu(cliCtx *cli.Context) error {
-	if !cliCtx.Args().Present() {
-		showCommandHelpAndExit(cliCtx, 1)
-	}
+    if !cliCtx.Args().Present() {
+        showCommandHelpAndExit(cliCtx, 1)
+    }
 
-	// Set colors.
-	console.SetColor("Remove", color.New(color.FgGreen, color.Bold))
-	console.SetColor("Prefix", color.New(color.FgCyan, color.Bold))
-	console.SetColor("Objects", color.New(color.FgGreen))
-	console.SetColor("Size", color.New(color.FgYellow))
+    // Set colors.
+    console.SetColor("Remove", color.New(color.FgGreen, color.Bold))
+    console.SetColor("Prefix", color.New(color.FgCyan, color.Bold))
+    console.SetColor("Objects", color.New(color.FgGreen))
+    console.SetColor("Size", color.New(color.FgYellow))
 
-	ctx, cancelRm := context.WithCancel(globalContext)
-	defer cancelRm()
+    ctx, cancelRm := context.WithCancel(globalContext)
+    defer cancelRm()
 
-	// du specific flags.
-	depth := cliCtx.Int("depth")
-	if depth == 0 {
-		if cliCtx.Bool("recursive") {
-			if !cliCtx.IsSet("depth") {
-				depth = -1
-			}
-		} else {
-			depth = 1
-		}
-	}
+    // du specific flags.
+    depth := cliCtx.Int("depth")
+    if depth == 0 {
+        if cliCtx.Bool("recursive") {
+            if !cliCtx.IsSet("depth") {
+                depth = -1
+            }
+        } else {
+            depth = 1
+        }
+    }
 
-	withVersions := cliCtx.Bool("versions")
-	timeRef := parseRewindFlag(cliCtx.String("rewind"))
+    withVersions := cliCtx.Bool("versions")
+    timeRef := parseRewindFlag(cliCtx.String("rewind"))
 
-	var duErr error
-	var isDir bool
-	for _, urlStr := range cliCtx.Args() {
-		isDir, _ = isAliasURLDir(ctx, urlStr, nil, time.Time{}, false)
-		if !isDir {
-			fatalIf(errInvalidArgument().Trace(urlStr), fmt.Sprintf("Source `%s` is not a folder. Only folders are supported by 'du' command.", urlStr))
-		}
+    var duErr error
+    var isDir bool
+    for _, urlStr := range cliCtx.Args() {
+        isDir, _ = isAliasURLDir(ctx, urlStr, nil, time.Time{}, false)
+        if !isDir {
+            fatalIf(errInvalidArgument().Trace(urlStr), fmt.Sprintf("Source `%s` is not a folder. Only folders are supported by 'du' command.", urlStr))
+        }
 
-		if _, _, err := du(ctx, urlStr, timeRef, withVersions, depth); duErr == nil {
-			duErr = err
-		}
-	}
+        if _, _, err := du(ctx, urlStr, timeRef, withVersions, depth); duErr == nil {
+            duErr = err
+        }
+    }
 
-	return duErr
+    return duErr
 }

@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserSvcAcctListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "list services accounts",
-	Action:       mainAdminUserSvcAcctList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "list services accounts",
+    Action:       mainAdminUserSvcAcctList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,61 +52,61 @@ EXAMPLES:
 
 // checkAdminUserSvcAcctListSyntax - validate all the passed arguments
 func checkAdminUserSvcAcctListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 }
 
 // mainAdminUserSvcAcctList is the handle for "mc admin user svcacct ls" command.
 func mainAdminUserSvcAcctList(ctx *cli.Context) error {
-	checkAdminUserSvcAcctListSyntax(ctx)
+    checkAdminUserSvcAcctListSyntax(ctx)
 
-	console.SetColor("AccMessage", color.New(color.FgGreen))
-	console.SetColor("AccessKeyHeader", color.New(color.Bold, color.FgBlue))
-	console.SetColor("ExpirationHeader", color.New(color.Bold, color.FgCyan))
-	console.SetColor("AccessKey", color.New(color.FgBlue))
-	console.SetColor("Expiration", color.New(color.FgCyan))
+    console.SetColor("AccMessage", color.New(color.FgGreen))
+    console.SetColor("AccessKeyHeader", color.New(color.Bold, color.FgBlue))
+    console.SetColor("ExpirationHeader", color.New(color.Bold, color.FgCyan))
+    console.SetColor("AccessKey", color.New(color.FgBlue))
+    console.SetColor("Expiration", color.New(color.FgCyan))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	user := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    user := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	svcList, e := client.ListServiceAccounts(globalContext, user)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to list service accounts")
+    svcList, e := client.ListServiceAccounts(globalContext, user)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to list service accounts")
 
-	if len(svcList.Accounts) > 0 {
-		if !globalJSON {
-			// Print table header
-			var header string
-			header += console.Colorize("Headers", newPrettyTable(" | ",
-				Field{"AccessKeyHeader", accessFieldMaxLen},
-				Field{"ExpirationHeader", expirationMaxLen},
-			).buildRow("   Access Key", "Expiry"))
-			console.Println(header)
-		}
+    if len(svcList.Accounts) > 0 {
+        if !globalJSON {
+            // Print table header
+            var header string
+            header += console.Colorize("Headers", newPrettyTable(" | ",
+                Field{"AccessKeyHeader", accessFieldMaxLen},
+                Field{"ExpirationHeader", expirationMaxLen},
+            ).buildRow("   Access Key", "Expiry"))
+            console.Println(header)
+        }
 
-		// Print table contents
-		for _, svc := range svcList.Accounts {
-			expiration := svc.Expiration
-			if expiration.Equal(timeSentinel) {
-				expiration = nil
-			}
-			printMsg(acctMessage{
-				op:         svcAccOpList,
-				AccessKey:  svc.AccessKey,
-				Expiration: expiration,
-			})
-		}
-	} else {
-		if !globalJSON {
-			console.Println("No service accounts found")
-		}
-	}
+        // Print table contents
+        for _, svc := range svcList.Accounts {
+            expiration := svc.Expiration
+            if expiration.Equal(timeSentinel) {
+                expiration = nil
+            }
+            printMsg(acctMessage{
+                op:         svcAccOpList,
+                AccessKey:  svc.AccessKey,
+                Expiration: expiration,
+            })
+        }
+    } else {
+        if !globalJSON {
+            console.Println("No service accounts found")
+        }
+    }
 
-	return nil
+    return nil
 }

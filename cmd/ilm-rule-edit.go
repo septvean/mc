@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/cmd/ilm"
-	"github.com/minio/mc/pkg/probe"
-	minio "github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/lifecycle"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/cmd/ilm"
+    "github.com/minio/mc/pkg/probe"
+    minio "github.com/minio/minio-go/v7"
+    "github.com/minio/minio-go/v7/pkg/lifecycle"
+    "github.com/minio/pkg/v3/console"
 )
 
 var ilmEditCmd = cli.Command{
-	Name:         "edit",
-	Usage:        "modify a lifecycle configuration rule with given id",
-	Action:       mainILMEdit,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(ilmEditFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "edit",
+    Usage:        "modify a lifecycle configuration rule with given id",
+    Action:       mainILMEdit,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(ilmEditFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -63,102 +63,102 @@ EXAMPLES:
 }
 
 var ilmEditFlags = append(
-	// Start by showing --id in edit command
-	[]cli.Flag{
-		cli.StringFlag{
-			Name:  "id",
-			Usage: "id of the rule to be modified",
-		},
-		cli.BoolFlag{
-			Name:  "disable",
-			Usage: "disable the rule",
-		},
-		cli.BoolFlag{
-			Name:  "enable",
-			Usage: "enable the rule",
-		},
-	},
-	ilmAddFlags...,
+    // Start by showing --id in edit command
+    []cli.Flag{
+        cli.StringFlag{
+            Name:  "id",
+            Usage: "id of the rule to be modified",
+        },
+        cli.BoolFlag{
+            Name:  "disable",
+            Usage: "disable the rule",
+        },
+        cli.BoolFlag{
+            Name:  "enable",
+            Usage: "enable the rule",
+        },
+    },
+    ilmAddFlags...,
 )
 
 type ilmEditMessage struct {
-	Status string `json:"status"`
-	Target string `json:"target"`
-	ID     string `json:"id"`
+    Status string `json:"status"`
+    Target string `json:"target"`
+    ID     string `json:"id"`
 }
 
 func (i ilmEditMessage) String() string {
-	return console.Colorize(ilmThemeResultSuccess, "Lifecycle configuration rule with ID `"+i.ID+"` modified  to "+i.Target+".")
+    return console.Colorize(ilmThemeResultSuccess, "Lifecycle configuration rule with ID `"+i.ID+"` modified  to "+i.Target+".")
 }
 
 func (i ilmEditMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(i, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(i, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 // Validate user given arguments
 func checkILMEditSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
-	id := ctx.String("id")
-	if id == "" {
-		fatalIf(errInvalidArgument(), "ID for lifecycle rule cannot be empty, please refer mc "+ctx.Command.FullName()+" --help for more details")
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
+    id := ctx.String("id")
+    if id == "" {
+        fatalIf(errInvalidArgument(), "ID for lifecycle rule cannot be empty, please refer mc "+ctx.Command.FullName()+" --help for more details")
+    }
 }
 
 // Calls SetBucketLifecycle with the XML representation of lifecycleConfiguration type.
 func mainILMEdit(cliCtx *cli.Context) error {
-	ctx, cancelILMEdit := context.WithCancel(globalContext)
-	defer cancelILMEdit()
+    ctx, cancelILMEdit := context.WithCancel(globalContext)
+    defer cancelILMEdit()
 
-	checkILMEditSyntax(cliCtx)
-	setILMDisplayColorScheme()
-	args := cliCtx.Args()
-	urlStr := args.Get(0)
+    checkILMEditSyntax(cliCtx)
+    setILMDisplayColorScheme()
+    args := cliCtx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
 
-	// Configuration that is already set.
-	lfcCfg, _, err := client.GetLifecycle(ctx)
-	if err != nil {
-		if e := err.ToGoError(); minio.ToErrorResponse(e).Code == "NoSuchLifecycleConfiguration" {
-			lfcCfg = lifecycle.NewConfiguration()
-		} else {
-			fatalIf(err.Trace(args...), "Unable to fetch lifecycle rules for "+urlStr)
-		}
-	}
+    // Configuration that is already set.
+    lfcCfg, _, err := client.GetLifecycle(ctx)
+    if err != nil {
+        if e := err.ToGoError(); minio.ToErrorResponse(e).Code == "NoSuchLifecycleConfiguration" {
+            lfcCfg = lifecycle.NewConfiguration()
+        } else {
+            fatalIf(err.Trace(args...), "Unable to fetch lifecycle rules for "+urlStr)
+        }
+    }
 
-	// Configuration that needs to be set is returned by ilm.GetILMConfigToSet.
-	// A new rule is added or the rule (if existing) is replaced
-	opts, err := ilm.GetLifecycleOptions(cliCtx)
-	fatalIf(err.Trace(args...), "Unable to generate new lifecycle rules for the input")
+    // Configuration that needs to be set is returned by ilm.GetILMConfigToSet.
+    // A new rule is added or the rule (if existing) is replaced
+    opts, err := ilm.GetLifecycleOptions(cliCtx)
+    fatalIf(err.Trace(args...), "Unable to generate new lifecycle rules for the input")
 
-	var rule *lifecycle.Rule
-	for i := range lfcCfg.Rules {
-		if lfcCfg.Rules[i].ID != opts.ID {
-			continue
-		}
-		rule = &lfcCfg.Rules[i]
-		break
-	}
+    var rule *lifecycle.Rule
+    for i := range lfcCfg.Rules {
+        if lfcCfg.Rules[i].ID != opts.ID {
+            continue
+        }
+        rule = &lfcCfg.Rules[i]
+        break
+    }
 
-	if rule == nil {
-		fatalIf(errDummy(), "Unable to find rule id")
-	}
+    if rule == nil {
+        fatalIf(errDummy(), "Unable to find rule id")
+    }
 
-	err = ilm.ApplyRuleFields(rule, opts)
-	fatalIf(err.Trace(args...), "Unable to generate new lifecycle rules for the input")
+    err = ilm.ApplyRuleFields(rule, opts)
+    fatalIf(err.Trace(args...), "Unable to generate new lifecycle rules for the input")
 
-	fatalIf(client.SetLifecycle(ctx, lfcCfg).Trace(urlStr), "Unable to set new lifecycle rules")
+    fatalIf(client.SetLifecycle(ctx, lfcCfg).Trace(urlStr), "Unable to set new lifecycle rules")
 
-	printMsg(ilmEditMessage{
-		Status: "success",
-		Target: urlStr,
-		ID:     opts.ID,
-	})
+    printMsg(ilmEditMessage{
+        Status: "success",
+        Target: urlStr,
+        ID:     opts.ID,
+    })
 
-	return nil
+    return nil
 }

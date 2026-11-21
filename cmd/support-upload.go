@@ -18,63 +18,63 @@
 package cmd
 
 import (
-	"fmt"
-	"net/url"
+    "fmt"
+    "net/url"
 
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 // profile command flags.
 var (
-	uploadFlags = append(globalFlags,
-		cli.IntFlag{
-			Name:  "issue",
-			Usage: "SUBNET issue number to which the file is to be uploaded",
-		},
-		cli.StringFlag{
-			Name:  "comment",
-			Usage: "comment to be posted on the issue along with the file",
-		},
-		cli.BoolFlag{
-			Name:  "enc",
-			Usage: "encrypt content with key only accessible to minio employees",
-		},
-		cli.BoolFlag{
-			Name:   "dev",
-			Usage:  "Development mode",
-			Hidden: true,
-		},
-	)
+    uploadFlags = append(globalFlags,
+        cli.IntFlag{
+            Name:  "issue",
+            Usage: "SUBNET issue number to which the file is to be uploaded",
+        },
+        cli.StringFlag{
+            Name:  "comment",
+            Usage: "comment to be posted on the issue along with the file",
+        },
+        cli.BoolFlag{
+            Name:  "enc",
+            Usage: "encrypt content with key only accessible to minio employees",
+        },
+        cli.BoolFlag{
+            Name:   "dev",
+            Usage:  "Development mode",
+            Hidden: true,
+        },
+    )
 )
 
 type supportUploadMessage struct {
-	Status   string `json:"status"`
-	IssueNum int    `json:"-"`
-	IssueURL string `json:"issueUrl"`
+    Status   string `json:"status"`
+    IssueNum int    `json:"-"`
+    IssueURL string `json:"issueUrl"`
 }
 
 // String colorized upload message
 func (s supportUploadMessage) String() string {
-	msg := fmt.Sprintf("File uploaded to SUBNET successfully. Click here to visit the issue: %s", subnetIssueURL(s.IssueNum))
-	return console.Colorize(supportSuccessMsgTag, msg)
+    msg := fmt.Sprintf("File uploaded to SUBNET successfully. Click here to visit the issue: %s", subnetIssueURL(s.IssueNum))
+    return console.Colorize(supportSuccessMsgTag, msg)
 }
 
 // JSON jsonified upload message
 func (s supportUploadMessage) JSON() string {
-	return toJSON(s)
+    return toJSON(s)
 }
 
 var supportUploadCmd = cli.Command{
-	Name:            "upload",
-	Usage:           "upload file to a SUBNET issue",
-	Action:          mainSupportUpload,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           uploadFlags,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "upload",
+    Usage:           "upload file to a SUBNET issue",
+    Action:          mainSupportUpload,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           uploadFlags,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -93,59 +93,59 @@ EXAMPLES:
 }
 
 func checkSupportUploadSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	if ctx.Int("issue") <= 0 {
-		fatal(errDummy().Trace(), "Invalid issue number")
-	}
+    if ctx.Int("issue") <= 0 {
+        fatal(errDummy().Trace(), "Invalid issue number")
+    }
 }
 
 // mainSupportUpload is the handle for "mc support upload" command.
 func mainSupportUpload(ctx *cli.Context) error {
-	// Check for command syntax
-	checkSupportUploadSyntax(ctx)
-	setSuccessMessageColor()
+    // Check for command syntax
+    checkSupportUploadSyntax(ctx)
+    setSuccessMessageColor()
 
-	// Get the alias parameter from cli
-	aliasedURL := ctx.Args().Get(0)
-	alias, apiKey := initSubnetConnectivity(ctx, aliasedURL, true)
-	if len(apiKey) == 0 {
-		// api key not passed as flag. Check that the cluster is registered.
-		apiKey = validateClusterRegistered(alias, true)
-	}
+    // Get the alias parameter from cli
+    aliasedURL := ctx.Args().Get(0)
+    alias, apiKey := initSubnetConnectivity(ctx, aliasedURL, true)
+    if len(apiKey) == 0 {
+        // api key not passed as flag. Check that the cluster is registered.
+        apiKey = validateClusterRegistered(alias, true)
+    }
 
-	// Main execution
-	execSupportUpload(ctx, alias, apiKey)
-	return nil
+    // Main execution
+    execSupportUpload(ctx, alias, apiKey)
+    return nil
 }
 
 func execSupportUpload(ctx *cli.Context, alias, apiKey string) {
-	filePath := ctx.Args().Get(1)
-	issueNum := ctx.Int("issue")
-	msg := ctx.String("comment")
+    filePath := ctx.Args().Get(1)
+    issueNum := ctx.Int("issue")
+    msg := ctx.String("comment")
 
-	params := url.Values{}
-	params.Add("issueNumber", fmt.Sprintf("%d", issueNum))
-	if len(msg) > 0 {
-		params.Add("message", msg)
-	}
+    params := url.Values{}
+    params.Add("issueNumber", fmt.Sprintf("%d", issueNum))
+    if len(msg) > 0 {
+        params.Add("message", msg)
+    }
 
-	uploadURL := SubnetUploadURL("attachment")
-	reqURL, headers := prepareSubnetUploadURL(uploadURL, alias, apiKey)
+    uploadURL := SubnetUploadURL("attachment")
+    reqURL, headers := prepareSubnetUploadURL(uploadURL, alias, apiKey)
 
-	_, e := (&SubnetFileUploader{
-		alias:        alias,
-		FilePath:     filePath,
-		ReqURL:       reqURL,
-		Headers:      headers,
-		AutoCompress: true,
-		AutoEncrypt:  ctx.Bool("enc"),
-		Params:       params,
-	}).UploadFileToSubnet()
-	if e != nil {
-		fatalIf(probe.NewError(e), "Unable to upload file to SUBNET")
-	}
-	printMsg(supportUploadMessage{IssueNum: issueNum, Status: "success", IssueURL: subnetIssueURL(issueNum)})
+    _, e := (&SubnetFileUploader{
+        alias:        alias,
+        FilePath:     filePath,
+        ReqURL:       reqURL,
+        Headers:      headers,
+        AutoCompress: true,
+        AutoEncrypt:  ctx.Bool("enc"),
+        Params:       params,
+    }).UploadFileToSubnet()
+    if e != nil {
+        fatalIf(probe.NewError(e), "Unable to upload file to SUBNET")
+    }
+    printMsg(supportUploadMessage{IssueNum: issueNum, Status: "success", IssueURL: subnetIssueURL(issueNum)})
 }

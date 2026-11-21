@@ -18,17 +18,17 @@
 package cmd
 
 import (
-	"net/url"
-	"testing"
+    "net/url"
+    "testing"
 )
 
 func TestSubnetBaseURL(t *testing.T) {
-	sbu := SubnetBaseURL()
-	u, err := url.ParseRequestURI(sbu)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if u.Scheme != "https" {
-		t.Fatalf("Expected TestSubnetBaseURL() to return an https url, received %s", u.Scheme)
-	}
+    sbu := SubnetBaseURL()
+    u, err := url.ParseRequestURI(sbu)
+    if err != nil {
+        t.Fatal(err)
+    }
+    if u.Scheme != "https" {
+        t.Fatalf("Expected TestSubnetBaseURL() to return an https url, received %s", u.Scheme)
+    }
 }

@@ -18,26 +18,26 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"os"
+    "context"
+    "fmt"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var batchStartCmd = cli.Command{
-	Name:         "start",
-	Usage:        "start a new batch job",
-	Action:       mainBatchStart,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "start",
+    Usage:        "start a new batch job",
+    Action:       mainBatchStart,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -54,57 +54,57 @@ EXAMPLES:
 
 // batchStartMessage container for file batchStart messages
 type batchStartMessage struct {
-	Status string                `json:"status"`
-	Result madmin.BatchJobResult `json:"result"`
+    Status string                `json:"status"`
+    Result madmin.BatchJobResult `json:"result"`
 }
 
 // String colorized batchStart message
 func (c batchStartMessage) String() string {
-	return console.Colorize("BatchStart", fmt.Sprintf("Successfully started '%s' job `%s` on '%s'", c.Result.Type, c.Result.ID, c.Result.Started))
+    return console.Colorize("BatchStart", fmt.Sprintf("Successfully started '%s' job `%s` on '%s'", c.Result.Type, c.Result.ID, c.Result.Started))
 }
 
 // JSON jsonified batchStart message
 func (c batchStartMessage) JSON() string {
-	c.Status = "success"
-	batchStartMessageBytes, e := json.MarshalIndent(c, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    c.Status = "success"
+    batchStartMessageBytes, e := json.MarshalIndent(c, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(batchStartMessageBytes)
+    return string(batchStartMessageBytes)
 }
 
 // checkBatchStartSyntax - validate all the passed arguments
 func checkBatchStartSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainBatchStart is the handle for "mc batch create" command.
 func mainBatchStart(ctx *cli.Context) error {
-	checkBatchStartSyntax(ctx)
+    checkBatchStartSyntax(ctx)
 
-	console.SetColor("BatchStart", color.New(color.FgGreen, color.Bold))
+    console.SetColor("BatchStart", color.New(color.FgGreen, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Start a new MinIO Admin Client
-	adminClient, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Start a new MinIO Admin Client
+    adminClient, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	buf, e := os.ReadFile(args.Get(1))
-	fatalIf(probe.NewError(e), "Unable to read %s", args.Get(1))
+    buf, e := os.ReadFile(args.Get(1))
+    fatalIf(probe.NewError(e), "Unable to read %s", args.Get(1))
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	res, e := adminClient.StartBatchJob(ctxt, string(buf))
-	fatalIf(probe.NewError(e), "Unable to start job")
+    res, e := adminClient.StartBatchJob(ctxt, string(buf))
+    fatalIf(probe.NewError(e), "Unable to start job")
 
-	printMsg(batchStartMessage{
-		Status: "success",
-		Result: res,
-	})
-	return nil
+    printMsg(batchStartMessage{
+        Status: "success",
+        Result: res,
+    })
+    return nil
 }

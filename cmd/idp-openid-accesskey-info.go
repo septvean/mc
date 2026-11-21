@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/charmbracelet/lipgloss"
-	"github.com/minio/cli"
+    "github.com/charmbracelet/lipgloss"
+    "github.com/minio/cli"
 )
 
 var idpOpenidAccesskeyInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "info about given access key pairs for OpenID",
-	Action:       mainIDPOpenIDAccesskeyInfo,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "info about given access key pairs for OpenID",
+    Action:       mainIDPOpenIDAccesskeyInfo,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -50,29 +50,29 @@ EXAMPLES:
 }
 
 type openIDAccessKeyInfo struct {
-	ConfigName       string `json:"configName"`
-	UserID           string `json:"userID"`
-	UserIDClaim      string `json:"userIDClaim"`
-	DisplayName      string `json:"displayName,omitempty"`
-	DisplayNameClaim string `json:"displayNameClaim,omitempty"`
+    ConfigName       string `json:"configName"`
+    UserID           string `json:"userID"`
+    UserIDClaim      string `json:"userIDClaim"`
+    DisplayName      string `json:"displayName,omitempty"`
+    DisplayNameClaim string `json:"displayNameClaim,omitempty"`
 }
 
 func (l openIDAccessKeyInfo) String() string {
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575")) // green
-	o := strings.Builder{}
-	if l.ConfigName == "_" {
-		l.ConfigName = "_ (default)"
-	}
-	o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render("Config:"), l.ConfigName))
-	if l.DisplayNameClaim != "" {
-		dispNameLabel := fmt.Sprintf("Display Name (%s):", l.DisplayNameClaim)
-		o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render(dispNameLabel), l.DisplayName))
-	}
-	uidLabel := fmt.Sprintf("User ID (%s):", l.UserIDClaim)
-	o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render(uidLabel), l.UserID))
-	return o.String()
+    labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575")) // green
+    o := strings.Builder{}
+    if l.ConfigName == "_" {
+        l.ConfigName = "_ (default)"
+    }
+    o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render("Config:"), l.ConfigName))
+    if l.DisplayNameClaim != "" {
+        dispNameLabel := fmt.Sprintf("Display Name (%s):", l.DisplayNameClaim)
+        o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render(dispNameLabel), l.DisplayName))
+    }
+    uidLabel := fmt.Sprintf("User ID (%s):", l.UserIDClaim)
+    o.WriteString(iFmt(2, "%s %s\n", labelStyle.Render(uidLabel), l.UserID))
+    return o.String()
 }
 
 func mainIDPOpenIDAccesskeyInfo(ctx *cli.Context) error {
-	return commonAccesskeyInfo(ctx)
+    return commonAccesskeyInfo(ctx)
 }

@@ -18,26 +18,26 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/jedib0t/go-pretty/v6/table"
+    "github.com/jedib0t/go-pretty/v6/text"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminKMSKeyListCmd = cli.Command{
-	Name:         "list",
-	Usage:        "request list of KMS master keys",
-	Action:       mainAdminKMSKeyList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    Usage:        "request list of KMS master keys",
+    Action:       mainAdminKMSKeyList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -54,63 +54,63 @@ EXAMPLES:
 
 // adminKMSKeyCmd is the handle for the "mc admin kms key" command.
 func mainAdminKMSKeyList(ctx *cli.Context) error {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	console.SetColor("KeyName", color.New(color.FgBlue))
+    console.SetColor("KeyName", color.New(color.FgBlue))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	keys, e := client.ListKeys(globalContext, "*")
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to list KMS keys")
+    keys, e := client.ListKeys(globalContext, "*")
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to list KMS keys")
 
-	var rows []table.Row
-	kmsKeys := []string{}
-	for idx, k := range keys {
-		rows = append(rows, table.Row{idx + 1, k.Name})
-		kmsKeys = append(kmsKeys, k.Name)
-	}
+    var rows []table.Row
+    kmsKeys := []string{}
+    for idx, k := range keys {
+        rows = append(rows, table.Row{idx + 1, k.Name})
+        kmsKeys = append(kmsKeys, k.Name)
+    }
 
-	if globalJSON {
-		printMsg(kmsKeysMsg{
-			Status: "success",
-			Target: aliasedURL,
-			Keys:   kmsKeys,
-		})
-		return nil
-	}
+    if globalJSON {
+        printMsg(kmsKeysMsg{
+            Status: "success",
+            Target: aliasedURL,
+            Keys:   kmsKeys,
+        })
+        return nil
+    }
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.SetColumnConfigs([]table.ColumnConfig{{Align: text.AlignCenter}})
-	t.SetTitle("KMS Keys")
-	t.AppendHeader(table.Row{"S N", "Name"})
-	t.AppendRows(rows)
-	t.SetStyle(table.StyleLight)
-	t.Render()
-	return nil
+    t := table.NewWriter()
+    t.SetOutputMirror(os.Stdout)
+    t.SetColumnConfigs([]table.ColumnConfig{{Align: text.AlignCenter}})
+    t.SetTitle("KMS Keys")
+    t.AppendHeader(table.Row{"S N", "Name"})
+    t.AppendRows(rows)
+    t.SetStyle(table.StyleLight)
+    t.Render()
+    return nil
 }
 
 type kmsKeysMsg struct {
-	Status string   `json:"status"`
-	Target string   `json:"target"`
-	Keys   []string `json:"keys"`
+    Status string   `json:"status"`
+    Target string   `json:"target"`
+    Keys   []string `json:"keys"`
 }
 
 func (k kmsKeysMsg) JSON() string {
-	kmsBytes, e := json.MarshalIndent(k, "", "    ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    kmsBytes, e := json.MarshalIndent(k, "", "    ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(kmsBytes)
+    return string(kmsBytes)
 }
 
 func (k kmsKeysMsg) String() string {
-	return fmt.Sprintf("Keys: %s\n", k.Keys)
+    return fmt.Sprintf("Keys: %s\n", k.Keys)
 }

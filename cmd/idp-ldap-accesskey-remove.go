@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var idpLdapAccesskeyRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "delete access key pairs for LDAP",
-	Action:       mainIDPLdapAccesskeyRemove,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "delete access key pairs for LDAP",
+    Action:       mainIDPLdapAccesskeyRemove,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -46,33 +46,33 @@ EXAMPLES:
 }
 
 func mainIDPLdapAccesskeyRemove(ctx *cli.Context) error {
-	return commonAccesskeyRemove(ctx)
+    return commonAccesskeyRemove(ctx)
 }
 
 // No difference between ldap and builtin accesskey remove for now
 func commonAccesskeyRemove(ctx *cli.Context) error {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	accessKey := args.Get(1)
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    accessKey := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.DeleteServiceAccount(globalContext, accessKey)
-	fatalIf(probe.NewError(e), "Unable to remove service account.")
+    e := client.DeleteServiceAccount(globalContext, accessKey)
+    fatalIf(probe.NewError(e), "Unable to remove service account.")
 
-	m := accesskeyMessage{
-		op:        "remove",
-		Status:    "success",
-		AccessKey: accessKey,
-	}
+    m := accesskeyMessage{
+        op:        "remove",
+        Status:    "success",
+        AccessKey: accessKey,
+    }
 
-	printMsg(m)
+    printMsg(m)
 
-	return nil
+    return nil
 }

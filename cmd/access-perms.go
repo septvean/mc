@@ -18,47 +18,47 @@
 package cmd
 
 import (
-	"os"
+    "os"
 
-	json "github.com/minio/colorjson"
-	"github.com/minio/minio-go/v7/pkg/policy"
+    json "github.com/minio/colorjson"
+    "github.com/minio/minio-go/v7/pkg/policy"
 )
 
 // isValidAccessPERM - is provided access perm string supported.
 func (b accessPerms) isValidAccessPERM() bool {
-	switch b {
-	case accessNone, accessDownload, accessUpload, accessPrivate, accessPublic:
-		return true
-	}
-	return false
+    switch b {
+    case accessNone, accessDownload, accessUpload, accessPrivate, accessPublic:
+        return true
+    }
+    return false
 }
 
 func (b accessPerms) isValidAccessFile() bool {
-	file, err := os.Open(string(b))
-	if err != nil {
-		return false
-	}
-	defer file.Close()
+    file, err := os.Open(string(b))
+    if err != nil {
+        return false
+    }
+    defer file.Close()
 
-	var policy policy.BucketAccessPolicy
-	if json.NewDecoder(file).Decode(&policy) != nil {
-		fatalIf(errDummy().Trace(), "Unable to parse access file.")
-		return false
-	}
+    var policy policy.BucketAccessPolicy
+    if json.NewDecoder(file).Decode(&policy) != nil {
+        fatalIf(errDummy().Trace(), "Unable to parse access file.")
+        return false
+    }
 
-	if policy.Version != "2012-10-17" {
-		fatalIf(errDummy().Trace(), "Invalid policy version. Only 2012-10-17 is supported.")
-		return false
-	}
+    if policy.Version != "2012-10-17" {
+        fatalIf(errDummy().Trace(), "Invalid policy version. Only 2012-10-17 is supported.")
+        return false
+    }
 
-	for _, statement := range policy.Statements {
-		if statement.Effect != "Allow" && statement.Effect != "Deny" {
-			fatalIf(errDummy().Trace(), "Invalid policy effect. Only Allow and Deny are supported.")
-			return false
-		}
-	}
+    for _, statement := range policy.Statements {
+        if statement.Effect != "Allow" && statement.Effect != "Deny" {
+            fatalIf(errDummy().Trace(), "Invalid policy effect. Only Allow and Deny are supported.")
+            return false
+        }
+    }
 
-	return true
+    return true
 }
 
 // accessPerms - access level.
@@ -66,10 +66,10 @@ type accessPerms string
 
 // different types of Access perm's currently supported by policy command.
 const (
-	accessNone     = accessPerms("none")
-	accessDownload = accessPerms("download")
-	accessUpload   = accessPerms("upload")
-	accessPrivate  = accessPerms("private")
-	accessPublic   = accessPerms("public")
-	accessCustom   = accessPerms("custom")
+    accessNone     = accessPerms("none")
+    accessDownload = accessPerms("download")
+    accessUpload   = accessPerms("upload")
+    accessPrivate  = accessPerms("private")
+    accessPublic   = accessPerms("public")
+    accessCustom   = accessPerms("custom")
 )

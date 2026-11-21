@@ -20,27 +20,27 @@ package cmd
 import "github.com/minio/cli"
 
 var ilmTierSubcommands = []cli.Command{
-	adminTierInfoCmd,
-	adminTierListCmd,
-	adminTierAddCmd,
-	adminTierEditCmd,
-	ilmTierUpdateCmd,
-	adminTierVerifyCmd,
-	ilmTierCheckCmd,
-	adminTierRmCmd,
+    adminTierInfoCmd,
+    adminTierListCmd,
+    adminTierAddCmd,
+    adminTierEditCmd,
+    ilmTierUpdateCmd,
+    adminTierVerifyCmd,
+    ilmTierCheckCmd,
+    adminTierRmCmd,
 }
 
 var ilmTierCmd = cli.Command{
-	Name:            "tier",
-	Usage:           "manage remote tiers",
-	Action:          mainILMTier,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     ilmTierSubcommands,
-	HideHelpCommand: true,
+    Name:            "tier",
+    Usage:           "manage remote tiers",
+    Action:          mainILMTier,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     ilmTierSubcommands,
+    HideHelpCommand: true,
 }
 
 func mainILMTier(ctx *cli.Context) error {
-	commandNotFound(ctx, ilmTierSubcommands)
-	return nil
+    commandNotFound(ctx, ilmTierSubcommands)
+    return nil
 }

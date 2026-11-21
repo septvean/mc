@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminGroupListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "display list of groups",
-	Action:       mainAdminGroupList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "display list of groups",
+    Action:       mainAdminGroupList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,32 +49,32 @@ EXAMPLES:
 
 // checkAdminGroupListSyntax - validate all the passed arguments
 func checkAdminGroupListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminGroupList is the handle for "mc admin group list" command.
 func mainAdminGroupList(ctx *cli.Context) error {
-	checkAdminGroupListSyntax(ctx)
+    checkAdminGroupListSyntax(ctx)
 
-	console.SetColor("GroupMessage", color.New(color.FgGreen))
+    console.SetColor("GroupMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	gs, e := client.ListGroups(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to list groups")
+    gs, e := client.ListGroups(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to list groups")
 
-	printMsg(groupMessage{
-		op:     ctx.Command.Name,
-		Groups: gs,
-	})
+    printMsg(groupMessage{
+        op:     ctx.Command.Name,
+        Groups: gs,
+    })
 
-	return nil
+    return nil
 }

@@ -18,33 +18,33 @@
 package cmd
 
 import (
-	"context"
-	"strings"
+    "context"
+    "strings"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/olekukonko/tablewriter"
+    humanize "github.com/dustin/go-humanize"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/olekukonko/tablewriter"
 )
 
 var batchListFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "type",
-		Usage: "list all current batch jobs via job type",
-	},
+    cli.StringFlag{
+        Name:  "type",
+        Usage: "list all current batch jobs via job type",
+    },
 }
 
 var batchListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "list all current batch jobs",
-	Action:       mainBatchList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(batchListFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "list all current batch jobs",
+    Action:       mainBatchList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(batchListFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -64,147 +64,147 @@ EXAMPLES:
 
 // batchListMessage container for file batchList messages
 type batchListMessage struct {
-	Status string                  `json:"status"`
-	Jobs   []madmin.BatchJobResult `json:"jobs"`
-	Admin  *madmin.AdminClient     `json:"-"` // Add AdminClient to fetch job status
+    Status string                  `json:"status"`
+    Jobs   []madmin.BatchJobResult `json:"jobs"`
+    Admin  *madmin.AdminClient     `json:"-"` // Add AdminClient to fetch job status
 }
 
 // String colorized batchList message
 func (c batchListMessage) String() string {
-	if len(c.Jobs) == 0 {
-		return "currently no jobs are running"
-	}
+    if len(c.Jobs) == 0 {
+        return "currently no jobs are running"
+    }
 
-	var s strings.Builder
+    var s strings.Builder
 
-	// Set table header
-	table := tablewriter.NewWriter(&s)
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t") // pad with tabs
-	table.SetNoWhiteSpace(true)
+    // Set table header
+    table := tablewriter.NewWriter(&s)
+    table.SetAutoWrapText(false)
+    table.SetAutoFormatHeaders(true)
+    table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+    table.SetAlignment(tablewriter.ALIGN_LEFT)
+    table.SetCenterSeparator("")
+    table.SetColumnSeparator("")
+    table.SetRowSeparator("")
+    table.SetHeaderLine(false)
+    table.SetBorder(false)
+    table.SetTablePadding("\t") // pad with tabs
+    table.SetNoWhiteSpace(true)
 
-	// Add a new "STATUS" column to the table header
-	table.SetHeader([]string{"ID", "TYPE", "USER", "STARTED", "STATUS"})
-	data := make([][]string, 0, 5)
+    // Add a new "STATUS" column to the table header
+    table.SetHeader([]string{"ID", "TYPE", "USER", "STARTED", "STATUS"})
+    data := make([][]string, 0, 5)
 
-	// Fetch the status for the batch job using BatchJobStatus API
-	for _, job := range c.Jobs {
-		jobStatus := "unknown"
-		jobMetric, err := c.Admin.BatchJobStatus(context.Background(), job.ID)
+    // Fetch the status for the batch job using BatchJobStatus API
+    for _, job := range c.Jobs {
+        jobStatus := "unknown"
+        jobMetric, err := c.Admin.BatchJobStatus(context.Background(), job.ID)
 
-		// Output error if the API call fails, but continue processing remaining jobs
-		if err != nil {
-			println("Failed to fetch job status for Job ID:", job.ID, "Error:", err.Error())
-		} else {
-			if jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
-				jobStatus = "completed"
-			} else if !jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
-				jobStatus = "in-progress"
-			} else if jobMetric.LastMetric.Failed {
-				jobStatus = "failed"
-			}
-		}
+        // Output error if the API call fails, but continue processing remaining jobs
+        if err != nil {
+            println("Failed to fetch job status for Job ID:", job.ID, "Error:", err.Error())
+        } else {
+            if jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
+                jobStatus = "completed"
+            } else if !jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
+                jobStatus = "in-progress"
+            } else if jobMetric.LastMetric.Failed {
+                jobStatus = "failed"
+            }
+        }
 
-		// Add jobStatus details to the data table
-		data = append(data, []string{
-			job.ID,
-			string(job.Type),
-			job.User,
-			humanize.Time(job.Started),
-			jobStatus,
-		})
-	}
+        // Add jobStatus details to the data table
+        data = append(data, []string{
+            job.ID,
+            string(job.Type),
+            job.User,
+            humanize.Time(job.Started),
+            jobStatus,
+        })
+    }
 
-	table.AppendBulk(data)
-	table.Render()
+    table.AppendBulk(data)
+    table.Render()
 
-	return s.String()
+    return s.String()
 }
 
 // JSON jsonified batchList message
 func (c batchListMessage) JSON() string {
-	c.Status = "success"
+    c.Status = "success"
 
-	// Create a temporary slice to hold jobs with derived statuses
-	jobsWithStatus := make([]map[string]interface{}, len(c.Jobs))
+    // Create a temporary slice to hold jobs with derived statuses
+    jobsWithStatus := make([]map[string]interface{}, len(c.Jobs))
 
-	// Fetch the status for the batch job using BatchJobStatus API
-	for i, job := range c.Jobs {
-		jobStatus := "unknown"
-		jobMetric, err := c.Admin.BatchJobStatus(context.Background(), job.ID)
+    // Fetch the status for the batch job using BatchJobStatus API
+    for i, job := range c.Jobs {
+        jobStatus := "unknown"
+        jobMetric, err := c.Admin.BatchJobStatus(context.Background(), job.ID)
 
-		// Output error if the API call fails, but continue processing remaining jobs
-		if err != nil {
-			println("Failed to fetch job status for Job ID:", job.ID, "Error:", err.Error())
-		} else {
-			if jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
-				jobStatus = "completed"
-			} else if !jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
-				jobStatus = "in-progress"
-			} else if jobMetric.LastMetric.Failed {
-				jobStatus = "failed"
-			}
-		}
+        // Output error if the API call fails, but continue processing remaining jobs
+        if err != nil {
+            println("Failed to fetch job status for Job ID:", job.ID, "Error:", err.Error())
+        } else {
+            if jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
+                jobStatus = "completed"
+            } else if !jobMetric.LastMetric.Complete && !jobMetric.LastMetric.Failed {
+                jobStatus = "in-progress"
+            } else if jobMetric.LastMetric.Failed {
+                jobStatus = "failed"
+            }
+        }
 
-		// Add the job details along with the derived status
-		jobsWithStatus[i] = map[string]interface{}{
-			"id":      job.ID,
-			"type":    job.Type,
-			"user":    job.User,
-			"started": job.Started,
-			"status":  jobStatus,
-		}
-	}
+        // Add the job details along with the derived status
+        jobsWithStatus[i] = map[string]interface{}{
+            "id":      job.ID,
+            "type":    job.Type,
+            "user":    job.User,
+            "started": job.Started,
+            "status":  jobStatus,
+        }
+    }
 
-	// Marshal the updated jobs into JSON
-	batchListMessageBytes, e := json.MarshalIndent(map[string]interface{}{
-		"status": c.Status,
-		"jobs":   jobsWithStatus,
-	}, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    // Marshal the updated jobs into JSON
+    batchListMessageBytes, e := json.MarshalIndent(map[string]interface{}{
+        "status": c.Status,
+        "jobs":   jobsWithStatus,
+    }, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(batchListMessageBytes)
+    return string(batchListMessageBytes)
 }
 
 // checkBatchListSyntax - validate all the passed arguments
 func checkBatchListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainBatchList is the handle for "mc batch create" command.
 func mainBatchList(ctx *cli.Context) error {
-	checkBatchListSyntax(ctx)
+    checkBatchListSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Start a new MinIO Admin Client
-	adminClient, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Start a new MinIO Admin Client
+    adminClient, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	res, e := adminClient.ListBatchJobs(ctxt, &madmin.ListBatchJobsFilter{
-		ByJobType: ctx.String("type"),
-	})
-	fatalIf(probe.NewError(e), "Unable to list jobs")
+    res, e := adminClient.ListBatchJobs(ctxt, &madmin.ListBatchJobsFilter{
+        ByJobType: ctx.String("type"),
+    })
+    fatalIf(probe.NewError(e), "Unable to list jobs")
 
-	printMsg(batchListMessage{
-		Status: "success",
-		Jobs:   res.Jobs,
-		Admin:  adminClient, // Pass the adminClient for status lookups
-	})
-	return nil
+    printMsg(batchListMessage{
+        Status: "success",
+        Jobs:   res.Jobs,
+        Admin:  adminClient, // Pass the adminClient for status lookups
+    })
+    return nil
 }

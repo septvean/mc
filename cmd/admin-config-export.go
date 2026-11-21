@@ -18,27 +18,27 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"io"
-	"strings"
+    "bufio"
+    "bytes"
+    "fmt"
+    "io"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminConfigExportCmd = cli.Command{
-	Name:         "export",
-	Usage:        "export all config keys to STDOUT",
-	Before:       setGlobalsFromContext,
-	Action:       mainAdminConfigExport,
-	OnUsageError: onUsageError,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "export",
+    Usage:        "export all config keys to STDOUT",
+    Before:       setGlobalsFromContext,
+    Action:       mainAdminConfigExport,
+    OnUsageError: onUsageError,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -57,69 +57,69 @@ EXAMPLES:
 
 // configExportMessage container to hold locks information.
 type configExportMessage struct {
-	Status string `json:"status"`
-	Value  []byte `json:"value"`
+    Status string `json:"status"`
+    Value  []byte `json:"value"`
 }
 
 // String colorized service status message.
 func (u configExportMessage) String() string {
-	console.SetColor("EnvVar", color.New(color.FgYellow))
-	bio := bufio.NewReader(bytes.NewReader(u.Value))
-	var lines []string
-	for {
-		s, e := bio.ReadString('\n')
-		// Make lines displaying environment variables bold.
-		if strings.HasPrefix(s, "# MINIO_") {
-			s = strings.TrimPrefix(s, "# ")
-			parts := strings.SplitN(s, "=", 2)
-			s = fmt.Sprintf("# %s=%s", console.Colorize("EnvVar", parts[0]), parts[1])
-			lines = append(lines, s)
-		} else {
-			lines = append(lines, s)
-		}
-		if e == io.EOF {
-			break
-		}
-		fatalIf(probe.NewError(e), "Unable to marshal to string.")
-	}
-	return strings.Join(lines, "")
+    console.SetColor("EnvVar", color.New(color.FgYellow))
+    bio := bufio.NewReader(bytes.NewReader(u.Value))
+    var lines []string
+    for {
+        s, e := bio.ReadString('\n')
+        // Make lines displaying environment variables bold.
+        if strings.HasPrefix(s, "# MINIO_") {
+            s = strings.TrimPrefix(s, "# ")
+            parts := strings.SplitN(s, "=", 2)
+            s = fmt.Sprintf("# %s=%s", console.Colorize("EnvVar", parts[0]), parts[1])
+            lines = append(lines, s)
+        } else {
+            lines = append(lines, s)
+        }
+        if e == io.EOF {
+            break
+        }
+        fatalIf(probe.NewError(e), "Unable to marshal to string.")
+    }
+    return strings.Join(lines, "")
 }
 
 // JSON jsonified service status Message message.
 func (u configExportMessage) JSON() string {
-	u.Status = "success"
-	statusJSONBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    statusJSONBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(statusJSONBytes)
+    return string(statusJSONBytes)
 }
 
 // checkAdminConfigExportSyntax - validate all the passed arguments
 func checkAdminConfigExportSyntax(ctx *cli.Context) {
-	if !ctx.Args().Present() || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if !ctx.Args().Present() || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainAdminConfigExport(ctx *cli.Context) error {
-	checkAdminConfigExportSyntax(ctx)
+    checkAdminConfigExportSyntax(ctx)
 
-	// Export the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Export the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	// Call get config API
-	buf, e := client.GetConfig(globalContext)
-	fatalIf(probe.NewError(e), "Unable to get server config")
+    // Call get config API
+    buf, e := client.GetConfig(globalContext)
+    fatalIf(probe.NewError(e), "Unable to get server config")
 
-	// Print
-	printMsg(configExportMessage{
-		Value: buf,
-	})
+    // Print
+    printMsg(configExportMessage{
+        Value: buf,
+    })
 
-	return nil
+    return nil
 }

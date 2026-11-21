@@ -18,30 +18,30 @@
 package cmd
 
 import (
-	"os"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var policyInfoFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "policy-file, f",
-		Usage: "additionally (over-)write policy JSON to given file",
-	},
+    cli.StringFlag{
+        Name:  "policy-file, f",
+        Usage: "additionally (over-)write policy JSON to given file",
+    },
 }
 
 var adminPolicyInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "show info on an IAM policy",
-	Action:       mainAdminPolicyInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(policyInfoFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "show info on an IAM policy",
+    Action:       mainAdminPolicyInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(policyInfoFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -64,62 +64,62 @@ EXAMPLES:
 
 // checkAdminPolicyInfoSyntax - validate all the passed arguments
 func checkAdminPolicyInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func getPolicyInfo(client *madmin.AdminClient, policyName string) (*madmin.PolicyInfo, error) {
-	pinfo, e := client.InfoCannedPolicyV2(globalContext, policyName)
-	if e != nil {
-		return nil, e
-	}
+    pinfo, e := client.InfoCannedPolicyV2(globalContext, policyName)
+    if e != nil {
+        return nil, e
+    }
 
-	if pinfo.PolicyName == "" {
-		// Likely server only supports the older version.
-		// nolint:staticcheck
-		pinfo.Policy, e = client.InfoCannedPolicy(globalContext, policyName)
-		if e != nil {
-			return nil, e
-		}
-		pinfo.PolicyName = policyName
-	}
-	return pinfo, nil
+    if pinfo.PolicyName == "" {
+        // Likely server only supports the older version.
+        // nolint:staticcheck
+        pinfo.Policy, e = client.InfoCannedPolicy(globalContext, policyName)
+        if e != nil {
+            return nil, e
+        }
+        pinfo.PolicyName = policyName
+    }
+    return pinfo, nil
 }
 
 // mainAdminPolicyInfo is the handler for "mc admin policy info" command.
 func mainAdminPolicyInfo(ctx *cli.Context) error {
-	checkAdminPolicyInfoSyntax(ctx)
+    checkAdminPolicyInfoSyntax(ctx)
 
-	console.SetColor("PolicyMessage", color.New(color.FgGreen))
-	console.SetColor("Policy", color.New(color.FgBlue))
+    console.SetColor("PolicyMessage", color.New(color.FgGreen))
+    console.SetColor("Policy", color.New(color.FgBlue))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	policyName := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    policyName := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection")
 
-	pinfo, e := getPolicyInfo(client, policyName)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch policy")
+    pinfo, e := getPolicyInfo(client, policyName)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch policy")
 
-	policyFile := ctx.String("policy-file")
-	if policyFile != "" {
-		f, e := os.Create(policyFile)
-		fatalIf(probe.NewError(e).Trace(args...), "Could not open given policy file")
+    policyFile := ctx.String("policy-file")
+    if policyFile != "" {
+        f, e := os.Create(policyFile)
+        fatalIf(probe.NewError(e).Trace(args...), "Could not open given policy file")
 
-		_, e = f.Write(pinfo.Policy)
-		fatalIf(probe.NewError(e).Trace(args...), "Could not write to given policy file")
-	}
+        _, e = f.Write(pinfo.Policy)
+        fatalIf(probe.NewError(e).Trace(args...), "Could not write to given policy file")
+    }
 
-	printMsg(userPolicyMessage{
-		op:         ctx.Command.Name,
-		Policy:     policyName,
-		PolicyInfo: *pinfo,
-	})
+    printMsg(userPolicyMessage{
+        op:         ctx.Command.Name,
+        Policy:     policyName,
+        PolicyInfo: *pinfo,
+    })
 
-	return nil
+    return nil
 }

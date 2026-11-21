@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminPolicyAddCmd = cli.Command{
-	Name:               "add",
-	Usage:              "add an IAM policy",
-	Action:             mainAdminPolicyAdd,
-	OnUsageError:       onUsageError,
-	Before:             setGlobalsFromContext,
-	Flags:              globalFlags,
-	HideHelpCommand:    true,
-	Hidden:             true,
-	CustomHelpTemplate: `Please use 'mc admin policy create'`,
+    Name:               "add",
+    Usage:              "add an IAM policy",
+    Action:             mainAdminPolicyAdd,
+    OnUsageError:       onUsageError,
+    Before:             setGlobalsFromContext,
+    Flags:              globalFlags,
+    HideHelpCommand:    true,
+    Hidden:             true,
+    CustomHelpTemplate: `Please use 'mc admin policy create'`,
 }
 
 func mainAdminPolicyAdd(_ *cli.Context) error {
-	deprecatedError("mc admin policy create")
-	return nil
+    deprecatedError("mc admin policy create")
+    return nil
 }

@@ -18,60 +18,60 @@
 package cmd
 
 import (
-	"context"
-	"errors"
-	"strings"
-	"time"
+    "context"
+    "errors"
+    "strings"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 // ls specific flags.
 var (
-	lsFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "rewind",
-			Usage: "list all object versions no later than specified date",
-		},
-		cli.BoolFlag{
-			Name:  "versions",
-			Usage: "list all versions",
-		},
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "list recursively",
-		},
-		cli.BoolFlag{
-			Name:  "incomplete, I",
-			Usage: "list incomplete uploads",
-		},
-		cli.BoolFlag{
-			Name:  "summarize",
-			Usage: "display summary information (number of objects, total size)",
-		},
-		cli.StringFlag{
-			Name:  "storage-class, sc",
-			Usage: "filter to specified storage class",
-		},
-		cli.BoolFlag{
-			Name:  "zip",
-			Usage: "list files inside zip archive (MinIO servers only)",
-		},
-	}
+    lsFlags = []cli.Flag{
+        cli.StringFlag{
+            Name:  "rewind",
+            Usage: "list all object versions no later than specified date",
+        },
+        cli.BoolFlag{
+            Name:  "versions",
+            Usage: "list all versions",
+        },
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "list recursively",
+        },
+        cli.BoolFlag{
+            Name:  "incomplete, I",
+            Usage: "list incomplete uploads",
+        },
+        cli.BoolFlag{
+            Name:  "summarize",
+            Usage: "display summary information (number of objects, total size)",
+        },
+        cli.StringFlag{
+            Name:  "storage-class, sc",
+            Usage: "filter to specified storage class",
+        },
+        cli.BoolFlag{
+            Name:  "zip",
+            Usage: "list files inside zip archive (MinIO servers only)",
+        },
+    }
 )
 
 // list files and folders.
 var lsCmd = cli.Command{
-	Name:         "ls",
-	Usage:        "list buckets and objects",
-	Action:       mainList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(lsFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "ls",
+    Usage:        "list buckets and objects",
+    Action:       mainList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(lsFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -116,119 +116,119 @@ EXAMPLES:
 }
 
 var rewindSupportedFormat = []string{
-	"2006.01.02",
-	"2006.01.02T15:04",
-	"2006.01.02T15:04:05",
-	time.RFC3339,
-	printDate,
+    "2006.01.02",
+    "2006.01.02T15:04",
+    "2006.01.02T15:04:05",
+    time.RFC3339,
+    printDate,
 }
 
 // Parse rewind flag while considering the system local time zone
 func parseRewindFlag(rewind string) (timeRef time.Time) {
-	if rewind != "" {
-		location, e := time.LoadLocation("Local")
-		if e != nil {
-			return
-		}
+    if rewind != "" {
+        location, e := time.LoadLocation("Local")
+        if e != nil {
+            return
+        }
 
-		for _, format := range rewindSupportedFormat {
-			if t, e := time.ParseInLocation(format, rewind, location); e == nil {
-				timeRef = t
-				break
-			}
-		}
+        for _, format := range rewindSupportedFormat {
+            if t, e := time.ParseInLocation(format, rewind, location); e == nil {
+                timeRef = t
+                break
+            }
+        }
 
-		if timeRef.IsZero() {
-			// rewind is not parsed, check if it is a duration instead
-			if duration, e := ParseDuration(rewind); e == nil {
-				if duration < 0 {
-					fatalIf(probe.NewError(errors.New("negative duration is not supported")),
-						"Unable to parse --rewind argument")
-				}
-				timeRef = time.Now().Add(-time.Duration(duration))
-			}
-		}
+        if timeRef.IsZero() {
+            // rewind is not parsed, check if it is a duration instead
+            if duration, e := ParseDuration(rewind); e == nil {
+                if duration < 0 {
+                    fatalIf(probe.NewError(errors.New("negative duration is not supported")),
+                        "Unable to parse --rewind argument")
+                }
+                timeRef = time.Now().Add(-time.Duration(duration))
+            }
+        }
 
-		if timeRef.IsZero() {
-			// rewind argument still not parsed, error out
-			fatalIf(probe.NewError(errors.New("unknown format")), "Unable to parse --rewind argument")
-		}
-	}
-	return
+        if timeRef.IsZero() {
+            // rewind argument still not parsed, error out
+            fatalIf(probe.NewError(errors.New("unknown format")), "Unable to parse --rewind argument")
+        }
+    }
+    return
 }
 
 // checkListSyntax - validate all the passed arguments
 func checkListSyntax(cliCtx *cli.Context) ([]string, doListOptions) {
-	args := cliCtx.Args()
-	if !cliCtx.Args().Present() {
-		args = []string{"."}
-	}
-	for _, arg := range args {
-		if strings.TrimSpace(arg) == "" {
-			fatalIf(errInvalidArgument().Trace(args...), "Unable to validate empty argument.")
-		}
-	}
+    args := cliCtx.Args()
+    if !cliCtx.Args().Present() {
+        args = []string{"."}
+    }
+    for _, arg := range args {
+        if strings.TrimSpace(arg) == "" {
+            fatalIf(errInvalidArgument().Trace(args...), "Unable to validate empty argument.")
+        }
+    }
 
-	isRecursive := cliCtx.Bool("recursive")
-	isIncomplete := cliCtx.Bool("incomplete")
-	withVersions := cliCtx.Bool("versions")
-	isSummary := cliCtx.Bool("summarize")
-	listZip := cliCtx.Bool("zip")
+    isRecursive := cliCtx.Bool("recursive")
+    isIncomplete := cliCtx.Bool("incomplete")
+    withVersions := cliCtx.Bool("versions")
+    isSummary := cliCtx.Bool("summarize")
+    listZip := cliCtx.Bool("zip")
 
-	timeRef := parseRewindFlag(cliCtx.String("rewind"))
+    timeRef := parseRewindFlag(cliCtx.String("rewind"))
 
-	if listZip && (withVersions || !timeRef.IsZero()) {
-		fatalIf(errInvalidArgument().Trace(args...), "Zip file listing can only be performed on the latest version")
-	}
-	storageClasss := cliCtx.String("storage-class")
-	opts := doListOptions{
-		timeRef:      timeRef,
-		isRecursive:  isRecursive,
-		isIncomplete: isIncomplete,
-		isSummary:    isSummary,
-		withVersions: withVersions,
-		listZip:      listZip,
-		filter:       storageClasss,
-	}
-	return args, opts
+    if listZip && (withVersions || !timeRef.IsZero()) {
+        fatalIf(errInvalidArgument().Trace(args...), "Zip file listing can only be performed on the latest version")
+    }
+    storageClasss := cliCtx.String("storage-class")
+    opts := doListOptions{
+        timeRef:      timeRef,
+        isRecursive:  isRecursive,
+        isIncomplete: isIncomplete,
+        isSummary:    isSummary,
+        withVersions: withVersions,
+        listZip:      listZip,
+        filter:       storageClasss,
+    }
+    return args, opts
 }
 
 // mainList - is a handler for mc ls command
 func mainList(cliCtx *cli.Context) error {
-	ctx, cancelList := context.WithCancel(globalContext)
-	defer cancelList()
+    ctx, cancelList := context.WithCancel(globalContext)
+    defer cancelList()
 
-	// Additional command specific theme customization.
-	console.SetColor("File", color.New(color.Bold))
-	console.SetColor("DEL", color.New(color.FgRed))
-	console.SetColor("PUT", color.New(color.FgGreen))
-	console.SetColor("VersionID", color.New(color.FgHiBlue))
-	console.SetColor("VersionOrd", color.New(color.FgHiMagenta))
-	console.SetColor("Dir", color.New(color.FgCyan, color.Bold))
-	console.SetColor("Size", color.New(color.FgYellow))
-	console.SetColor("Time", color.New(color.FgGreen))
-	console.SetColor("Summarize", color.New(color.Bold))
-	console.SetColor("SC", color.New(color.FgBlue))
+    // Additional command specific theme customization.
+    console.SetColor("File", color.New(color.Bold))
+    console.SetColor("DEL", color.New(color.FgRed))
+    console.SetColor("PUT", color.New(color.FgGreen))
+    console.SetColor("VersionID", color.New(color.FgHiBlue))
+    console.SetColor("VersionOrd", color.New(color.FgHiMagenta))
+    console.SetColor("Dir", color.New(color.FgCyan, color.Bold))
+    console.SetColor("Size", color.New(color.FgYellow))
+    console.SetColor("Time", color.New(color.FgGreen))
+    console.SetColor("Summarize", color.New(color.Bold))
+    console.SetColor("SC", color.New(color.FgBlue))
 
-	// check 'ls' cliCtx arguments.
-	args, opts := checkListSyntax(cliCtx)
+    // check 'ls' cliCtx arguments.
+    args, opts := checkListSyntax(cliCtx)
 
-	var cErr error
-	for _, targetURL := range args {
-		clnt, err := newClient(targetURL)
-		fatalIf(err.Trace(targetURL), "Unable to initialize target `"+targetURL+"`.")
-		if !strings.HasSuffix(targetURL, string(clnt.GetURL().Separator)) {
-			var st *ClientContent
-			st, err = clnt.Stat(ctx, StatOptions{incomplete: opts.isIncomplete, includeVersions: opts.withVersions})
-			if st != nil && err == nil && st.Type.IsDir() {
-				targetURL = targetURL + string(clnt.GetURL().Separator)
-				clnt, err = newClient(targetURL)
-				fatalIf(err.Trace(targetURL), "Unable to initialize target `"+targetURL+"`.")
-			}
-		}
-		if e := doList(ctx, clnt, opts); e != nil {
-			cErr = e
-		}
-	}
-	return cErr
+    var cErr error
+    for _, targetURL := range args {
+        clnt, err := newClient(targetURL)
+        fatalIf(err.Trace(targetURL), "Unable to initialize target `"+targetURL+"`.")
+        if !strings.HasSuffix(targetURL, string(clnt.GetURL().Separator)) {
+            var st *ClientContent
+            st, err = clnt.Stat(ctx, StatOptions{incomplete: opts.isIncomplete, includeVersions: opts.withVersions})
+            if st != nil && err == nil && st.Type.IsDir() {
+                targetURL = targetURL + string(clnt.GetURL().Separator)
+                clnt, err = newClient(targetURL)
+                fatalIf(err.Trace(targetURL), "Unable to initialize target `"+targetURL+"`.")
+            }
+        }
+        if e := doList(ctx, clnt, opts); e != nil {
+            cErr = e
+        }
+    }
+    return cErr
 }

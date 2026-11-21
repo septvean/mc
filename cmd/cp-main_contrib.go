@@ -20,119 +20,119 @@
 package cmd
 
 import (
-	"fmt"
-	"net/http"
-	"strings"
+    "fmt"
+    "net/http"
+    "strings"
 
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/mc/pkg/probe"
 )
 
 // validate the passed metadataString and populate the map
 func getMetaDataEntry(metadataString string) (map[string]string, *probe.Error) {
-	metaDataMap := make(map[string]string)
-	r := strings.NewReader(metadataString)
+    metaDataMap := make(map[string]string)
+    r := strings.NewReader(metadataString)
 
-	type pToken int
-	const (
-		KEY pToken = iota
-		VALUE
-	)
+    type pToken int
+    const (
+        KEY pToken = iota
+        VALUE
+    )
 
-	type pState int
-	const (
-		NORMAL pState = iota
-		QSTRING
-		DQSTRING
-	)
+    type pState int
+    const (
+        NORMAL pState = iota
+        QSTRING
+        DQSTRING
+    )
 
-	var key, value strings.Builder
+    var key, value strings.Builder
 
-	writeRune := func(ch rune, pt pToken) {
-		switch pt {
-		case KEY:
-			key.WriteRune(ch)
-		case VALUE:
-			value.WriteRune(ch)
-		default:
-			panic("Invalid parser token type")
-		}
-	}
+    writeRune := func(ch rune, pt pToken) {
+        switch pt {
+        case KEY:
+            key.WriteRune(ch)
+        case VALUE:
+            value.WriteRune(ch)
+        default:
+            panic("Invalid parser token type")
+        }
+    }
 
-	ps := NORMAL
-	pt := KEY
-	p := 0
+    ps := NORMAL
+    pt := KEY
+    p := 0
 
-	for ; ; p++ {
-		ch, _, e := r.ReadRune()
-		if e != nil {
-			// eof
-			if ps == QSTRING || ps == DQSTRING || pt == KEY {
-				return nil, probe.NewError(ErrInvalidMetadata)
-			}
-			metaDataMap[http.CanonicalHeaderKey(key.String())] = value.String()
-			return metaDataMap, nil
-		}
+    for ; ; p++ {
+        ch, _, e := r.ReadRune()
+        if e != nil {
+            // eof
+            if ps == QSTRING || ps == DQSTRING || pt == KEY {
+                return nil, probe.NewError(ErrInvalidMetadata)
+            }
+            metaDataMap[http.CanonicalHeaderKey(key.String())] = value.String()
+            return metaDataMap, nil
+        }
 
-		if ch == '"' {
-			switch ps {
-			case DQSTRING:
-				ps = NORMAL
-			case QSTRING:
-				writeRune(ch, pt)
-			case NORMAL:
-				ps = DQSTRING
-			default:
-				break
-			}
-			continue
-		}
+        if ch == '"' {
+            switch ps {
+            case DQSTRING:
+                ps = NORMAL
+            case QSTRING:
+                writeRune(ch, pt)
+            case NORMAL:
+                ps = DQSTRING
+            default:
+                break
+            }
+            continue
+        }
 
-		if ch == '\'' {
-			switch ps {
-			case QSTRING:
-				ps = NORMAL
-			case DQSTRING:
-				writeRune(ch, pt)
-			case NORMAL:
-				ps = QSTRING
-			default:
-				break
-			}
-			continue
-		}
+        if ch == '\'' {
+            switch ps {
+            case QSTRING:
+                ps = NORMAL
+            case DQSTRING:
+                writeRune(ch, pt)
+            case NORMAL:
+                ps = QSTRING
+            default:
+                break
+            }
+            continue
+        }
 
-		if ch == '=' {
-			if ps == QSTRING || ps == DQSTRING {
-				writeRune(ch, pt)
-			} else if pt == KEY {
-				pt = VALUE
-			} else if pt == VALUE {
-				writeRune(ch, pt)
-			} else {
-				break
-			}
-			continue
-		}
+        if ch == '=' {
+            if ps == QSTRING || ps == DQSTRING {
+                writeRune(ch, pt)
+            } else if pt == KEY {
+                pt = VALUE
+            } else if pt == VALUE {
+                writeRune(ch, pt)
+            } else {
+                break
+            }
+            continue
+        }
 
-		if ch == ';' {
-			if ps == QSTRING || ps == DQSTRING {
-				writeRune(ch, pt)
-			} else if pt == KEY {
-				return nil, probe.NewError(ErrInvalidMetadata)
-			} else if pt == VALUE {
-				metaDataMap[http.CanonicalHeaderKey(key.String())] = value.String()
-				key.Reset()
-				value.Reset()
-				pt = KEY
-			} else {
-				break
-			}
-			continue
-		}
+        if ch == ';' {
+            if ps == QSTRING || ps == DQSTRING {
+                writeRune(ch, pt)
+            } else if pt == KEY {
+                return nil, probe.NewError(ErrInvalidMetadata)
+            } else if pt == VALUE {
+                metaDataMap[http.CanonicalHeaderKey(key.String())] = value.String()
+                key.Reset()
+                value.Reset()
+                pt = KEY
+            } else {
+                break
+            }
+            continue
+        }
 
-		writeRune(ch, pt)
-	}
+        writeRune(ch, pt)
+    }
 
-	fatalErr := fmt.Sprintf("Invalid parser state at index: %d", p)
-	panic(fatalErr)
+    fatalErr := fmt.Sprintf("Invalid parser state at index: %d", p)
+    panic(fatalErr)
 }

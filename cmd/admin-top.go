@@ -20,23 +20,23 @@ package cmd
 import "github.com/minio/cli"
 
 var adminTopSubcommands = []cli.Command{
-	adminTopAPICmd,
-	adminTopLocksCmd,
+    adminTopAPICmd,
+    adminTopLocksCmd,
 }
 
 var adminTopCmd = cli.Command{
-	Name:            "top",
-	Usage:           "provide top like statistics for MinIO",
-	Action:          mainAdminTop,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminTopSubcommands,
-	HideHelpCommand: true,
+    Name:            "top",
+    Usage:           "provide top like statistics for MinIO",
+    Action:          mainAdminTop,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminTopSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminTop is the handle for "mc admin top" command.
 func mainAdminTop(ctx *cli.Context) error {
-	commandNotFound(ctx, adminTopSubcommands)
-	return nil
-	// Sub-commands like "locks" have their own main.
+    commandNotFound(ctx, adminTopSubcommands)
+    return nil
+    // Sub-commands like "locks" have their own main.
 }

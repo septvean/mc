@@ -20,25 +20,25 @@ package cmd
 import "github.com/minio/cli"
 
 var adminReplicateSubcommands = []cli.Command{
-	adminReplicateAddCmd,
-	adminReplicateUpdateCmd,
-	adminReplicateRemoveCmd,
-	adminReplicateInfoCmd,
-	adminReplicateStatusCmd,
-	adminReplicateResyncCmd,
+    adminReplicateAddCmd,
+    adminReplicateUpdateCmd,
+    adminReplicateRemoveCmd,
+    adminReplicateInfoCmd,
+    adminReplicateStatusCmd,
+    adminReplicateResyncCmd,
 }
 
 var adminReplicateCmd = cli.Command{
-	Name:            "replicate",
-	Usage:           "manage MinIO site replication",
-	Action:          mainAdminReplicate,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminReplicateSubcommands,
-	HideHelpCommand: true,
+    Name:            "replicate",
+    Usage:           "manage MinIO site replication",
+    Action:          mainAdminReplicate,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminReplicateSubcommands,
+    HideHelpCommand: true,
 }
 
 func mainAdminReplicate(ctx *cli.Context) error {
-	commandNotFound(ctx, adminReplicateSubcommands)
-	return nil
+    commandNotFound(ctx, adminReplicateSubcommands)
+    return nil
 }

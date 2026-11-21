@@ -20,19 +20,19 @@ package cmd
 import "github.com/minio/cli"
 
 var adminPrometheusSubcommands = []cli.Command{
-	adminPrometheusGenerateCmd,
-	adminPrometheusMetricsCmd,
+    adminPrometheusGenerateCmd,
+    adminPrometheusMetricsCmd,
 }
 
 var adminPrometheusCmd = cli.Command{
-	Name:            "prometheus",
-	Usage:           "manages prometheus config",
-	Action:          mainAdminPrometheus,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	Subcommands:     adminPrometheusSubcommands,
-	CustomHelpTemplate: `NAME:
+    Name:            "prometheus",
+    Usage:           "manages prometheus config",
+    Action:          mainAdminPrometheus,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    Subcommands:     adminPrometheusSubcommands,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -46,6 +46,6 @@ FLAGS:
 
 // mainAdminPrometheus is the handle for "mc admin prometheus" command.
 func mainAdminPrometheus(ctx *cli.Context) error {
-	commandNotFound(ctx, adminPrometheusSubcommands)
-	return nil
+    commandNotFound(ctx, adminPrometheusSubcommands)
+    return nil
 }

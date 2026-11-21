@@ -18,41 +18,41 @@
 package cmd
 
 import (
-	"strings"
-	"testing"
+    "strings"
+    "testing"
 )
 
 func TestMakeCurlCmdEscapesSpecialChars(t *testing.T) {
-	testCases := []struct {
-		key         string
-		expectedKey string
-	}{
-		{
-			key:         "Robert O'Neil.png",
-			expectedKey: "Robert\\ O\\'Neil.png",
-		},
-		{
-			key:         "A&B-Design<Revision 1>|2014.pdf",
-			expectedKey: "A\\&B-Design\\<Revision\\ 1\\>\\|2014.pdf",
-		},
-		{
-			key:         "A&B-Design(Revision 1).pdf",
-			expectedKey: "A\\&B-Design\\(Revision\\ 1\\).pdf",
-		},
-		{
-			key:         "Matt`s\tResume.pdf",
-			expectedKey: "Matt\\`s\\\tResume.pdf",
-		},
-		{
-			key:         "out.pdf;rm -rf $HOME #",
-			expectedKey: "out.pdf\\;rm\\ -rf\\ \\$HOME\\ \\#",
-		},
-	}
+    testCases := []struct {
+        key         string
+        expectedKey string
+    }{
+        {
+            key:         "Robert O'Neil.png",
+            expectedKey: "Robert\\ O\\'Neil.png",
+        },
+        {
+            key:         "A&B-Design<Revision 1>|2014.pdf",
+            expectedKey: "A\\&B-Design\\<Revision\\ 1\\>\\|2014.pdf",
+        },
+        {
+            key:         "A&B-Design(Revision 1).pdf",
+            expectedKey: "A\\&B-Design\\(Revision\\ 1\\).pdf",
+        },
+        {
+            key:         "Matt`s\tResume.pdf",
+            expectedKey: "Matt\\`s\\\tResume.pdf",
+        },
+        {
+            key:         "out.pdf;rm -rf $HOME #",
+            expectedKey: "out.pdf\\;rm\\ -rf\\ \\$HOME\\ \\#",
+        },
+    }
 
-	for _, testCase := range testCases {
-		cmd, _ := makeCurlCmd(testCase.key, "http://example.com", false, map[string]string{})
-		if !strings.Contains(cmd, " key="+testCase.expectedKey+" ") {
-			t.Errorf("Did not find key=%s in command %s", testCase.expectedKey, cmd)
-		}
-	}
+    for _, testCase := range testCases {
+        cmd, _ := makeCurlCmd(testCase.key, "http://example.com", false, map[string]string{})
+        if !strings.Contains(cmd, " key="+testCase.expectedKey+" ") {
+            t.Errorf("Did not find key=%s in command %s", testCase.expectedKey, cmd)
+        }
+    }
 }

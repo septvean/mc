@@ -36,54 +36,54 @@ import "github.com/rjeczalik/notify"
 
 // PipeChan builds a new dynamically sized channel
 func PipeChan(capacity int) (inputCh, outputCh chan notify.EventInfo) {
-	// A set of channels which store all elements received from input
-	channels := make(chan chan notify.EventInfo, 1000)
+    // A set of channels which store all elements received from input
+    channels := make(chan chan notify.EventInfo, 1000)
 
-	inputCh = make(chan notify.EventInfo, capacity)
+    inputCh = make(chan notify.EventInfo, capacity)
 
-	// A goroutine which receives elements from inputCh and creates
-	// new channels when needed.
-	go func() {
-		// Create the first channel
-		currCh := make(chan notify.EventInfo, capacity)
-		channels <- currCh
+    // A goroutine which receives elements from inputCh and creates
+    // new channels when needed.
+    go func() {
+        // Create the first channel
+        currCh := make(chan notify.EventInfo, capacity)
+        channels <- currCh
 
-		for elem := range inputCh {
-			// Prepare next channel with a double capacity when
-			// half of the current channel is already filled.
-			if len(currCh) >= cap(currCh)/2 {
-				close(currCh)
-				currCh = make(chan notify.EventInfo, cap(currCh)*2)
-				channels <- currCh
-			}
-			// Prepare next channel with half capacity when
-			// current channel is 1/4 filled
-			if len(currCh) >= capacity && len(currCh) <= cap(currCh)/4 {
-				close(currCh)
-				currCh = make(chan notify.EventInfo, cap(currCh)/2)
-				channels <- currCh
-			}
-			// Send element to current channel
-			currCh <- elem
-		}
+        for elem := range inputCh {
+            // Prepare next channel with a double capacity when
+            // half of the current channel is already filled.
+            if len(currCh) >= cap(currCh)/2 {
+                close(currCh)
+                currCh = make(chan notify.EventInfo, cap(currCh)*2)
+                channels <- currCh
+            }
+            // Prepare next channel with half capacity when
+            // current channel is 1/4 filled
+            if len(currCh) >= capacity && len(currCh) <= cap(currCh)/4 {
+                close(currCh)
+                currCh = make(chan notify.EventInfo, cap(currCh)/2)
+                channels <- currCh
+            }
+            // Send element to current channel
+            currCh <- elem
+        }
 
-		close(currCh)
-		close(channels)
-	}()
+        close(currCh)
+        close(channels)
+    }()
 
-	// Copy elements from infinite channel set to the output
-	outputCh = make(chan notify.EventInfo, capacity)
-	go func() {
-		for {
-			currCh, ok := <-channels
-			if !ok {
-				break
-			}
-			for v := range currCh {
-				outputCh <- v
-			}
-		}
-		close(outputCh)
-	}()
-	return inputCh, outputCh
+    // Copy elements from infinite channel set to the output
+    outputCh = make(chan notify.EventInfo, capacity)
+    go func() {
+        for {
+            currCh, ok := <-channels
+            if !ok {
+                break
+            }
+            for v := range currCh {
+                outputCh <- v
+            }
+        }
+        close(outputCh)
+    }()
+    return inputCh, outputCh
 }

@@ -18,42 +18,42 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminTopAPIFlags = []cli.Flag{
-	cli.StringSliceFlag{
-		Name:  "name",
-		Usage: "summarize current calls for matching API name",
-	},
-	cli.StringSliceFlag{
-		Name:  "path",
-		Usage: "summarize current API calls only on matching path",
-	},
-	cli.StringSliceFlag{
-		Name:  "node",
-		Usage: "summarize current API calls only on matching servers",
-	},
-	cli.BoolFlag{
-		Name:  "errors, e",
-		Usage: "summarize current API calls throwing only errors",
-	},
+    cli.StringSliceFlag{
+        Name:  "name",
+        Usage: "summarize current calls for matching API name",
+    },
+    cli.StringSliceFlag{
+        Name:  "path",
+        Usage: "summarize current API calls only on matching path",
+    },
+    cli.StringSliceFlag{
+        Name:  "node",
+        Usage: "summarize current API calls only on matching servers",
+    },
+    cli.BoolFlag{
+        Name:  "errors, e",
+        Usage: "summarize current API calls throwing only errors",
+    },
 }
 
 var adminTopAPICmd = cli.Command{
-	Name:            "api",
-	Usage:           "summarize API events on MinIO server in real-time",
-	Action:          mainAdminTopAPI,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(adminTopAPIFlags, globalFlags...),
-	Hidden:          true,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `Please use 'mc support top api' 
+    Name:            "api",
+    Usage:           "summarize API events on MinIO server in real-time",
+    Action:          mainAdminTopAPI,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(adminTopAPIFlags, globalFlags...),
+    Hidden:          true,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `Please use 'mc support top api' 
 `,
 }
 
 func mainAdminTopAPI(_ *cli.Context) error {
-	deprecatedError("mc support top api")
-	return nil
+    deprecatedError("mc support top api")
+    return nil
 }

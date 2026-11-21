@@ -20,28 +20,28 @@ package cmd
 import "github.com/minio/cli"
 
 var adminConfigSubcommands = []cli.Command{
-	adminConfigGetCmd,
-	adminConfigSetCmd,
-	adminConfigResetCmd,
-	adminConfigHistoryCmd,
-	adminConfigRestoreCmd,
-	adminConfigExportCmd,
-	adminConfigImportCmd,
+    adminConfigGetCmd,
+    adminConfigSetCmd,
+    adminConfigResetCmd,
+    adminConfigHistoryCmd,
+    adminConfigRestoreCmd,
+    adminConfigExportCmd,
+    adminConfigImportCmd,
 }
 
 var adminConfigCmd = cli.Command{
-	Name:            "config",
-	Usage:           "manage MinIO server configuration",
-	Action:          mainAdminConfig,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminConfigSubcommands,
-	HideHelpCommand: true,
+    Name:            "config",
+    Usage:           "manage MinIO server configuration",
+    Action:          mainAdminConfig,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminConfigSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminConfig is the handle for "mc admin config" command.
 func mainAdminConfig(ctx *cli.Context) error {
-	commandNotFound(ctx, adminConfigSubcommands)
-	return nil
-	// Sub-commands like "get", "set" have their own main.
+    commandNotFound(ctx, adminConfigSubcommands)
+    return nil
+    // Sub-commands like "get", "set" have their own main.
 }

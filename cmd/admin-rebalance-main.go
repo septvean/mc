@@ -20,22 +20,22 @@ package cmd
 import "github.com/minio/cli"
 
 var adminRebalanceSubcommands = []cli.Command{
-	adminRebalanceStartCmd,
-	adminRebalanceStatusCmd,
-	adminRebalanceStopCmd,
+    adminRebalanceStartCmd,
+    adminRebalanceStatusCmd,
+    adminRebalanceStopCmd,
 }
 
 var adminRebalanceCmd = cli.Command{
-	Name:            "rebalance",
-	Usage:           "Manage MinIO rebalance",
-	Action:          mainAdminRebalance,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminRebalanceSubcommands,
-	HideHelpCommand: true,
+    Name:            "rebalance",
+    Usage:           "Manage MinIO rebalance",
+    Action:          mainAdminRebalance,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminRebalanceSubcommands,
+    HideHelpCommand: true,
 }
 
 func mainAdminRebalance(ctx *cli.Context) error {
-	commandNotFound(ctx, adminRebalanceSubcommands)
-	return nil
+    commandNotFound(ctx, adminRebalanceSubcommands)
+    return nil
 }

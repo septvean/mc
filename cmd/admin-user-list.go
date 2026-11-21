@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"strings"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "list all users",
-	Action:       mainAdminUserList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "list all users",
+    Action:       mainAdminUserList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -51,53 +51,53 @@ EXAMPLES:
 
 // checkAdminUserListSyntax - validate all the passed arguments
 func checkAdminUserListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminUserList is the handle for "mc admin user list" command.
 func mainAdminUserList(ctx *cli.Context) error {
-	checkAdminUserListSyntax(ctx)
+    checkAdminUserListSyntax(ctx)
 
-	// Additional command speific theme customization.
-	console.SetColor("UserMessage", color.New(color.FgGreen))
-	console.SetColor("AccessKey", color.New(color.FgBlue))
-	console.SetColor("PolicyName", color.New(color.FgYellow))
-	console.SetColor("UserStatus", color.New(color.FgCyan))
+    // Additional command speific theme customization.
+    console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("AccessKey", color.New(color.FgBlue))
+    console.SetColor("PolicyName", color.New(color.FgYellow))
+    console.SetColor("UserStatus", color.New(color.FgCyan))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	users, e := client.ListUsers(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to list user")
+    users, e := client.ListUsers(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to list user")
 
-	for k, v := range users {
-		memberOf := []userGroup{}
-		for _, group := range v.MemberOf {
-			gd, e := client.GetGroupDescription(globalContext, group)
-			fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
-			policies := []string{}
-			if gd.Policy != "" {
-				policies = strings.Split(gd.Policy, ",")
-			}
-			memberOf = append(memberOf, userGroup{
-				Name:     gd.Name,
-				Policies: policies,
-			})
-		}
-		printMsg(userMessage{
-			op:         ctx.Command.Name,
-			AccessKey:  k,
-			PolicyName: v.PolicyName,
-			MemberOf:   memberOf,
-			UserStatus: string(v.Status),
-		})
-	}
-	return nil
+    for k, v := range users {
+        memberOf := []userGroup{}
+        for _, group := range v.MemberOf {
+            gd, e := client.GetGroupDescription(globalContext, group)
+            fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
+            policies := []string{}
+            if gd.Policy != "" {
+                policies = strings.Split(gd.Policy, ",")
+            }
+            memberOf = append(memberOf, userGroup{
+                Name:     gd.Name,
+                Policies: policies,
+            })
+        }
+        printMsg(userMessage{
+            op:         ctx.Command.Name,
+            AccessKey:  k,
+            PolicyName: v.PolicyName,
+            MemberOf:   memberOf,
+            UserStatus: string(v.Status),
+        })
+    }
+    return nil
 }

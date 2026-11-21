@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminGroupRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove group or members from a group",
-	Action:       mainAdminGroupRemove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove group or members from a group",
+    Action:       mainAdminGroupRemove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -53,43 +53,43 @@ EXAMPLES:
 
 // checkAdminGroupRemoveSyntax - validate all the passed arguments
 func checkAdminGroupRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) < 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) < 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminGroupRemove is the handle for "mc admin group remove" command.
 func mainAdminGroupRemove(ctx *cli.Context) error {
-	checkAdminGroupRemoveSyntax(ctx)
+    checkAdminGroupRemoveSyntax(ctx)
 
-	console.SetColor("GroupMessage", color.New(color.FgGreen))
+    console.SetColor("GroupMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	members := []string{}
-	for i := 2; i < ctx.NArg(); i++ {
-		members = append(members, args.Get(i))
-	}
-	gAddRemove := madmin.GroupAddRemove{
-		Group:    args.Get(1),
-		Members:  members,
-		IsRemove: true,
-	}
+    members := []string{}
+    for i := 2; i < ctx.NArg(); i++ {
+        members = append(members, args.Get(i))
+    }
+    gAddRemove := madmin.GroupAddRemove{
+        Group:    args.Get(1),
+        Members:  members,
+        IsRemove: true,
+    }
 
-	e := client.UpdateGroupMembers(globalContext, gAddRemove)
-	fatalIf(probe.NewError(e).Trace(args...), "Could not perform remove operation")
+    e := client.UpdateGroupMembers(globalContext, gAddRemove)
+    fatalIf(probe.NewError(e).Trace(args...), "Could not perform remove operation")
 
-	printMsg(groupMessage{
-		op:        ctx.Command.Name,
-		GroupName: args.Get(1),
-		Members:   members,
-	})
+    printMsg(groupMessage{
+        op:        ctx.Command.Name,
+        GroupName: args.Get(1),
+        Members:   members,
+    })
 
-	return nil
+    return nil
 }

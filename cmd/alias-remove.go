@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var aliasRemoveCmd = cli.Command{
-	Name:      "remove",
-	ShortName: "rm",
-	Usage:     "remove an alias from configuration file",
-	Action: func(ctx *cli.Context) error {
-		return mainAliasRemove(ctx)
-	},
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	OnUsageError:    onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:      "remove",
+    ShortName: "rm",
+    Usage:     "remove an alias from configuration file",
+    Action: func(ctx *cli.Context) error {
+        return mainAliasRemove(ctx)
+    },
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    OnUsageError:    onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,56 +52,56 @@ EXAMPLES:
 
 // checkAliasRemoveSyntax - verifies input arguments to 'alias remove'.
 func checkAliasRemoveSyntax(ctx *cli.Context) {
-	args := ctx.Args()
+    args := ctx.Args()
 
-	if len(ctx.Args()) != 1 {
-		fatalIf(errInvalidArgument().Trace(args...),
-			"Incorrect number of arguments for alias remove command.")
-	}
+    if len(ctx.Args()) != 1 {
+        fatalIf(errInvalidArgument().Trace(args...),
+            "Incorrect number of arguments for alias remove command.")
+    }
 
-	alias := cleanAlias(args.Get(0))
-	if !isValidAlias(alias) {
-		fatalIf(errDummy().Trace(alias), "Invalid alias `"+alias+"`.")
-	}
+    alias := cleanAlias(args.Get(0))
+    if !isValidAlias(alias) {
+        fatalIf(errDummy().Trace(alias), "Invalid alias `"+alias+"`.")
+    }
 }
 
 // mainAliasRemove is the handle for "mc alias rm" command.
 func mainAliasRemove(ctx *cli.Context) error {
-	checkAliasRemoveSyntax(ctx)
+    checkAliasRemoveSyntax(ctx)
 
-	console.SetColor("AliasMessage", color.New(color.FgGreen))
+    console.SetColor("AliasMessage", color.New(color.FgGreen))
 
-	args := ctx.Args()
-	alias := args.Get(0)
+    args := ctx.Args()
+    alias := args.Get(0)
 
-	aliasMsg := removeAlias(alias) // Remove an alias
-	aliasMsg.op = "remove"
-	printMsg(aliasMsg)
-	return nil
+    aliasMsg := removeAlias(alias) // Remove an alias
+    aliasMsg.op = "remove"
+    printMsg(aliasMsg)
+    return nil
 }
 
 // aliasMustExist confirms that a given alias is present in Aliases array, returns error if not found
 
 func aliasMustExist(alias string) {
-	hostConfig := mustGetHostConfig(alias)
-	if hostConfig == nil {
-		fatalIf(errInvalidAliasedURL(alias), "No such alias `"+alias+"` found.")
-	}
+    hostConfig := mustGetHostConfig(alias)
+    if hostConfig == nil {
+        fatalIf(errInvalidAliasedURL(alias), "No such alias `"+alias+"` found.")
+    }
 }
 
 // removeAlias - removes an alias.
 func removeAlias(alias string) aliasMessage {
-	conf, err := loadMcConfig()
-	fatalIf(err.Trace(globalMCConfigVersion), "Unable to load config version `"+globalMCConfigVersion+"`.")
+    conf, err := loadMcConfig()
+    fatalIf(err.Trace(globalMCConfigVersion), "Unable to load config version `"+globalMCConfigVersion+"`.")
 
-	// check if alias is valid
-	aliasMustExist(alias)
+    // check if alias is valid
+    aliasMustExist(alias)
 
-	// Remove the alias from the config.
-	delete(conf.Aliases, alias)
+    // Remove the alias from the config.
+    delete(conf.Aliases, alias)
 
-	err = saveMcConfig(conf)
-	fatalIf(err.Trace(alias), "Unable to save the delete alias in config version `"+globalMCConfigVersion+"`.")
+    err = saveMcConfig(conf)
+    fatalIf(err.Trace(alias), "Unable to save the delete alias in config version `"+globalMCConfigVersion+"`.")
 
-	return aliasMessage{Alias: alias}
+    return aliasMessage{Alias: alias}
 }

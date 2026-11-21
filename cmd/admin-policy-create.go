@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminPolicyCreateCmd = cli.Command{
-	Name:         "create",
-	Usage:        "create a new IAM policy",
-	Action:       mainAdminPolicyCreate,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "create",
+    Usage:        "create a new IAM policy",
+    Action:       mainAdminPolicyCreate,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -59,86 +59,86 @@ EXAMPLES:
 
 // checkAdminPolicyCreateSyntax - validate all the passed arguments
 func checkAdminPolicyCreateSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 3 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 3 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // userPolicyMessage container for content message structure
 type userPolicyMessage struct {
-	op          string
-	Status      string            `json:"status"`
-	Policy      string            `json:"policy,omitempty"`
-	PolicyInfo  madmin.PolicyInfo `json:"policyInfo,omitempty"`
-	UserOrGroup string            `json:"userOrGroup,omitempty"`
-	IsGroup     bool              `json:"isGroup"`
+    op          string
+    Status      string            `json:"status"`
+    Policy      string            `json:"policy,omitempty"`
+    PolicyInfo  madmin.PolicyInfo `json:"policyInfo,omitempty"`
+    UserOrGroup string            `json:"userOrGroup,omitempty"`
+    IsGroup     bool              `json:"isGroup"`
 }
 
 func (u userPolicyMessage) accountType() string {
-	switch u.op {
-	case "attach", "detach":
-		if u.IsGroup {
-			return "group"
-		}
-		return "user"
-	}
-	return ""
+    switch u.op {
+    case "attach", "detach":
+        if u.IsGroup {
+            return "group"
+        }
+        return "user"
+    }
+    return ""
 }
 
 func (u userPolicyMessage) String() string {
-	switch u.op {
-	case "info":
-		buf, e := json.MarshalIndent(u.PolicyInfo, "", " ")
-		fatalIf(probe.NewError(e), "Unable to marshal to JSON.")
-		return string(buf)
-	case "list":
-		return console.Colorize("PolicyName", u.Policy)
-	case "remove":
-		return console.Colorize("PolicyMessage", "Removed policy `"+u.Policy+"` successfully.")
-	case "create":
-		return console.Colorize("PolicyMessage", "Created policy `"+u.Policy+"` successfully.")
-	case "detach":
-		return console.Colorize("PolicyMessage",
-			fmt.Sprintf("Policy `%s` successfully detached from %s `%s`", u.Policy, u.accountType(), u.UserOrGroup))
-	case "attach":
-		return console.Colorize("PolicyMessage",
-			fmt.Sprintf("Policy `%s` successfully attached to %s `%s`", u.Policy, u.accountType(), u.UserOrGroup))
-	}
+    switch u.op {
+    case "info":
+        buf, e := json.MarshalIndent(u.PolicyInfo, "", " ")
+        fatalIf(probe.NewError(e), "Unable to marshal to JSON.")
+        return string(buf)
+    case "list":
+        return console.Colorize("PolicyName", u.Policy)
+    case "remove":
+        return console.Colorize("PolicyMessage", "Removed policy `"+u.Policy+"` successfully.")
+    case "create":
+        return console.Colorize("PolicyMessage", "Created policy `"+u.Policy+"` successfully.")
+    case "detach":
+        return console.Colorize("PolicyMessage",
+            fmt.Sprintf("Policy `%s` successfully detached from %s `%s`", u.Policy, u.accountType(), u.UserOrGroup))
+    case "attach":
+        return console.Colorize("PolicyMessage",
+            fmt.Sprintf("Policy `%s` successfully attached to %s `%s`", u.Policy, u.accountType(), u.UserOrGroup))
+    }
 
-	return ""
+    return ""
 }
 
 func (u userPolicyMessage) JSON() string {
-	u.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonMessageBytes)
+    return string(jsonMessageBytes)
 }
 
 // mainAdminPolicyCreate is the handle for "mc admin policy create" command.
 func mainAdminPolicyCreate(ctx *cli.Context) error {
-	checkAdminPolicyCreateSyntax(ctx)
+    checkAdminPolicyCreateSyntax(ctx)
 
-	console.SetColor("PolicyMessage", color.New(color.FgGreen))
+    console.SetColor("PolicyMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	policy, e := os.ReadFile(args.Get(2))
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get policy")
+    policy, e := os.ReadFile(args.Get(2))
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get policy")
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	fatalIf(probe.NewError(client.AddCannedPolicy(globalContext, args.Get(1), policy)).Trace(args...), "Unable to create new policy")
+    fatalIf(probe.NewError(client.AddCannedPolicy(globalContext, args.Get(1), policy)).Trace(args...), "Unable to create new policy")
 
-	printMsg(userPolicyMessage{
-		op:     ctx.Command.Name,
-		Policy: args.Get(1),
-	})
+    printMsg(userPolicyMessage{
+        op:     ctx.Command.Name,
+        Policy: args.Get(1),
+    })
 
-	return nil
+    return nil
 }

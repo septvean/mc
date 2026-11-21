@@ -18,40 +18,40 @@
 package cmd
 
 import (
-	"context"
-	"errors"
-	"time"
+    "context"
+    "errors"
+    "time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var supportTopNetFlags = []cli.Flag{
-	cli.IntFlag{
-		Name:  "interval",
-		Usage: "interval between requests in seconds",
-		Value: 1,
-	},
-	cli.IntFlag{
-		Name:  "n",
-		Usage: "number of requests to run before exiting. 0 for endless (default)",
-		Value: 0,
-	},
+    cli.IntFlag{
+        Name:  "interval",
+        Usage: "interval between requests in seconds",
+        Value: 1,
+    },
+    cli.IntFlag{
+        Name:  "n",
+        Usage: "number of requests to run before exiting. 0 for endless (default)",
+        Value: 0,
+    },
 }
 
 var supportTopNetCmd = cli.Command{
-	Name:            "net",
-	Aliases:         []string{"network"},
-	HiddenAliases:   true,
-	Usage:           "show real-time net metrics",
-	Action:          mainSupportTopNet,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(supportTopNetFlags, supportGlobalFlags...),
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "net",
+    Aliases:         []string{"network"},
+    HiddenAliases:   true,
+    Usage:           "show real-time net metrics",
+    Action:          mainSupportTopNet,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(supportTopNetFlags, supportGlobalFlags...),
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -68,74 +68,74 @@ EXAMPLES:
 
 // checkSupportTopNetSyntax - validate all the passed arguments
 func checkSupportTopNetSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainSupportTopNet(ctx *cli.Context) error {
-	checkSupportTopNetSyntax(ctx)
+    checkSupportTopNetSyntax(ctx)
 
-	aliasedURL := ctx.Args().Get(0)
-	alias, _ := url2Alias(aliasedURL)
-	validateClusterRegistered(alias, false)
+    aliasedURL := ctx.Args().Get(0)
+    alias, _ := url2Alias(aliasedURL)
+    validateClusterRegistered(alias, false)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	if err != nil {
-		fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
-		return nil
-	}
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    if err != nil {
+        fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
+        return nil
+    }
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	// MetricsOptions are options provided to Metrics call.
-	opts := madmin.MetricsOptions{
-		Type:     madmin.MetricNet,
-		Interval: time.Duration(ctx.Int("interval")) * time.Second,
-		N:        ctx.Int("n"),
-		ByHost:   true,
-	}
-	if globalJSON {
-		e := client.Metrics(ctxt, opts, func(metrics madmin.RealtimeMetrics) {
-			printMsg(metricsMessage{RealtimeMetrics: metrics})
-		})
-		if e != nil && !errors.Is(e, context.Canceled) {
-			fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch net metrics")
-		}
-		return nil
-	}
-	p := tea.NewProgram(initTopNetUI())
-	go func() {
-		out := func(m madmin.RealtimeMetrics) {
-			for endPoint, metric := range m.ByHost {
-				if metric.Net != nil {
-					p.Send(topNetResult{
-						endPoint: endPoint,
-						stats:    *metric.Net,
-					})
-				}
-			}
-			if len(m.Errors) != 0 && len(m.Hosts) != 0 {
-				p.Send(topNetResult{
-					endPoint: m.Hosts[0],
-					error:    m.Errors[0],
-				})
-			}
-		}
+    // MetricsOptions are options provided to Metrics call.
+    opts := madmin.MetricsOptions{
+        Type:     madmin.MetricNet,
+        Interval: time.Duration(ctx.Int("interval")) * time.Second,
+        N:        ctx.Int("n"),
+        ByHost:   true,
+    }
+    if globalJSON {
+        e := client.Metrics(ctxt, opts, func(metrics madmin.RealtimeMetrics) {
+            printMsg(metricsMessage{RealtimeMetrics: metrics})
+        })
+        if e != nil && !errors.Is(e, context.Canceled) {
+            fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch net metrics")
+        }
+        return nil
+    }
+    p := tea.NewProgram(initTopNetUI())
+    go func() {
+        out := func(m madmin.RealtimeMetrics) {
+            for endPoint, metric := range m.ByHost {
+                if metric.Net != nil {
+                    p.Send(topNetResult{
+                        endPoint: endPoint,
+                        stats:    *metric.Net,
+                    })
+                }
+            }
+            if len(m.Errors) != 0 && len(m.Hosts) != 0 {
+                p.Send(topNetResult{
+                    endPoint: m.Hosts[0],
+                    error:    m.Errors[0],
+                })
+            }
+        }
 
-		e := client.Metrics(ctxt, opts, out)
-		if e != nil {
-			fatalIf(probe.NewError(e), "Unable to fetch top net events")
-		}
-		p.Quit()
-	}()
+        e := client.Metrics(ctxt, opts, out)
+        if e != nil {
+            fatalIf(probe.NewError(e), "Unable to fetch top net events")
+        }
+        p.Quit()
+    }()
 
-	if _, e := p.Run(); e != nil {
-		cancel()
-		fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch top net events")
-	}
+    if _, e := p.Run(); e != nil {
+        cancel()
+        fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch top net events")
+    }
 
-	return nil
+    return nil
 }

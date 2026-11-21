@@ -18,26 +18,26 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 const licUnregisterMsgTag = "licenseUnregisterMessage"
 
 var licenseUnregisterCmd = cli.Command{
-	Name:         "unregister",
-	Usage:        "unregister from MinIO Subscription Network",
-	OnUsageError: onUsageError,
-	Action:       mainLicenseUnregister,
-	Before:       setGlobalsFromContext,
-	Hidden:       true,
-	Flags:        subnetCommonFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "unregister",
+    Usage:        "unregister from MinIO Subscription Network",
+    OnUsageError: onUsageError,
+    Action:       mainLicenseUnregister,
+    Before:       setGlobalsFromContext,
+    Hidden:       true,
+    Flags:        subnetCommonFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -53,50 +53,50 @@ EXAMPLES:
 }
 
 type licUnregisterMessage struct {
-	Status string `json:"status"`
-	Alias  string `json:"-"`
+    Status string `json:"status"`
+    Alias  string `json:"-"`
 }
 
 // String colorized license unregister message
 func (li licUnregisterMessage) String() string {
-	msg := fmt.Sprintf("%s unregistered successfully.", li.Alias)
-	return console.Colorize(licUnregisterMsgTag, msg)
+    msg := fmt.Sprintf("%s unregistered successfully.", li.Alias)
+    return console.Colorize(licUnregisterMsgTag, msg)
 }
 
 // JSON jsonified license unregister message
 func (li licUnregisterMessage) JSON() string {
-	jsonBytes, e := json.MarshalIndent(li, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    jsonBytes, e := json.MarshalIndent(li, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonBytes)
+    return string(jsonBytes)
 }
 
 // checkLicenseUnregisterSyntax - validate arguments passed by a user
 func checkLicenseUnregisterSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainLicenseUnregister(ctx *cli.Context) error {
-	console.SetColor(licUnregisterMsgTag, color.New(color.FgGreen, color.Bold))
-	checkLicenseUnregisterSyntax(ctx)
+    console.SetColor(licUnregisterMsgTag, color.New(color.FgGreen, color.Bold))
+    checkLicenseUnregisterSyntax(ctx)
 
-	aliasedURL := ctx.Args().Get(0)
-	alias, apiKey := initSubnetConnectivity(ctx, aliasedURL, true)
-	if len(apiKey) == 0 {
-		// api key not passed as flag. Check that the cluster is registered.
-		apiKey = validateClusterRegistered(alias, true)
-	}
+    aliasedURL := ctx.Args().Get(0)
+    alias, apiKey := initSubnetConnectivity(ctx, aliasedURL, true)
+    if len(apiKey) == 0 {
+        // api key not passed as flag. Check that the cluster is registered.
+        apiKey = validateClusterRegistered(alias, true)
+    }
 
-	if !globalAirgapped {
-		info := getAdminInfo(aliasedURL)
-		e := unregisterClusterFromSubnet(info.DeploymentID, apiKey)
-		fatalIf(probe.NewError(e), "Could not unregister cluster from SUBNET:")
-	}
+    if !globalAirgapped {
+        info := getAdminInfo(aliasedURL)
+        e := unregisterClusterFromSubnet(info.DeploymentID, apiKey)
+        fatalIf(probe.NewError(e), "Could not unregister cluster from SUBNET:")
+    }
 
-	removeSubnetAuthConfig(alias)
+    removeSubnetAuthConfig(alias)
 
-	printMsg(licUnregisterMessage{Status: "success", Alias: alias})
-	return nil
+    printMsg(licUnregisterMessage{Status: "success", Alias: alias})
+    return nil
 }

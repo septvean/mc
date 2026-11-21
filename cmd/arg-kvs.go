@@ -19,8 +19,8 @@ package cmd
 
 // argKV - is a shorthand of each key value.
 type argKV struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+    Key   string `json:"key"`
+    Value string `json:"value"`
 }
 
 // argKVS - is a shorthand for some wrapper functions
@@ -29,41 +29,41 @@ type argKVS []argKV
 
 // Empty - return if kv is empty
 func (kvs argKVS) Empty() bool {
-	return len(kvs) == 0
+    return len(kvs) == 0
 }
 
 // Set sets a value, if not sets a default value.
 func (kvs *argKVS) Set(key, value string) {
-	for i, kv := range *kvs {
-		if kv.Key == key {
-			(*kvs)[i] = argKV{
-				Key:   key,
-				Value: value,
-			}
-			return
-		}
-	}
-	*kvs = append(*kvs, argKV{
-		Key:   key,
-		Value: value,
-	})
+    for i, kv := range *kvs {
+        if kv.Key == key {
+            (*kvs)[i] = argKV{
+                Key:   key,
+                Value: value,
+            }
+            return
+        }
+    }
+    *kvs = append(*kvs, argKV{
+        Key:   key,
+        Value: value,
+    })
 }
 
 // Get - returns the value of a key, if not found returns empty.
 func (kvs argKVS) Get(key string) string {
-	v, ok := kvs.Lookup(key)
-	if ok {
-		return v
-	}
-	return ""
+    v, ok := kvs.Lookup(key)
+    if ok {
+        return v
+    }
+    return ""
 }
 
 // Lookup - lookup a key in a list of argKVS
 func (kvs argKVS) Lookup(key string) (string, bool) {
-	for _, kv := range kvs {
-		if kv.Key == key {
-			return kv.Value, true
-		}
-	}
-	return "", false
+    for _, kv := range kvs {
+        if kv.Key == key {
+            return kv.Value, true
+        }
+    }
+    return "", false
 }

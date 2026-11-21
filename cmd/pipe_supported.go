@@ -20,45 +20,45 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
+    "fmt"
+    "os"
+    "strconv"
+    "strings"
 
-	"golang.org/x/sys/unix"
+    "golang.org/x/sys/unix"
 )
 
 const pipeMaxSizeProcFile = "/proc/sys/fs/pipe-max-size"
 
 func setPipeSize(fd uintptr, size int) error {
-	_, err := unix.FcntlInt(fd, unix.F_SETPIPE_SZ, size)
-	return err
+    _, err := unix.FcntlInt(fd, unix.F_SETPIPE_SZ, size)
+    return err
 }
 
 func getConfiguredMaxPipeSize() (int, error) {
-	b, err := os.ReadFile(pipeMaxSizeProcFile)
-	if err != nil {
-		return 0, err
-	}
-	maxSize, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("error parsing %s content: %v", pipeMaxSizeProcFile, err)
-	}
-	return int(maxSize), nil
+    b, err := os.ReadFile(pipeMaxSizeProcFile)
+    if err != nil {
+        return 0, err
+    }
+    maxSize, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
+    if err != nil {
+        return 0, fmt.Errorf("error parsing %s content: %v", pipeMaxSizeProcFile, err)
+    }
+    return int(maxSize), nil
 }
 
 // increasePipeBufferSize attempts to increase the pipe size to the the input value
 // or system-max, if the provided size is 0 or less.
 func increasePipeBufferSize(f *os.File, desiredPipeSize int) error {
-	fd := f.Fd()
+    fd := f.Fd()
 
-	if desiredPipeSize <= 0 {
-		maxSize, err := getConfiguredMaxPipeSize()
-		if err == nil {
-			setPipeSize(fd, maxSize)
-			return nil
-		}
-	}
+    if desiredPipeSize <= 0 {
+        maxSize, err := getConfiguredMaxPipeSize()
+        if err == nil {
+            setPipeSize(fd, maxSize)
+            return nil
+        }
+    }
 
-	return setPipeSize(fd, desiredPipeSize)
+    return setPipeSize(fd, desiredPipeSize)
 }

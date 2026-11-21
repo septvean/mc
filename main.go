@@ -18,14 +18,14 @@
 package main // import "github.com/minio/mc"
 
 import (
-	"os"
+    "os"
 
-	mc "github.com/minio/mc/cmd"
-	"github.com/minio/pkg/v3/console"
+    mc "github.com/minio/mc/cmd"
+    "github.com/minio/pkg/v3/console"
 )
 
 func main() {
-	if e := mc.Main(os.Args); e != nil {
-		console.Fatalln(e)
-	}
+    if e := mc.Main(os.Args); e != nil {
+        console.Fatalln(e)
+    }
 }

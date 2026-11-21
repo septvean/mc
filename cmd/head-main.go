@@ -18,50 +18,50 @@
 package cmd
 
 import (
-	"bufio"
-	"compress/bzip2"
-	"compress/gzip"
-	"context"
-	"errors"
-	"io"
-	"os"
-	"strings"
-	"syscall"
-	"time"
+    "bufio"
+    "compress/bzip2"
+    "compress/gzip"
+    "context"
+    "errors"
+    "io"
+    "os"
+    "strings"
+    "syscall"
+    "time"
 
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var headFlags = []cli.Flag{
-	cli.Int64Flag{
-		Name:  "n,lines",
-		Usage: "print the first 'n' lines",
-		Value: 10,
-	},
-	cli.StringFlag{
-		Name:  "rewind",
-		Usage: "select an object version at specified time",
-	},
-	cli.StringFlag{
-		Name:  "version-id, vid",
-		Usage: "select an object version to display",
-	},
-	cli.BoolFlag{
-		Name:  "zip",
-		Usage: "extract from remote zip file (MinIO server source only)",
-	},
+    cli.Int64Flag{
+        Name:  "n,lines",
+        Usage: "print the first 'n' lines",
+        Value: 10,
+    },
+    cli.StringFlag{
+        Name:  "rewind",
+        Usage: "select an object version at specified time",
+    },
+    cli.StringFlag{
+        Name:  "version-id, vid",
+        Usage: "select an object version to display",
+    },
+    cli.BoolFlag{
+        Name:  "zip",
+        Usage: "extract from remote zip file (MinIO server source only)",
+    },
 }
 
 // Display contents of a file.
 var headCmd = cli.Command{
-	Name:         "head",
-	Usage:        "display first 'n' lines of an object",
-	Action:       mainHead,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(headFlags, encCFlag), globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "head",
+    Usage:        "display first 'n' lines of an object",
+    Action:       mainHead,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(headFlags, encCFlag), globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -91,130 +91,130 @@ EXAMPLES:
 
 // headURL displays contents of a URL to stdout.
 func headURL(sourceURL, sourceVersion string, timeRef time.Time, encKeyDB map[string][]prefixSSEPair, nlines int64, zip bool) *probe.Error {
-	var reader io.ReadCloser
-	switch sourceURL {
-	case "-":
-		reader = os.Stdin
-	default:
-		var err *probe.Error
-		var content *ClientContent
-		if reader, content, err = getSourceStreamMetadataFromURL(context.Background(), sourceURL, sourceVersion, timeRef, encKeyDB, zip); err != nil {
-			return err.Trace(sourceURL)
-		}
+    var reader io.ReadCloser
+    switch sourceURL {
+    case "-":
+        reader = os.Stdin
+    default:
+        var err *probe.Error
+        var content *ClientContent
+        if reader, content, err = getSourceStreamMetadataFromURL(context.Background(), sourceURL, sourceVersion, timeRef, encKeyDB, zip); err != nil {
+            return err.Trace(sourceURL)
+        }
 
-		ctype := content.Metadata["Content-Type"]
-		if strings.Contains(ctype, "gzip") {
-			var e error
-			reader, e = gzip.NewReader(reader)
-			if e != nil {
-				return probe.NewError(e)
-			}
-			defer reader.Close()
-		} else if strings.Contains(ctype, "bzip") {
-			defer reader.Close()
-			reader = io.NopCloser(bzip2.NewReader(reader))
-		} else {
-			defer reader.Close()
-		}
-	}
-	return headOut(reader, nlines).Trace(sourceURL)
+        ctype := content.Metadata["Content-Type"]
+        if strings.Contains(ctype, "gzip") {
+            var e error
+            reader, e = gzip.NewReader(reader)
+            if e != nil {
+                return probe.NewError(e)
+            }
+            defer reader.Close()
+        } else if strings.Contains(ctype, "bzip") {
+            defer reader.Close()
+            reader = io.NopCloser(bzip2.NewReader(reader))
+        } else {
+            defer reader.Close()
+        }
+    }
+    return headOut(reader, nlines).Trace(sourceURL)
 }
 
 // headOut reads from reader stream and writes to stdout. Also check the length of the
 // read bytes against size parameter (if not -1) and return the appropriate error
 func headOut(r io.Reader, nlines int64) *probe.Error {
-	var stdout io.Writer
+    var stdout io.Writer
 
-	// In case of a user showing the object content in a terminal,
-	// avoid printing control and other bad characters to avoid
-	// terminal session corruption
-	if isTerminal() {
-		stdout = newPrettyStdout(os.Stdout)
-	} else {
-		stdout = os.Stdout
-	}
+    // In case of a user showing the object content in a terminal,
+    // avoid printing control and other bad characters to avoid
+    // terminal session corruption
+    if isTerminal() {
+        stdout = newPrettyStdout(os.Stdout)
+    } else {
+        stdout = os.Stdout
+    }
 
-	// Initialize a new scanner.
-	br := bufio.NewReader(r)
+    // Initialize a new scanner.
+    br := bufio.NewReader(r)
 
-	// Negative number of lines means default number of lines.
-	if nlines < 0 {
-		nlines = 10
-	}
+    // Negative number of lines means default number of lines.
+    if nlines < 0 {
+        nlines = 10
+    }
 
-	for nlines > 0 {
-		line, _, err := br.ReadLine()
-		if err != nil && !errors.Is(err, io.EOF) {
-			return probe.NewError(err)
-		}
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if _, e := stdout.Write(line); e != nil {
-			switch e := e.(type) {
-			case *os.PathError:
-				if e.Err == syscall.EPIPE {
-					// stdout closed by the user. Gracefully exit.
-					return nil
-				}
-				return probe.NewError(e)
-			default:
-				return probe.NewError(e)
-			}
-		}
-		stdout.Write([]byte("\n"))
-		nlines--
-	}
-	return nil
+    for nlines > 0 {
+        line, _, err := br.ReadLine()
+        if err != nil && !errors.Is(err, io.EOF) {
+            return probe.NewError(err)
+        }
+        if errors.Is(err, io.EOF) {
+            break
+        }
+        if _, e := stdout.Write(line); e != nil {
+            switch e := e.(type) {
+            case *os.PathError:
+                if e.Err == syscall.EPIPE {
+                    // stdout closed by the user. Gracefully exit.
+                    return nil
+                }
+                return probe.NewError(e)
+            default:
+                return probe.NewError(e)
+            }
+        }
+        stdout.Write([]byte("\n"))
+        nlines--
+    }
+    return nil
 }
 
 // parseHeadSyntax performs command-line input validation for head command.
 func parseHeadSyntax(ctx *cli.Context) (args []string, versionID string, timeRef time.Time) {
-	args = ctx.Args()
+    args = ctx.Args()
 
-	versionID = ctx.String("version-id")
-	rewind := ctx.String("rewind")
+    versionID = ctx.String("version-id")
+    rewind := ctx.String("rewind")
 
-	if versionID != "" && rewind != "" {
-		fatalIf(errInvalidArgument().Trace(), "You cannot specify --version-id and --rewind at the same time")
-	}
+    if versionID != "" && rewind != "" {
+        fatalIf(errInvalidArgument().Trace(), "You cannot specify --version-id and --rewind at the same time")
+    }
 
-	if versionID != "" && len(args) != 1 {
-		fatalIf(errInvalidArgument().Trace(), "You need to pass at least one argument if --version-id is specified")
-	}
+    if versionID != "" && len(args) != 1 {
+        fatalIf(errInvalidArgument().Trace(), "You need to pass at least one argument if --version-id is specified")
+    }
 
-	timeRef = parseRewindFlag(rewind)
-	return
+    timeRef = parseRewindFlag(rewind)
+    return
 }
 
 // mainHead is the main entry point for head command.
 func mainHead(ctx *cli.Context) error {
-	// Parse encryption keys per command.
-	encryptionKeys, err := validateAndCreateEncryptionKeys(ctx)
-	fatalIf(err, "Unable to parse encryption keys.")
+    // Parse encryption keys per command.
+    encryptionKeys, err := validateAndCreateEncryptionKeys(ctx)
+    fatalIf(err, "Unable to parse encryption keys.")
 
-	args, versionID, timeRef := parseHeadSyntax(ctx)
+    args, versionID, timeRef := parseHeadSyntax(ctx)
 
-	stdinMode := len(args) == 0
+    stdinMode := len(args) == 0
 
-	// handle std input data.
-	if stdinMode {
-		fatalIf(headOut(os.Stdin, ctx.Int64("lines")).Trace(), "Unable to read from standard input.")
-		return nil
-	}
+    // handle std input data.
+    if stdinMode {
+        fatalIf(headOut(os.Stdin, ctx.Int64("lines")).Trace(), "Unable to read from standard input.")
+        return nil
+    }
 
-	// Convert arguments to URLs: expand alias, fix format.
-	for _, url := range ctx.Args() {
-		err = headURL(
-			url,
-			versionID,
-			timeRef,
-			encryptionKeys,
-			ctx.Int64("lines"),
-			ctx.Bool("zip"),
-		)
-		fatalIf(err.Trace(url), "Unable to read from `"+url+"`.")
-	}
+    // Convert arguments to URLs: expand alias, fix format.
+    for _, url := range ctx.Args() {
+        err = headURL(
+            url,
+            versionID,
+            timeRef,
+            encryptionKeys,
+            ctx.Int64("lines"),
+            ctx.Bool("zip"),
+        )
+        fatalIf(err.Trace(url), "Unable to read from `"+url+"`.")
+    }
 
-	return nil
+    return nil
 }

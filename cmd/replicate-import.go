@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"context"
-	"os"
+    "context"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/replication"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/replication"
+    "github.com/minio/pkg/v3/console"
 )
 
 var replicateImportCmd = cli.Command{
-	Name:         "import",
-	Usage:        "import server side replication configuration in JSON format",
-	Action:       mainReplicateImport,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "import",
+    Usage:        "import server side replication configuration in JSON format",
+    Action:       mainReplicateImport,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -56,64 +56,64 @@ EXAMPLES:
 
 // checkReplicateImportSyntax - validate all the passed arguments
 func checkReplicateImportSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type replicateImportMessage struct {
-	Op                string             `json:"op"`
-	Status            string             `json:"status"`
-	URL               string             `json:"url"`
-	ReplicationConfig replication.Config `json:"config"`
+    Op                string             `json:"op"`
+    Status            string             `json:"status"`
+    URL               string             `json:"url"`
+    ReplicationConfig replication.Config `json:"config"`
 }
 
 func (r replicateImportMessage) JSON() string {
-	r.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    r.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (r replicateImportMessage) String() string {
-	return console.Colorize("replicateImportMessage", "Replication configuration successfully set on `"+r.URL+"`.")
+    return console.Colorize("replicateImportMessage", "Replication configuration successfully set on `"+r.URL+"`.")
 }
 
 // readReplicationConfig read from stdin, returns XML.
 func readReplicationConfig() (*replication.Config, *probe.Error) {
-	// User is expected to enter the replication configuration in JSON format
-	cfg := replication.Config{}
+    // User is expected to enter the replication configuration in JSON format
+    cfg := replication.Config{}
 
-	// Consume json from STDIN
-	dec := json.NewDecoder(os.Stdin)
-	if e := dec.Decode(&cfg); e != nil {
-		return &cfg, probe.NewError(e)
-	}
+    // Consume json from STDIN
+    dec := json.NewDecoder(os.Stdin)
+    if e := dec.Decode(&cfg); e != nil {
+        return &cfg, probe.NewError(e)
+    }
 
-	return &cfg, nil
+    return &cfg, nil
 }
 
 func mainReplicateImport(cliCtx *cli.Context) error {
-	ctx, cancelReplicateImport := context.WithCancel(globalContext)
-	defer cancelReplicateImport()
+    ctx, cancelReplicateImport := context.WithCancel(globalContext)
+    defer cancelReplicateImport()
 
-	console.SetColor("replicateImportMessage", color.New(color.FgGreen))
-	checkReplicateImportSyntax(cliCtx)
+    console.SetColor("replicateImportMessage", color.New(color.FgGreen))
+    checkReplicateImportSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	rCfg, err := readReplicationConfig()
-	fatalIf(err.Trace(args...), "Unable to read replication configuration")
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    rCfg, err := readReplicationConfig()
+    fatalIf(err.Trace(args...), "Unable to read replication configuration")
 
-	fatalIf(client.SetReplication(ctx, rCfg, replication.Options{Op: replication.ImportOption}).Trace(aliasedURL), "Unable to set replication configuration")
-	printMsg(replicateImportMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	})
-	return nil
+    fatalIf(client.SetReplication(ctx, rCfg, replication.Options{Op: replication.ImportOption}).Trace(aliasedURL), "Unable to set replication configuration")
+    printMsg(replicateImportMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    })
+    return nil
 }

@@ -18,98 +18,98 @@
 package cmd
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"io"
-	"maps"
-	"path/filepath"
-	"strings"
+    "context"
+    "errors"
+    "fmt"
+    "io"
+    "maps"
+    "path/filepath"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/pkg/v3/console"
 )
 
 // cp command flags.
 var (
-	cpFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "rewind",
-			Usage: "roll back object(s) to current version at specified time",
-		},
-		cli.StringFlag{
-			Name:  "version-id, vid",
-			Usage: "select an object version to copy",
-		},
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "copy recursively",
-		},
-		cli.StringFlag{
-			Name:  "older-than",
-			Usage: "copy objects older than value in duration string (e.g. 7d10h31s)",
-		},
-		cli.StringFlag{
-			Name:  "newer-than",
-			Usage: "copy objects newer than value in duration string (e.g. 7d10h31s)",
-		},
-		cli.StringFlag{
-			Name:  "storage-class, sc",
-			Usage: "set storage class for new object(s) on target",
-		},
-		cli.StringFlag{
-			Name:  "attr",
-			Usage: "add custom metadata for the object",
-		},
-		cli.BoolFlag{
-			Name:  "preserve, a",
-			Usage: "preserve filesystem attributes (mode, ownership, timestamps)",
-		},
-		cli.BoolFlag{
-			Name:  "disable-multipart",
-			Usage: "disable multipart upload feature",
-		},
-		cli.BoolFlag{
-			Name:   "md5",
-			Usage:  "force all upload(s) to calculate md5sum checksum",
-			Hidden: true,
-		},
-		cli.StringFlag{
-			Name:  "tags",
-			Usage: "apply one or more tags to the uploaded objects",
-		},
-		cli.StringFlag{
-			Name:  rmFlag,
-			Usage: "retention mode to be applied on the object (governance, compliance)",
-		},
-		cli.StringFlag{
-			Name:  rdFlag,
-			Usage: "retention duration for the object in d days or y years",
-		},
-		cli.StringFlag{
-			Name:  lhFlag,
-			Usage: "apply legal hold to the copied object (on, off)",
-		},
-		cli.BoolFlag{
-			Name:  "zip",
-			Usage: "Extract from remote zip file (MinIO server source only)",
-		},
-		cli.IntFlag{
-			Name:  "max-workers",
-			Usage: "maximum number of concurrent copies (default: autodetect)",
-		},
-		checksumFlag,
-	}
+    cpFlags = []cli.Flag{
+        cli.StringFlag{
+            Name:  "rewind",
+            Usage: "roll back object(s) to current version at specified time",
+        },
+        cli.StringFlag{
+            Name:  "version-id, vid",
+            Usage: "select an object version to copy",
+        },
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "copy recursively",
+        },
+        cli.StringFlag{
+            Name:  "older-than",
+            Usage: "copy objects older than value in duration string (e.g. 7d10h31s)",
+        },
+        cli.StringFlag{
+            Name:  "newer-than",
+            Usage: "copy objects newer than value in duration string (e.g. 7d10h31s)",
+        },
+        cli.StringFlag{
+            Name:  "storage-class, sc",
+            Usage: "set storage class for new object(s) on target",
+        },
+        cli.StringFlag{
+            Name:  "attr",
+            Usage: "add custom metadata for the object",
+        },
+        cli.BoolFlag{
+            Name:  "preserve, a",
+            Usage: "preserve filesystem attributes (mode, ownership, timestamps)",
+        },
+        cli.BoolFlag{
+            Name:  "disable-multipart",
+            Usage: "disable multipart upload feature",
+        },
+        cli.BoolFlag{
+            Name:   "md5",
+            Usage:  "force all upload(s) to calculate md5sum checksum",
+            Hidden: true,
+        },
+        cli.StringFlag{
+            Name:  "tags",
+            Usage: "apply one or more tags to the uploaded objects",
+        },
+        cli.StringFlag{
+            Name:  rmFlag,
+            Usage: "retention mode to be applied on the object (governance, compliance)",
+        },
+        cli.StringFlag{
+            Name:  rdFlag,
+            Usage: "retention duration for the object in d days or y years",
+        },
+        cli.StringFlag{
+            Name:  lhFlag,
+            Usage: "apply legal hold to the copied object (on, off)",
+        },
+        cli.BoolFlag{
+            Name:  "zip",
+            Usage: "Extract from remote zip file (MinIO server source only)",
+        },
+        cli.IntFlag{
+            Name:  "max-workers",
+            Usage: "maximum number of concurrent copies (default: autodetect)",
+        },
+        checksumFlag,
+    }
 )
 
 var (
-	rmFlag = "retention-mode"
-	rdFlag = "retention-duration"
-	lhFlag = "legal-hold"
+    rmFlag = "retention-mode"
+    rdFlag = "retention-duration"
+    lhFlag = "legal-hold"
 )
 
 // ErrInvalidMetadata reflects invalid metadata format
@@ -117,13 +117,13 @@ var ErrInvalidMetadata = errors.New("specified metadata should be of form key1=v
 
 // Copy command.
 var cpCmd = cli.Command{
-	Name:         "cp",
-	Usage:        "copy objects",
-	Action:       mainCopy,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(cpFlags, encFlags...), globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "cp",
+    Usage:        "copy objects",
+    Action:       mainCopy,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(cpFlags, encFlags...), globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -200,374 +200,374 @@ EXAMPLES:
 
 // copyMessage container for file copy messages
 type copyMessage struct {
-	Status     string `json:"status"`
-	Source     string `json:"source"`
-	Target     string `json:"target"`
-	Size       int64  `json:"size"`
-	TotalCount int64  `json:"totalCount"`
-	TotalSize  int64  `json:"totalSize"`
+    Status     string `json:"status"`
+    Source     string `json:"source"`
+    Target     string `json:"target"`
+    Size       int64  `json:"size"`
+    TotalCount int64  `json:"totalCount"`
+    TotalSize  int64  `json:"totalSize"`
 }
 
 // String colorized copy message
 func (c copyMessage) String() string {
-	return console.Colorize("Copy", fmt.Sprintf("`%s` -> `%s`", c.Source, c.Target))
+    return console.Colorize("Copy", fmt.Sprintf("`%s` -> `%s`", c.Source, c.Target))
 }
 
 // JSON jsonified copy message
 func (c copyMessage) JSON() string {
-	c.Status = "success"
-	copyMessageBytes, e := json.MarshalIndent(c, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    c.Status = "success"
+    copyMessageBytes, e := json.MarshalIndent(c, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(copyMessageBytes)
+    return string(copyMessageBytes)
 }
 
 // Progress - an interface which describes current amount
 // of data written.
 type Progress interface {
-	Get() int64
-	SetTotal(int64)
+    Get() int64
+    SetTotal(int64)
 }
 
 // ProgressReader can be used to update the progress of
 // an on-going transfer progress.
 type ProgressReader interface {
-	io.Reader
-	Progress
+    io.Reader
+    Progress
 }
 
 // doCopy - Copy a single file from source to destination
 func doCopy(ctx context.Context, copyOpts doCopyOpts) URLs {
-	if copyOpts.cpURLs.Error != nil {
-		copyOpts.cpURLs.Error = copyOpts.cpURLs.Error.Trace()
-		return copyOpts.cpURLs
-	}
+    if copyOpts.cpURLs.Error != nil {
+        copyOpts.cpURLs.Error = copyOpts.cpURLs.Error.Trace()
+        return copyOpts.cpURLs
+    }
 
-	sourceAlias := copyOpts.cpURLs.SourceAlias
-	sourceURL := copyOpts.cpURLs.SourceContent.URL
-	targetAlias := copyOpts.cpURLs.TargetAlias
-	targetURL := copyOpts.cpURLs.TargetContent.URL
-	length := copyOpts.cpURLs.SourceContent.Size
-	sourcePath := filepath.ToSlash(filepath.Join(sourceAlias, sourceURL.Path))
+    sourceAlias := copyOpts.cpURLs.SourceAlias
+    sourceURL := copyOpts.cpURLs.SourceContent.URL
+    targetAlias := copyOpts.cpURLs.TargetAlias
+    targetURL := copyOpts.cpURLs.TargetContent.URL
+    length := copyOpts.cpURLs.SourceContent.Size
+    sourcePath := filepath.ToSlash(filepath.Join(sourceAlias, sourceURL.Path))
 
-	if progressReader, ok := copyOpts.pg.(*progressBar); ok {
-		progressReader.SetCaption(copyOpts.cpURLs.SourceContent.URL.String() + ":")
-	} else {
-		targetPath := filepath.ToSlash(filepath.Join(targetAlias, targetURL.Path))
-		printMsg(copyMessage{
-			Source:     sourcePath,
-			Target:     targetPath,
-			Size:       length,
-			TotalCount: copyOpts.cpURLs.TotalCount,
-			TotalSize:  copyOpts.cpURLs.TotalSize,
-		})
-	}
+    if progressReader, ok := copyOpts.pg.(*progressBar); ok {
+        progressReader.SetCaption(copyOpts.cpURLs.SourceContent.URL.String() + ":")
+    } else {
+        targetPath := filepath.ToSlash(filepath.Join(targetAlias, targetURL.Path))
+        printMsg(copyMessage{
+            Source:     sourcePath,
+            Target:     targetPath,
+            Size:       length,
+            TotalCount: copyOpts.cpURLs.TotalCount,
+            TotalSize:  copyOpts.cpURLs.TotalSize,
+        })
+    }
 
-	urls := uploadSourceToTargetURL(ctx, uploadSourceToTargetURLOpts{
-		urls:                copyOpts.cpURLs,
-		progress:            copyOpts.pg,
-		encKeyDB:            copyOpts.encryptionKeys,
-		preserve:            copyOpts.preserve,
-		isZip:               copyOpts.isZip,
-		multipartSize:       copyOpts.multipartSize,
-		multipartThreads:    copyOpts.multipartThreads,
-		updateProgressTotal: copyOpts.updateProgressTotal,
-		ifNotExists:         copyOpts.ifNotExists,
-	})
-	if copyOpts.isMvCmd && urls.Error == nil {
-		rmManager.add(ctx, sourceAlias, sourceURL.String())
-	}
+    urls := uploadSourceToTargetURL(ctx, uploadSourceToTargetURLOpts{
+        urls:                copyOpts.cpURLs,
+        progress:            copyOpts.pg,
+        encKeyDB:            copyOpts.encryptionKeys,
+        preserve:            copyOpts.preserve,
+        isZip:               copyOpts.isZip,
+        multipartSize:       copyOpts.multipartSize,
+        multipartThreads:    copyOpts.multipartThreads,
+        updateProgressTotal: copyOpts.updateProgressTotal,
+        ifNotExists:         copyOpts.ifNotExists,
+    })
+    if copyOpts.isMvCmd && urls.Error == nil {
+        rmManager.add(ctx, sourceAlias, sourceURL.String())
+    }
 
-	return urls
+    return urls
 }
 
 // doCopyFake - Perform a fake copy to update the progress bar appropriately.
 func doCopyFake(cpURLs URLs, pg Progress) URLs {
-	if progressReader, ok := pg.(*progressBar); ok {
-		progressReader.Add64(cpURLs.SourceContent.Size)
-	}
+    if progressReader, ok := pg.(*progressBar); ok {
+        progressReader.Add64(cpURLs.SourceContent.Size)
+    }
 
-	return cpURLs
+    return cpURLs
 }
 
 func printCopyURLsError(cpURLs *URLs) {
-	// Print in new line and adjust to top so that we
-	// don't print over the ongoing scan bar
-	if !globalQuiet && !globalJSON {
-		console.Eraseline()
-	}
+    // Print in new line and adjust to top so that we
+    // don't print over the ongoing scan bar
+    if !globalQuiet && !globalJSON {
+        console.Eraseline()
+    }
 
-	if strings.Contains(cpURLs.Error.ToGoError().Error(),
-		" is a folder.") {
-		errorIf(cpURLs.Error.Trace(),
-			"Folder cannot be copied. Please use `...` suffix.")
-	} else {
-		errorIf(cpURLs.Error.Trace(),
-			"Unable to prepare URL for copying.")
-	}
+    if strings.Contains(cpURLs.Error.ToGoError().Error(),
+        " is a folder.") {
+        errorIf(cpURLs.Error.Trace(),
+            "Folder cannot be copied. Please use `...` suffix.")
+    } else {
+        errorIf(cpURLs.Error.Trace(),
+            "Unable to prepare URL for copying.")
+    }
 }
 
 func doCopySession(ctx context.Context, cancelCopy context.CancelFunc, cli *cli.Context, encryptionKeys map[string][]prefixSSEPair, isMvCmd bool) error {
-	var isCopied func(string) bool
-	var totalObjects, totalBytes int64
+    var isCopied func(string) bool
+    var totalObjects, totalBytes int64
 
-	cpURLsCh := make(chan URLs, 10000)
-	errSeen := false
+    cpURLsCh := make(chan URLs, 10000)
+    errSeen := false
 
-	// Store a progress bar or an accounter
-	var pg ProgressReader
+    // Store a progress bar or an accounter
+    var pg ProgressReader
 
-	// Enable progress bar reader only during default mode.
-	if !globalQuiet && !globalJSON { // set up progress bar
-		pg = newProgressBar(totalBytes)
-	} else {
-		pg = newAccounter(totalBytes)
-	}
-	sourceURLs := cli.Args()[:len(cli.Args())-1]
-	targetURL := cli.Args()[len(cli.Args())-1] // Last one is target
+    // Enable progress bar reader only during default mode.
+    if !globalQuiet && !globalJSON { // set up progress bar
+        pg = newProgressBar(totalBytes)
+    } else {
+        pg = newAccounter(totalBytes)
+    }
+    sourceURLs := cli.Args()[:len(cli.Args())-1]
+    targetURL := cli.Args()[len(cli.Args())-1] // Last one is target
 
-	// Check if the target path has object locking enabled
-	withLock, _ := isBucketLockEnabled(ctx, targetURL)
+    // Check if the target path has object locking enabled
+    withLock, _ := isBucketLockEnabled(ctx, targetURL)
 
-	isRecursive := cli.Bool("recursive")
-	olderThan := cli.String("older-than")
-	newerThan := cli.String("newer-than")
-	rewind := cli.String("rewind")
-	versionID := cli.String("version-id")
-	md5, checksum := parseChecksum(cli)
-	if withLock {
-		// The Content-MD5 header is required for any request to upload an object with a retention period configured using Amazon S3 Object Lock.
-		md5, checksum = true, minio.ChecksumNone
-	}
+    isRecursive := cli.Bool("recursive")
+    olderThan := cli.String("older-than")
+    newerThan := cli.String("newer-than")
+    rewind := cli.String("rewind")
+    versionID := cli.String("version-id")
+    md5, checksum := parseChecksum(cli)
+    if withLock {
+        // The Content-MD5 header is required for any request to upload an object with a retention period configured using Amazon S3 Object Lock.
+        md5, checksum = true, minio.ChecksumNone
+    }
 
-	go func() {
-		totalBytes := int64(0)
-		opts := prepareCopyURLsOpts{
-			sourceURLs:  sourceURLs,
-			targetURL:   targetURL,
-			isRecursive: isRecursive,
-			encKeyDB:    encryptionKeys,
-			olderThan:   olderThan,
-			newerThan:   newerThan,
-			timeRef:     parseRewindFlag(rewind),
-			versionID:   versionID,
-			isZip:       cli.Bool("zip"),
-		}
+    go func() {
+        totalBytes := int64(0)
+        opts := prepareCopyURLsOpts{
+            sourceURLs:  sourceURLs,
+            targetURL:   targetURL,
+            isRecursive: isRecursive,
+            encKeyDB:    encryptionKeys,
+            olderThan:   olderThan,
+            newerThan:   newerThan,
+            timeRef:     parseRewindFlag(rewind),
+            versionID:   versionID,
+            isZip:       cli.Bool("zip"),
+        }
 
-		for cpURLs := range prepareCopyURLs(ctx, opts) {
-			if cpURLs.Error != nil {
-				errSeen = true
-				printCopyURLsError(&cpURLs)
-				break
-			}
+        for cpURLs := range prepareCopyURLs(ctx, opts) {
+            if cpURLs.Error != nil {
+                errSeen = true
+                printCopyURLsError(&cpURLs)
+                break
+            }
 
-			totalBytes += cpURLs.SourceContent.Size
-			pg.SetTotal(totalBytes)
-			totalObjects++
-			cpURLsCh <- cpURLs
-		}
-		close(cpURLsCh)
-	}()
+            totalBytes += cpURLs.SourceContent.Size
+            pg.SetTotal(totalBytes)
+            totalObjects++
+            cpURLsCh <- cpURLs
+        }
+        close(cpURLsCh)
+    }()
 
-	quitCh := make(chan struct{})
-	statusCh := make(chan URLs)
-	parallel := newParallelManager(statusCh, cli.Int("max-workers"))
+    quitCh := make(chan struct{})
+    statusCh := make(chan URLs)
+    parallel := newParallelManager(statusCh, cli.Int("max-workers"))
 
-	go func() {
-		gracefulStop := func() {
-			parallel.stopAndWait()
-			close(statusCh)
-		}
+    go func() {
+        gracefulStop := func() {
+            parallel.stopAndWait()
+            close(statusCh)
+        }
 
-		for {
-			select {
-			case <-quitCh:
-				gracefulStop()
-				return
-			case cpURLs, ok := <-cpURLsCh:
-				if !ok {
-					gracefulStop()
-					return
-				}
+        for {
+            select {
+            case <-quitCh:
+                gracefulStop()
+                return
+            case cpURLs, ok := <-cpURLsCh:
+                if !ok {
+                    gracefulStop()
+                    return
+                }
 
-				// Save total count.
-				cpURLs.TotalCount = totalObjects
+                // Save total count.
+                cpURLs.TotalCount = totalObjects
 
-				// Save totalSize.
-				cpURLs.TotalSize = totalBytes
+                // Save totalSize.
+                cpURLs.TotalSize = totalBytes
 
-				// Initialize target metadata.
-				cpURLs.TargetContent.Metadata = make(map[string]string)
+                // Initialize target metadata.
+                cpURLs.TargetContent.Metadata = make(map[string]string)
 
-				// Initialize target user metadata.
-				cpURLs.TargetContent.UserMetadata = make(map[string]string)
+                // Initialize target user metadata.
+                cpURLs.TargetContent.UserMetadata = make(map[string]string)
 
-				// Check and handle storage class if passed in command line args
-				if storageClass := cli.String("storage-class"); storageClass != "" {
-					cpURLs.TargetContent.StorageClass = storageClass
-				}
+                // Check and handle storage class if passed in command line args
+                if storageClass := cli.String("storage-class"); storageClass != "" {
+                    cpURLs.TargetContent.StorageClass = storageClass
+                }
 
-				if rm := cli.String(rmFlag); rm != "" {
-					cpURLs.TargetContent.RetentionMode = rm
-					cpURLs.TargetContent.RetentionEnabled = true
-				}
-				if rd := cli.String(rdFlag); rd != "" {
-					cpURLs.TargetContent.RetentionDuration = rd
-				}
-				if lh := cli.String(lhFlag); lh != "" {
-					cpURLs.TargetContent.LegalHold = strings.ToUpper(lh)
-					cpURLs.TargetContent.LegalHoldEnabled = true
-				}
+                if rm := cli.String(rmFlag); rm != "" {
+                    cpURLs.TargetContent.RetentionMode = rm
+                    cpURLs.TargetContent.RetentionEnabled = true
+                }
+                if rd := cli.String(rdFlag); rd != "" {
+                    cpURLs.TargetContent.RetentionDuration = rd
+                }
+                if lh := cli.String(lhFlag); lh != "" {
+                    cpURLs.TargetContent.LegalHold = strings.ToUpper(lh)
+                    cpURLs.TargetContent.LegalHoldEnabled = true
+                }
 
-				if tags := cli.String("tags"); tags != "" {
-					cpURLs.TargetContent.Metadata["X-Amz-Tagging"] = tags
-				}
+                if tags := cli.String("tags"); tags != "" {
+                    cpURLs.TargetContent.Metadata["X-Amz-Tagging"] = tags
+                }
 
-				preserve := cli.Bool("preserve")
-				isZip := cli.Bool("zip")
-				if cli.String("attr") != "" {
-					userMetaMap, _ := getMetaDataEntry(cli.String("attr"))
-					maps.Copy(cpURLs.TargetContent.UserMetadata, userMetaMap)
-				}
+                preserve := cli.Bool("preserve")
+                isZip := cli.Bool("zip")
+                if cli.String("attr") != "" {
+                    userMetaMap, _ := getMetaDataEntry(cli.String("attr"))
+                    maps.Copy(cpURLs.TargetContent.UserMetadata, userMetaMap)
+                }
 
-				cpURLs.MD5 = md5
-				cpURLs.checksum = checksum
-				cpURLs.DisableMultipart = cli.Bool("disable-multipart")
+                cpURLs.MD5 = md5
+                cpURLs.checksum = checksum
+                cpURLs.DisableMultipart = cli.Bool("disable-multipart")
 
-				// Verify if previously copied, notify progress bar.
-				if isCopied != nil && isCopied(cpURLs.SourceContent.URL.String()) {
-					parallel.queueTask(func() URLs {
-						return doCopyFake(cpURLs, pg)
-					}, 0)
-				} else {
-					// Print the copy resume summary once in start
-					parallel.queueTask(func() URLs {
-						return doCopy(ctx, doCopyOpts{
-							cpURLs:         cpURLs,
-							pg:             pg,
-							encryptionKeys: encryptionKeys,
-							isMvCmd:        isMvCmd,
-							preserve:       preserve,
-							isZip:          isZip,
-						})
-					}, cpURLs.SourceContent.Size)
-				}
-			}
-		}
-	}()
+                // Verify if previously copied, notify progress bar.
+                if isCopied != nil && isCopied(cpURLs.SourceContent.URL.String()) {
+                    parallel.queueTask(func() URLs {
+                        return doCopyFake(cpURLs, pg)
+                    }, 0)
+                } else {
+                    // Print the copy resume summary once in start
+                    parallel.queueTask(func() URLs {
+                        return doCopy(ctx, doCopyOpts{
+                            cpURLs:         cpURLs,
+                            pg:             pg,
+                            encryptionKeys: encryptionKeys,
+                            isMvCmd:        isMvCmd,
+                            preserve:       preserve,
+                            isZip:          isZip,
+                        })
+                    }, cpURLs.SourceContent.Size)
+                }
+            }
+        }
+    }()
 
-	var retErr error
-	cpAllFilesErr := true
+    var retErr error
+    cpAllFilesErr := true
 
 loop:
-	for {
-		select {
-		case <-globalContext.Done():
-			close(quitCh)
-			cancelCopy()
-			// Receive interrupt notification.
-			if !globalQuiet && !globalJSON {
-				console.Eraseline()
-			}
-			break loop
-		case cpURLs, ok := <-statusCh:
-			// Status channel is closed, we should return.
-			if !ok {
-				break loop
-			}
-			if cpURLs.Error == nil {
-				cpAllFilesErr = false
-			} else {
+    for {
+        select {
+        case <-globalContext.Done():
+            close(quitCh)
+            cancelCopy()
+            // Receive interrupt notification.
+            if !globalQuiet && !globalJSON {
+                console.Eraseline()
+            }
+            break loop
+        case cpURLs, ok := <-statusCh:
+            // Status channel is closed, we should return.
+            if !ok {
+                break loop
+            }
+            if cpURLs.Error == nil {
+                cpAllFilesErr = false
+            } else {
 
-				// Set exit status for any copy error
-				retErr = exitStatus(globalErrorExitStatus)
+                // Set exit status for any copy error
+                retErr = exitStatus(globalErrorExitStatus)
 
-				// Print in new line and adjust to top so that we
-				// don't print over the ongoing progress bar.
-				if !globalQuiet && !globalJSON {
-					console.Eraseline()
-				}
-				errorIf(cpURLs.Error.Trace(cpURLs.SourceContent.URL.String()),
-					"Failed to copy `%s`.", cpURLs.SourceContent.URL)
-				if isErrIgnored(cpURLs.Error) {
-					cpAllFilesErr = false
-					continue loop
-				}
+                // Print in new line and adjust to top so that we
+                // don't print over the ongoing progress bar.
+                if !globalQuiet && !globalJSON {
+                    console.Eraseline()
+                }
+                errorIf(cpURLs.Error.Trace(cpURLs.SourceContent.URL.String()),
+                    "Failed to copy `%s`.", cpURLs.SourceContent.URL)
+                if isErrIgnored(cpURLs.Error) {
+                    cpAllFilesErr = false
+                    continue loop
+                }
 
-				errSeen = true
-				if progressReader, pgok := pg.(*progressBar); pgok {
-					if progressReader.Get() > 0 {
-						writeContSize := (int)(cpURLs.SourceContent.Size)
-						totalPGSize := (int)(progressReader.Total)
-						written := (int)(progressReader.Get())
-						if totalPGSize > writeContSize && written > writeContSize {
-							progressReader.Set((written - writeContSize))
-							progressReader.Update()
-						}
-					}
-				}
+                errSeen = true
+                if progressReader, pgok := pg.(*progressBar); pgok {
+                    if progressReader.Get() > 0 {
+                        writeContSize := (int)(cpURLs.SourceContent.Size)
+                        totalPGSize := (int)(progressReader.Total)
+                        written := (int)(progressReader.Get())
+                        if totalPGSize > writeContSize && written > writeContSize {
+                            progressReader.Set((written - writeContSize))
+                            progressReader.Update()
+                        }
+                    }
+                }
 
-			}
-		}
-	}
+            }
+        }
+    }
 
-	if progressReader, ok := pg.(*progressBar); ok {
-		if errSeen || (cpAllFilesErr && totalObjects > 0) {
-			// We only erase a line if we are displaying a progress bar
-			if !globalQuiet && !globalJSON {
-				console.Eraseline()
-			}
-		} else if progressReader.Get() > 0 {
-			progressReader.Finish()
-		}
-	} else {
-		if accntReader, ok := pg.(*accounter); ok {
-			if errSeen || (cpAllFilesErr && totalObjects > 0) {
-				// We only erase a line if we are displaying a progress bar
-				if !globalQuiet && !globalJSON {
-					console.Eraseline()
-				}
-			} else {
-				printMsg(accntReader.Stat())
-			}
-		}
-	}
+    if progressReader, ok := pg.(*progressBar); ok {
+        if errSeen || (cpAllFilesErr && totalObjects > 0) {
+            // We only erase a line if we are displaying a progress bar
+            if !globalQuiet && !globalJSON {
+                console.Eraseline()
+            }
+        } else if progressReader.Get() > 0 {
+            progressReader.Finish()
+        }
+    } else {
+        if accntReader, ok := pg.(*accounter); ok {
+            if errSeen || (cpAllFilesErr && totalObjects > 0) {
+                // We only erase a line if we are displaying a progress bar
+                if !globalQuiet && !globalJSON {
+                    console.Eraseline()
+                }
+            } else {
+                printMsg(accntReader.Stat())
+            }
+        }
+    }
 
-	// Source has error
-	if errSeen && totalObjects == 0 && retErr == nil {
-		retErr = exitStatus(globalErrorExitStatus)
-	}
+    // Source has error
+    if errSeen && totalObjects == 0 && retErr == nil {
+        retErr = exitStatus(globalErrorExitStatus)
+    }
 
-	return retErr
+    return retErr
 }
 
 // mainCopy is the entry point for cp command.
 func mainCopy(cliCtx *cli.Context) error {
-	ctx, cancelCopy := context.WithCancel(globalContext)
-	defer cancelCopy()
+    ctx, cancelCopy := context.WithCancel(globalContext)
+    defer cancelCopy()
 
-	checkCopySyntax(cliCtx)
-	console.SetColor("Copy", color.New(color.FgGreen, color.Bold))
+    checkCopySyntax(cliCtx)
+    console.SetColor("Copy", color.New(color.FgGreen, color.Bold))
 
-	var err *probe.Error
+    var err *probe.Error
 
-	// Parse encryption keys per command.
-	encryptionKeyMap, err := validateAndCreateEncryptionKeys(cliCtx)
-	if err != nil {
-		err.Trace(cliCtx.Args()...)
-	}
-	fatalIf(err, "SSE Error")
+    // Parse encryption keys per command.
+    encryptionKeyMap, err := validateAndCreateEncryptionKeys(cliCtx)
+    if err != nil {
+        err.Trace(cliCtx.Args()...)
+    }
+    fatalIf(err, "SSE Error")
 
-	return doCopySession(ctx, cancelCopy, cliCtx, encryptionKeyMap, false)
+    return doCopySession(ctx, cancelCopy, cliCtx, encryptionKeyMap, false)
 }
 
 type doCopyOpts struct {
-	cpURLs                   URLs
-	pg                       ProgressReader
-	encryptionKeys           map[string][]prefixSSEPair
-	isMvCmd, preserve, isZip bool
-	updateProgressTotal      bool
-	multipartSize            string
-	multipartThreads         string
-	ifNotExists              bool
+    cpURLs                   URLs
+    pg                       ProgressReader
+    encryptionKeys           map[string][]prefixSSEPair
+    isMvCmd, preserve, isZip bool
+    updateProgressTotal      bool
+    multipartSize            string
+    multipartThreads         string
+    ifNotExists              bool
 }

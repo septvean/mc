@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminServiceUnfreezeCmd = cli.Command{
-	Name:         "unfreeze",
-	Usage:        "unfreeze S3 API calls on MinIO cluster",
-	Action:       mainAdminServiceUnfreeze,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "unfreeze",
+    Usage:        "unfreeze S3 API calls on MinIO cluster",
+    Action:       mainAdminServiceUnfreeze,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -51,61 +51,61 @@ EXAMPLES:
 
 // serviceUnfreezeCommand is container for service unfreeze command success and failure messages.
 type serviceUnfreezeCommand struct {
-	Status    string `json:"status"`
-	ServerURL string `json:"serverURL"`
+    Status    string `json:"status"`
+    ServerURL string `json:"serverURL"`
 }
 
 // String colorized service unfreeze command message.
 func (s serviceUnfreezeCommand) String() string {
-	return console.Colorize("ServiceUnfreeze", "Unfreeze command successfully sent to `"+s.ServerURL+"`.")
+    return console.Colorize("ServiceUnfreeze", "Unfreeze command successfully sent to `"+s.ServerURL+"`.")
 }
 
 // JSON jsonified service unfreeze command message.
 func (s serviceUnfreezeCommand) JSON() string {
-	serviceUnfreezeJSONBytes, e := json.MarshalIndent(s, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    serviceUnfreezeJSONBytes, e := json.MarshalIndent(s, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(serviceUnfreezeJSONBytes)
+    return string(serviceUnfreezeJSONBytes)
 }
 
 // checkAdminServiceUnfreezeSyntax - validate all the passed arguments
 func checkAdminServiceUnfreezeSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainAdminServiceUnfreeze(ctx *cli.Context) error {
-	// Validate service unfreeze syntax.
-	checkAdminServiceUnfreezeSyntax(ctx)
+    // Validate service unfreeze syntax.
+    checkAdminServiceUnfreezeSyntax(ctx)
 
-	// Set color.
-	console.SetColor("ServiceUnfreeze", color.New(color.FgGreen, color.Bold))
-	console.SetColor("FailedServiceUnfreeze", color.New(color.FgRed, color.Bold))
+    // Set color.
+    console.SetColor("ServiceUnfreeze", color.New(color.FgGreen, color.Bold))
+    console.SetColor("FailedServiceUnfreeze", color.New(color.FgRed, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	// Unfreeze the specified MinIO server
-	e := client.ServiceUnfreezeV2(ctxt)
-	if e != nil {
-		// Attempt an older API server might be old
-		// nolint:staticcheck
-		// we need this fallback
-		e = client.ServiceUnfreeze(ctxt)
-	}
-	// Unfreeze the specified MinIO server
-	fatalIf(probe.NewError(e), "Unable to unfreeze the server.")
+    // Unfreeze the specified MinIO server
+    e := client.ServiceUnfreezeV2(ctxt)
+    if e != nil {
+        // Attempt an older API server might be old
+        // nolint:staticcheck
+        // we need this fallback
+        e = client.ServiceUnfreeze(ctxt)
+    }
+    // Unfreeze the specified MinIO server
+    fatalIf(probe.NewError(e), "Unable to unfreeze the server.")
 
-	// Success..
-	printMsg(serviceUnfreezeCommand{Status: "success", ServerURL: aliasedURL})
+    // Success..
+    printMsg(serviceUnfreezeCommand{Status: "success", ServerURL: aliasedURL})
 
-	return nil
+    return nil
 }

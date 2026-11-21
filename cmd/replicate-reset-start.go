@@ -18,38 +18,38 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "strings"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/replication"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/replication"
+    "github.com/minio/pkg/v3/console"
 )
 
 var replicateResyncStartFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "older-than",
-		Usage: "replicate back objects older than value in duration string (e.g. 7d10h31s)",
-	},
-	cli.StringFlag{
-		Name:  "remote-bucket",
-		Usage: "remote bucket ARN",
-	},
+    cli.StringFlag{
+        Name:  "older-than",
+        Usage: "replicate back objects older than value in duration string (e.g. 7d10h31s)",
+    },
+    cli.StringFlag{
+        Name:  "remote-bucket",
+        Usage: "remote bucket ARN",
+    },
 }
 
 var replicateResyncStartCmd = cli.Command{
-	Name:         "start",
-	Usage:        "start replicating back all previously replicated objects",
-	Action:       mainReplicateResyncStart,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(globalFlags, replicateResyncStartFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "start",
+    Usage:        "start replicating back all previously replicated objects",
+    Action:       mainReplicateResyncStart,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(globalFlags, replicateResyncStartFlags...),
+    CustomHelpTemplate: `NAME:
    {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -69,72 +69,72 @@ EXAMPLES:
 
 // checkReplicateResyncStartSyntax - validate all the passed arguments
 func checkReplicateResyncStartSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
-	if ctx.String("remote-bucket") == "" {
-		fatal(errDummy().Trace(), "--remote-bucket flag needs to be specified.")
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
+    if ctx.String("remote-bucket") == "" {
+        fatal(errDummy().Trace(), "--remote-bucket flag needs to be specified.")
+    }
 }
 
 type replicateResyncMessage struct {
-	Op                string                        `json:"op"`
-	URL               string                        `json:"url"`
-	ResyncTargetsInfo replication.ResyncTargetsInfo `json:"resyncInfo"`
-	Status            string                        `json:"status"`
-	TargetArn         string                        `json:"targetArn"`
+    Op                string                        `json:"op"`
+    URL               string                        `json:"url"`
+    ResyncTargetsInfo replication.ResyncTargetsInfo `json:"resyncInfo"`
+    Status            string                        `json:"status"`
+    TargetArn         string                        `json:"targetArn"`
 }
 
 func (r replicateResyncMessage) JSON() string {
-	r.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    r.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (r replicateResyncMessage) String() string {
-	if len(r.ResyncTargetsInfo.Targets) == 1 {
-		return console.Colorize("replicateResyncMessage", fmt.Sprintf("Replication reset started for %s with ID %s", r.URL, r.ResyncTargetsInfo.Targets[0].ResetID))
-	}
-	return console.Colorize("replicateResyncMessage", fmt.Sprintf("Replication reset started for %s", r.URL))
+    if len(r.ResyncTargetsInfo.Targets) == 1 {
+        return console.Colorize("replicateResyncMessage", fmt.Sprintf("Replication reset started for %s with ID %s", r.URL, r.ResyncTargetsInfo.Targets[0].ResetID))
+    }
+    return console.Colorize("replicateResyncMessage", fmt.Sprintf("Replication reset started for %s", r.URL))
 }
 
 func mainReplicateResyncStart(cliCtx *cli.Context) error {
-	ctx, cancelReplicateResyncStart := context.WithCancel(globalContext)
-	defer cancelReplicateResyncStart()
+    ctx, cancelReplicateResyncStart := context.WithCancel(globalContext)
+    defer cancelReplicateResyncStart()
 
-	console.SetColor("replicateResyncMessage", color.New(color.FgGreen))
+    console.SetColor("replicateResyncMessage", color.New(color.FgGreen))
 
-	checkReplicateResyncStartSyntax(cliCtx)
+    checkReplicateResyncStartSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	var olderThanStr string
-	var olderThan time.Duration
-	if cliCtx.IsSet("older-than") {
-		olderThanStr = cliCtx.String("older-than")
-		if olderThanStr != "" {
-			days, e := ParseDuration(olderThanStr)
-			if e != nil || !strings.ContainsAny(olderThanStr, "dwy") {
-				fatalIf(probe.NewError(e), "Unable to parse older-than=`"+olderThanStr+"`.")
-			}
-			if days == 0 {
-				fatalIf(probe.NewError(e), "older-than cannot be set to zero")
-			}
-			olderThan = time.Duration(days.Days())
-		}
-	}
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    var olderThanStr string
+    var olderThan time.Duration
+    if cliCtx.IsSet("older-than") {
+        olderThanStr = cliCtx.String("older-than")
+        if olderThanStr != "" {
+            days, e := ParseDuration(olderThanStr)
+            if e != nil || !strings.ContainsAny(olderThanStr, "dwy") {
+                fatalIf(probe.NewError(e), "Unable to parse older-than=`"+olderThanStr+"`.")
+            }
+            if days == 0 {
+                fatalIf(probe.NewError(e), "older-than cannot be set to zero")
+            }
+            olderThan = time.Duration(days.Days())
+        }
+    }
 
-	rinfo, err := client.ResetReplication(ctx, olderThan, cliCtx.String("remote-bucket"))
-	fatalIf(err.Trace(args...), "Unable to reset replication")
-	printMsg(replicateResyncMessage{
-		Op:                cliCtx.Command.Name,
-		URL:               aliasedURL,
-		ResyncTargetsInfo: rinfo,
-	})
-	return nil
+    rinfo, err := client.ResetReplication(ctx, olderThan, cliCtx.String("remote-bucket"))
+    fatalIf(err.Trace(args...), "Unable to reset replication")
+    printMsg(replicateResyncMessage{
+        Op:                cliCtx.Command.Name,
+        URL:               aliasedURL,
+        ResyncTargetsInfo: rinfo,
+    })
+    return nil
 }

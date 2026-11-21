@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "enable user",
-	Action:       mainAdminUserEnable,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "enable user",
+    Action:       mainAdminUserEnable,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,32 +49,32 @@ EXAMPLES:
 
 // checkAdminUserEnableSyntax - validate all the passed arguments
 func checkAdminUserEnableSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminUserEnable is the handle for "mc admin user enable" command.
 func mainAdminUserEnable(ctx *cli.Context) error {
-	checkAdminUserEnableSyntax(ctx)
+    checkAdminUserEnableSyntax(ctx)
 
-	console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("UserMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.SetUserStatus(globalContext, args.Get(1), madmin.AccountEnabled)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to enable user")
+    e := client.SetUserStatus(globalContext, args.Get(1), madmin.AccountEnabled)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to enable user")
 
-	printMsg(userMessage{
-		op:        ctx.Command.Name,
-		AccessKey: args.Get(1),
-	})
+    printMsg(userMessage{
+        op:        ctx.Command.Name,
+        AccessKey: args.Get(1),
+    })
 
-	return nil
+    return nil
 }

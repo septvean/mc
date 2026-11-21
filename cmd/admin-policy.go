@@ -20,32 +20,32 @@ package cmd
 import "github.com/minio/cli"
 
 var adminPolicySubcommands = []cli.Command{
-	adminPolicyCreateCmd,
-	adminPolicyRemoveCmd,
-	adminPolicyListCmd,
-	adminPolicyInfoCmd,
-	adminPolicyAttachCmd,
-	adminPolicyDetachCmd,
-	adminPolicyEntitiesCmd,
-	adminPolicyAddCmd,
-	adminPolicySetCmd,
-	adminPolicyUnsetCmd,
-	adminPolicyUpdateCmd,
+    adminPolicyCreateCmd,
+    adminPolicyRemoveCmd,
+    adminPolicyListCmd,
+    adminPolicyInfoCmd,
+    adminPolicyAttachCmd,
+    adminPolicyDetachCmd,
+    adminPolicyEntitiesCmd,
+    adminPolicyAddCmd,
+    adminPolicySetCmd,
+    adminPolicyUnsetCmd,
+    adminPolicyUpdateCmd,
 }
 
 var adminPolicyCmd = cli.Command{
-	Name:            "policy",
-	Usage:           "manage policies defined in the MinIO server",
-	Action:          mainAdminPolicy,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminPolicySubcommands,
-	HideHelpCommand: true,
+    Name:            "policy",
+    Usage:           "manage policies defined in the MinIO server",
+    Action:          mainAdminPolicy,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminPolicySubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminPolicy is the handle for "mc admin policy" command.
 func mainAdminPolicy(ctx *cli.Context) error {
-	commandNotFound(ctx, adminPolicySubcommands)
-	return nil
-	// Sub-commands like "get", "set" have their own main.
+    commandNotFound(ctx, adminPolicySubcommands)
+    return nil
+    // Sub-commands like "get", "set" have their own main.
 }

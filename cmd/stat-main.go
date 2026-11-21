@@ -18,55 +18,55 @@
 package cmd
 
 import (
-	"context"
-	"path/filepath"
-	"strings"
-	"time"
+    "context"
+    "path/filepath"
+    "strings"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 // stat specific flags.
 var (
-	statFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "rewind",
-			Usage: "stat on older version(s)",
-		},
-		cli.BoolFlag{
-			Name:  "versions",
-			Usage: "stat all versions",
-		},
-		cli.StringFlag{
-			Name:  "version-id, vid",
-			Usage: "stat a specific object version",
-		},
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "stat all objects recursively",
-		},
-		cli.BoolFlag{
-			Name:  "verbose, v",
-			Usage: "show extended bucket(s) stat",
-		},
-		cli.BoolFlag{
-			Name:  "no-list",
-			Usage: "disable all LIST operations for stat",
-		},
-	}
+    statFlags = []cli.Flag{
+        cli.StringFlag{
+            Name:  "rewind",
+            Usage: "stat on older version(s)",
+        },
+        cli.BoolFlag{
+            Name:  "versions",
+            Usage: "stat all versions",
+        },
+        cli.StringFlag{
+            Name:  "version-id, vid",
+            Usage: "stat a specific object version",
+        },
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "stat all objects recursively",
+        },
+        cli.BoolFlag{
+            Name:  "verbose, v",
+            Usage: "show extended bucket(s) stat",
+        },
+        cli.BoolFlag{
+            Name:  "no-list",
+            Usage: "disable all LIST operations for stat",
+        },
+    }
 )
 
 // show object metadata
 var statCmd = cli.Command{
-	Name:         "stat",
-	Usage:        "show object metadata",
-	Action:       mainStat,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(statFlags, encCFlag), globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "stat",
+    Usage:        "show object metadata",
+    Action:       mainStat,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(statFlags, encCFlag), globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -103,94 +103,94 @@ EXAMPLES:
 
 // parseAndCheckStatSyntax - parse and validate all the passed arguments
 func parseAndCheckStatSyntax(ctx context.Context, cliCtx *cli.Context) ([]string, bool, string, time.Time, bool) {
-	if !cliCtx.Args().Present() {
-		showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
-	}
+    if !cliCtx.Args().Present() {
+        showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
+    }
 
-	args := cliCtx.Args()
-	for _, arg := range args {
-		if strings.TrimSpace(arg) == "" {
-			fatalIf(errInvalidArgument().Trace(args...), "Unable to validate empty argument.")
-		}
-	}
+    args := cliCtx.Args()
+    for _, arg := range args {
+        if strings.TrimSpace(arg) == "" {
+            fatalIf(errInvalidArgument().Trace(args...), "Unable to validate empty argument.")
+        }
+    }
 
-	recursive := cliCtx.Bool("recursive")
-	versionID := cliCtx.String("version-id")
-	withVersions := cliCtx.Bool("versions")
-	headOnly := cliCtx.Bool("no-list")
-	rewind := parseRewindFlag(cliCtx.String("rewind"))
+    recursive := cliCtx.Bool("recursive")
+    versionID := cliCtx.String("version-id")
+    withVersions := cliCtx.Bool("versions")
+    headOnly := cliCtx.Bool("no-list")
+    rewind := parseRewindFlag(cliCtx.String("rewind"))
 
-	// extract URLs.
-	URLs := cliCtx.Args()
+    // extract URLs.
+    URLs := cliCtx.Args()
 
-	if versionID != "" && len(args) > 1 {
-		fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --version-id with multiple arguments.")
-	}
+    if versionID != "" && len(args) > 1 {
+        fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --version-id with multiple arguments.")
+    }
 
-	if versionID != "" && (recursive || withVersions || !rewind.IsZero()) {
-		fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --version-id with either --rewind, --versions or --recursive.")
-	}
+    if versionID != "" && (recursive || withVersions || !rewind.IsZero()) {
+        fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --version-id with either --rewind, --versions or --recursive.")
+    }
 
-	if (recursive || withVersions) && headOnly {
-		fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --no-list with either --versions or --recursive.")
-	}
+    if (recursive || withVersions) && headOnly {
+        fatalIf(errInvalidArgument().Trace(args...), "You cannot specify --no-list with either --versions or --recursive.")
+    }
 
-	var targetUrls []string
-	for _, url := range URLs {
-		_, path := url2Alias(url)
-		if path != "" || !cliCtx.Bool("verbose") {
-			targetUrls = append(targetUrls, url)
-			continue
-		}
-		clnt, err := newClient(url)
-		fatalIf(err.Trace(args...), "Unable to initialize `"+url+"`.")
-		buckets, e := clnt.ListBuckets(ctx)
-		if e != nil || len(buckets) == 0 {
-			targetUrls = append(targetUrls, url)
-			continue
-		}
-		for _, bucket := range buckets {
-			targetUrls = append(targetUrls, filepath.Join(url, bucket.BucketName))
-		}
-	}
-	return targetUrls, recursive, versionID, rewind, withVersions
+    var targetUrls []string
+    for _, url := range URLs {
+        _, path := url2Alias(url)
+        if path != "" || !cliCtx.Bool("verbose") {
+            targetUrls = append(targetUrls, url)
+            continue
+        }
+        clnt, err := newClient(url)
+        fatalIf(err.Trace(args...), "Unable to initialize `"+url+"`.")
+        buckets, e := clnt.ListBuckets(ctx)
+        if e != nil || len(buckets) == 0 {
+            targetUrls = append(targetUrls, url)
+            continue
+        }
+        for _, bucket := range buckets {
+            targetUrls = append(targetUrls, filepath.Join(url, bucket.BucketName))
+        }
+    }
+    return targetUrls, recursive, versionID, rewind, withVersions
 }
 
 // mainStat - is a handler for mc stat command
 func mainStat(cliCtx *cli.Context) error {
-	ctx, cancelStat := context.WithCancel(globalContext)
-	defer cancelStat()
+    ctx, cancelStat := context.WithCancel(globalContext)
+    defer cancelStat()
 
-	// Additional command specific theme customization.
-	console.SetColor("Name", color.New(color.Bold, color.FgCyan))
-	console.SetColor("Date", color.New(color.FgWhite))
-	console.SetColor("Size", color.New(color.FgWhite))
-	console.SetColor("ETag", color.New(color.FgWhite))
-	console.SetColor("Metadata", color.New(color.FgWhite))
-	// theme specific to stat bucket
-	console.SetColor("Key", color.New(color.FgCyan))
-	console.SetColor("Value", color.New(color.FgYellow))
-	console.SetColor("Unset", color.New(color.FgRed))
-	console.SetColor("Set", color.New(color.FgGreen))
+    // Additional command specific theme customization.
+    console.SetColor("Name", color.New(color.Bold, color.FgCyan))
+    console.SetColor("Date", color.New(color.FgWhite))
+    console.SetColor("Size", color.New(color.FgWhite))
+    console.SetColor("ETag", color.New(color.FgWhite))
+    console.SetColor("Metadata", color.New(color.FgWhite))
+    // theme specific to stat bucket
+    console.SetColor("Key", color.New(color.FgCyan))
+    console.SetColor("Value", color.New(color.FgYellow))
+    console.SetColor("Unset", color.New(color.FgRed))
+    console.SetColor("Set", color.New(color.FgGreen))
 
-	console.SetColor("Title", color.New(color.Bold, color.FgBlue))
-	console.SetColor("Count", color.New(color.FgGreen))
+    console.SetColor("Title", color.New(color.Bold, color.FgBlue))
+    console.SetColor("Count", color.New(color.FgGreen))
 
-	// Parse encryption keys per command.
-	encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
-	fatalIf(err, "Unable to parse encryption keys.")
+    // Parse encryption keys per command.
+    encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
+    fatalIf(err, "Unable to parse encryption keys.")
 
-	// check 'stat' cli arguments.
-	args, isRecursive, versionID, rewind, withVersions := parseAndCheckStatSyntax(ctx, cliCtx)
-	// mimic operating system tool behavior.
-	if len(args) == 0 {
-		args = []string{"."}
-	}
+    // check 'stat' cli arguments.
+    args, isRecursive, versionID, rewind, withVersions := parseAndCheckStatSyntax(ctx, cliCtx)
+    // mimic operating system tool behavior.
+    if len(args) == 0 {
+        args = []string{"."}
+    }
 
-	headOnly := cliCtx.Bool("no-list")
-	for _, targetURL := range args {
-		fatalIf(statURL(ctx, targetURL, versionID, rewind, withVersions, false, isRecursive, headOnly, encKeyDB), "Unable to stat `"+targetURL+"`.")
-	}
+    headOnly := cliCtx.Bool("no-list")
+    for _, targetURL := range args {
+        fatalIf(statURL(ctx, targetURL, versionID, rewind, withVersions, false, isRecursive, headOnly, encKeyDB), "Unable to stat `"+targetURL+"`.")
+    }
 
-	return nil
+    return nil
 }

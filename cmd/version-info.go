@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"strings"
+    "context"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var versionInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "show bucket versioning status",
-	Action:       mainVersionInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "show bucket versioning status",
+    Action:       mainVersionInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -53,73 +53,73 @@ EXAMPLES:
 
 // checkVersionInfoSyntax - validate all the passed arguments
 func checkVersionInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type versioningInfoMessage struct {
-	Op         string
-	Status     string `json:"status"`
-	URL        string `json:"url"`
-	Versioning struct {
-		Status           string   `json:"status"`
-		MFADelete        string   `json:"MFADelete"`
-		ExcludedPrefixes []string `json:"ExcludedPrefixes,omitempty"`
-		ExcludeFolders   bool     `json:"ExcludeFolders,omitempty"`
-	} `json:"versioning"`
+    Op         string
+    Status     string `json:"status"`
+    URL        string `json:"url"`
+    Versioning struct {
+        Status           string   `json:"status"`
+        MFADelete        string   `json:"MFADelete"`
+        ExcludedPrefixes []string `json:"ExcludedPrefixes,omitempty"`
+        ExcludeFolders   bool     `json:"ExcludeFolders,omitempty"`
+    }   `json:"versioning"`
 }
 
 func (v versioningInfoMessage) JSON() string {
-	v.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    v.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (v versioningInfoMessage) String() string {
-	msg := ""
-	switch v.Versioning.Status {
-	case "":
-		msg = fmt.Sprintf("%s is un-versioned", v.URL)
-	default:
-		msg = fmt.Sprintf("%s versioning is %s", v.URL, strings.ToLower(v.Versioning.Status))
-	}
-	return console.Colorize("versioningInfoMessage", msg)
+    msg := ""
+    switch v.Versioning.Status {
+    case "":
+        msg = fmt.Sprintf("%s is un-versioned", v.URL)
+    default:
+        msg = fmt.Sprintf("%s versioning is %s", v.URL, strings.ToLower(v.Versioning.Status))
+    }
+    return console.Colorize("versioningInfoMessage", msg)
 }
 
 func mainVersionInfo(cliCtx *cli.Context) error {
-	ctx, cancelVersioningInfo := context.WithCancel(globalContext)
-	defer cancelVersioningInfo()
+    ctx, cancelVersioningInfo := context.WithCancel(globalContext)
+    defer cancelVersioningInfo()
 
-	console.SetColor("versioningInfoMessage", color.New(color.FgGreen))
+    console.SetColor("versioningInfoMessage", color.New(color.FgGreen))
 
-	checkVersionInfoSyntax(cliCtx)
+    checkVersionInfoSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	vConfig, e := client.GetVersion(ctx)
-	fatalIf(e, "Unable to get versioning info")
-	vMsg := versioningInfoMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	}
-	vMsg.Versioning.Status = vConfig.Status
-	vMsg.Versioning.MFADelete = vConfig.MFADelete
-	vMsg.Versioning.ExcludeFolders = vConfig.ExcludeFolders
-	if len(vConfig.ExcludedPrefixes) > 0 {
-		prefixes := make([]string, 0, len(vConfig.ExcludedPrefixes))
-		for _, eprefix := range vConfig.ExcludedPrefixes {
-			prefixes = append(prefixes, eprefix.Prefix)
-		}
-		vMsg.Versioning.ExcludedPrefixes = prefixes
-	}
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    vConfig, e := client.GetVersion(ctx)
+    fatalIf(e, "Unable to get versioning info")
+    vMsg := versioningInfoMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    }
+    vMsg.Versioning.Status = vConfig.Status
+    vMsg.Versioning.MFADelete = vConfig.MFADelete
+    vMsg.Versioning.ExcludeFolders = vConfig.ExcludeFolders
+    if len(vConfig.ExcludedPrefixes) > 0 {
+        prefixes := make([]string, 0, len(vConfig.ExcludedPrefixes))
+        for _, eprefix := range vConfig.ExcludedPrefixes {
+            prefixes = append(prefixes, eprefix.Prefix)
+        }
+        vMsg.Versioning.ExcludedPrefixes = prefixes
+    }
 
-	printMsg(vMsg)
-	return nil
+    printMsg(vMsg)
+    return nil
 }

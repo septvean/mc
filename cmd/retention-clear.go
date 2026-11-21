@@ -18,46 +18,46 @@
 package cmd
 
 import (
-	"context"
-	"time"
+    "context"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/pkg/v3/console"
 )
 
 var retentionClearFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "recursive, r",
-		Usage: "clear retention recursively",
-	},
-	cli.StringFlag{
-		Name:  "version-id, vid",
-		Usage: "clear retention of a specific object version",
-	},
-	cli.StringFlag{
-		Name:  "rewind",
-		Usage: "roll back object(s) to current version at specified time",
-	},
-	cli.BoolFlag{
-		Name:  "versions",
-		Usage: "clear retention of object(s) and all its versions",
-	},
-	cli.BoolFlag{
-		Name:  "default",
-		Usage: "set default bucket locking",
-	},
+    cli.BoolFlag{
+        Name:  "recursive, r",
+        Usage: "clear retention recursively",
+    },
+    cli.StringFlag{
+        Name:  "version-id, vid",
+        Usage: "clear retention of a specific object version",
+    },
+    cli.StringFlag{
+        Name:  "rewind",
+        Usage: "roll back object(s) to current version at specified time",
+    },
+    cli.BoolFlag{
+        Name:  "versions",
+        Usage: "clear retention of object(s) and all its versions",
+    },
+    cli.BoolFlag{
+        Name:  "default",
+        Usage: "set default bucket locking",
+    },
 }
 
 var retentionClearCmd = cli.Command{
-	Name:         "clear",
-	Usage:        "clear all retention settings on object(s)",
-	Action:       mainRetentionClear,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(retentionClearFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "clear",
+    Usage:        "clear all retention settings on object(s)",
+    Action:       mainRetentionClear,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(retentionClearFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -89,58 +89,58 @@ EXAMPLES:
 }
 
 func parseClearRetentionArgs(cliCtx *cli.Context) (target, versionID string, timeRef time.Time, withVersions, recursive, bucketMode bool) {
-	args := cliCtx.Args()
+    args := cliCtx.Args()
 
-	if len(args) != 1 {
-		showCommandHelpAndExit(cliCtx, 1)
-	}
+    if len(args) != 1 {
+        showCommandHelpAndExit(cliCtx, 1)
+    }
 
-	target = args[0]
-	if target == "" {
-		fatalIf(errInvalidArgument().Trace(), "invalid target url '%v'", target)
-	}
+    target = args[0]
+    if target == "" {
+        fatalIf(errInvalidArgument().Trace(), "invalid target url '%v'", target)
+    }
 
-	versionID = cliCtx.String("version-id")
-	timeRef = parseRewindFlag(cliCtx.String("rewind"))
-	withVersions = cliCtx.Bool("versions")
-	recursive = cliCtx.Bool("recursive")
-	bucketMode = cliCtx.Bool("default")
+    versionID = cliCtx.String("version-id")
+    timeRef = parseRewindFlag(cliCtx.String("rewind"))
+    withVersions = cliCtx.Bool("versions")
+    recursive = cliCtx.Bool("recursive")
+    bucketMode = cliCtx.Bool("default")
 
-	if bucketMode && (versionID != "" || !timeRef.IsZero() || withVersions || recursive) {
-		fatalIf(errDummy(), "--default cannot be specified with any of --version-id, --rewind, --versions or --recursive.")
-	}
+    if bucketMode && (versionID != "" || !timeRef.IsZero() || withVersions || recursive) {
+        fatalIf(errDummy(), "--default cannot be specified with any of --version-id, --rewind, --versions or --recursive.")
+    }
 
-	return
+    return
 }
 
 // Clear Retention for one object/version or many objects within a given prefix, bypass governance is always enabled
 func clearRetention(ctx context.Context, target, versionID string, timeRef time.Time, withVersions, isRecursive bool) error {
-	return applyRetention(ctx, lockOpClear, target, versionID, timeRef, withVersions, isRecursive, "", 0, minio.Days, true)
+    return applyRetention(ctx, lockOpClear, target, versionID, timeRef, withVersions, isRecursive, "", 0, minio.Days, true)
 }
 
 func clearBucketLock(urlStr string) error {
-	return applyBucketLock(lockOpClear, urlStr, "", 0, "")
+    return applyBucketLock(lockOpClear, urlStr, "", 0, "")
 }
 
 // main for retention clear command.
 func mainRetentionClear(cliCtx *cli.Context) error {
-	ctx, cancelSetRetention := context.WithCancel(globalContext)
-	defer cancelSetRetention()
+    ctx, cancelSetRetention := context.WithCancel(globalContext)
+    defer cancelSetRetention()
 
-	console.SetColor("RetentionSuccess", color.New(color.FgGreen, color.Bold))
-	console.SetColor("RetentionFailure", color.New(color.FgYellow))
+    console.SetColor("RetentionSuccess", color.New(color.FgGreen, color.Bold))
+    console.SetColor("RetentionFailure", color.New(color.FgYellow))
 
-	target, versionID, rewind, withVersions, recursive, bucketMode := parseClearRetentionArgs(cliCtx)
+    target, versionID, rewind, withVersions, recursive, bucketMode := parseClearRetentionArgs(cliCtx)
 
-	fatalIfBucketLockNotSupported(ctx, target)
+    fatalIfBucketLockNotSupported(ctx, target)
 
-	if bucketMode {
-		return clearBucketLock(target)
-	}
+    if bucketMode {
+        return clearBucketLock(target)
+    }
 
-	if withVersions && rewind.IsZero() {
-		rewind = time.Now().UTC()
-	}
+    if withVersions && rewind.IsZero() {
+        rewind = time.Now().UTC()
+    }
 
-	return clearRetention(ctx, target, versionID, rewind, withVersions, recursive)
+    return clearRetention(ctx, target, versionID, rewind, withVersions, recursive)
 }

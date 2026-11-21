@@ -23,23 +23,23 @@ import "github.com/fatih/color"
 type col string
 
 const (
-	colGrey   col = "Grey"
-	colRed    col = "Red"
-	colYellow col = "Yellow"
-	colGreen  col = "Green"
+    colGrey   col = "Grey"
+    colRed    col = "Red"
+    colYellow col = "Yellow"
+    colGreen  col = "Green"
 )
 
 // getPrintCol - map color code to color for printing
 func getPrintCol(c col) *color.Color {
-	switch c {
-	case colGrey:
-		return color.New(color.FgWhite, color.Bold)
-	case colRed:
-		return color.New(color.FgRed, color.Bold)
-	case colYellow:
-		return color.New(color.FgYellow, color.Bold)
-	case colGreen:
-		return color.New(color.FgGreen, color.Bold)
-	}
-	return nil
+    switch c {
+    case colGrey:
+        return color.New(color.FgWhite, color.Bold)
+    case colRed:
+        return color.New(color.FgRed, color.Bold)
+    case colYellow:
+        return color.New(color.FgYellow, color.Bold)
+    case colGreen:
+        return color.New(color.FgGreen, color.Bold)
+    }
+    return nil
 }

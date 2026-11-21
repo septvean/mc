@@ -18,26 +18,26 @@
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
-	"time"
+    "fmt"
+    "path/filepath"
+    "time"
 
-	"github.com/dustin/go-humanize"
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/dustin/go-humanize"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminDecommissionStatusCmd = cli.Command{
-	Name:         "status",
-	Usage:        "show current decommissioning status",
-	Action:       mainAdminDecommissionStatus,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "status",
+    Usage:        "show current decommissioning status",
+    Action:       mainAdminDecommissionStatus,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -56,120 +56,120 @@ EXAMPLES:
 
 // checkAdminDecommissionStatusSyntax - validate all the passed arguments
 func checkAdminDecommissionStatusSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminDecommissionStatus is the handle for "mc admin decomission status" command.
 func mainAdminDecommissionStatus(ctx *cli.Context) error {
-	checkAdminDecommissionStatusSyntax(ctx)
+    checkAdminDecommissionStatusSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	aliasedURL = filepath.Clean(aliasedURL)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    aliasedURL = filepath.Clean(aliasedURL)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	if pool := args.Get(1); pool != "" {
-		poolStatus, e := client.StatusPool(globalContext, pool)
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to get status per pool")
+    if pool := args.Get(1); pool != "" {
+        poolStatus, e := client.StatusPool(globalContext, pool)
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to get status per pool")
 
-		if globalJSON {
-			statusJSONBytes, e := json.MarshalIndent(poolStatus, "", "    ")
-			fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-			console.Println(string(statusJSONBytes))
-			return nil
-		}
+        if globalJSON {
+            statusJSONBytes, e := json.MarshalIndent(poolStatus, "", "    ")
+            fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+            console.Println(string(statusJSONBytes))
+            return nil
+        }
 
-		var msg string
-		if poolStatus.Decommission.Complete {
-			msg = color.GreenString(fmt.Sprintf("Decommission of pool %s is complete, you may now remove it from server command line", poolStatus.CmdLine))
-		} else if poolStatus.Decommission.Failed {
-			msg = color.GreenString(fmt.Sprintf("Decommission of pool %s failed, please retry again", poolStatus.CmdLine))
-		} else if poolStatus.Decommission.Canceled {
-			msg = color.GreenString(fmt.Sprintf("Decommission of pool %s was canceled, you may start again", poolStatus.CmdLine))
-		} else if !poolStatus.Decommission.StartTime.IsZero() {
-			usedStart := (poolStatus.Decommission.TotalSize - poolStatus.Decommission.StartSize)
-			usedCurrent := (poolStatus.Decommission.TotalSize - poolStatus.Decommission.CurrentSize)
+        var msg string
+        if poolStatus.Decommission.Complete {
+            msg = color.GreenString(fmt.Sprintf("Decommission of pool %s is complete, you may now remove it from server command line", poolStatus.CmdLine))
+        } else if poolStatus.Decommission.Failed {
+            msg = color.GreenString(fmt.Sprintf("Decommission of pool %s failed, please retry again", poolStatus.CmdLine))
+        } else if poolStatus.Decommission.Canceled {
+            msg = color.GreenString(fmt.Sprintf("Decommission of pool %s was canceled, you may start again", poolStatus.CmdLine))
+        } else if !poolStatus.Decommission.StartTime.IsZero() {
+            usedStart := (poolStatus.Decommission.TotalSize - poolStatus.Decommission.StartSize)
+            usedCurrent := (poolStatus.Decommission.TotalSize - poolStatus.Decommission.CurrentSize)
 
-			duration := float64(time.Since(poolStatus.Decommission.StartTime)) / float64(time.Second)
-			if usedStart > usedCurrent && duration > 10 {
-				copied := uint64(usedStart - usedCurrent)
-				speed := uint64(float64(copied) / duration)
-				msg = "Decommissioning rate at " + humanize.IBytes(speed) + "/sec " + "[" + humanize.IBytes(
-					uint64(usedCurrent)) + "/" + humanize.IBytes(uint64(poolStatus.Decommission.TotalSize)) + "]"
-				msg += "\nStarted: " + humanize.RelTime(time.Now().UTC(), poolStatus.Decommission.StartTime, "", "ago")
-			} else {
-				msg = "Decommissioning is starting..."
-			}
-			msg = color.GreenString(msg)
-		} else {
-			errorIf(errDummy().Trace(args...), "This pool is currently not scheduled for decomissioning")
-			return nil
-		}
-		fmt.Println(msg)
-		return nil
-	}
-	poolStatuses, e := client.ListPoolsStatus(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get status for all pools")
+            duration := float64(time.Since(poolStatus.Decommission.StartTime)) / float64(time.Second)
+            if usedStart > usedCurrent && duration > 10 {
+                copied := uint64(usedStart - usedCurrent)
+                speed := uint64(float64(copied) / duration)
+                msg = "Decommissioning rate at " + humanize.IBytes(speed) + "/sec " + "[" + humanize.IBytes(
+                    uint64(usedCurrent)) + "/" + humanize.IBytes(uint64(poolStatus.Decommission.TotalSize)) + "]"
+                msg += "\nStarted: " + humanize.RelTime(time.Now().UTC(), poolStatus.Decommission.StartTime, "", "ago")
+            } else {
+                msg = "Decommissioning is starting..."
+            }
+            msg = color.GreenString(msg)
+        } else {
+            errorIf(errDummy().Trace(args...), "This pool is currently not scheduled for decomissioning")
+            return nil
+        }
+        fmt.Println(msg)
+        return nil
+    }
+    poolStatuses, e := client.ListPoolsStatus(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get status for all pools")
 
-	if globalJSON {
-		statusJSONBytes, e := json.MarshalIndent(poolStatuses, "", "    ")
-		fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-		console.Println(string(statusJSONBytes))
-		return nil
-	}
+    if globalJSON {
+        statusJSONBytes, e := json.MarshalIndent(poolStatuses, "", "    ")
+        fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+        console.Println(string(statusJSONBytes))
+        return nil
+    }
 
-	dspOrder := []col{colGreen} // Header
-	for range poolStatuses {
-		dspOrder = append(dspOrder, colGrey)
-	}
-	var printColors []*color.Color
-	for _, c := range dspOrder {
-		printColors = append(printColors, getPrintCol(c))
-	}
+    dspOrder := []col{colGreen} // Header
+    for range poolStatuses {
+        dspOrder = append(dspOrder, colGrey)
+    }
+    var printColors []*color.Color
+    for _, c := range dspOrder {
+        printColors = append(printColors, getPrintCol(c))
+    }
 
-	tbl := console.NewTable(printColors, []bool{false, false, false, false}, 0)
+    tbl := console.NewTable(printColors, []bool{false, false, false, false}, 0)
 
-	cellText := make([][]string, len(poolStatuses)+1)
-	cellText[0] = []string{
-		"ID",
-		"Pools",
-		"Drives Usage",
-		"Status",
-	}
-	for idx, pool := range poolStatuses {
-		idx++
-		totalSize := uint64(pool.Decommission.TotalSize)
-		usedCurrent := uint64(pool.Decommission.TotalSize - pool.Decommission.CurrentSize)
-		var capacity string
-		if totalSize == 0 {
-			capacity = "0% (total: 0B)"
-		} else {
-			capacity = fmt.Sprintf("%.1f%% (total: %s)", 100*float64(usedCurrent)/float64(totalSize), humanize.IBytes(totalSize))
-		}
-		status := "Active"
-		if pool.Decommission != nil {
-			if pool.Decommission.Complete {
-				status = "Complete"
-			} else if pool.Decommission.Failed {
-				status = "Draining(Failed)"
-			} else if pool.Decommission.Canceled {
-				status = "Draining(Canceled)"
-			} else if !pool.Decommission.StartTime.IsZero() {
-				status = "Draining"
-			}
-		}
-		cellText[idx] = []string{
-			humanize.Ordinal(pool.ID + 1),
-			pool.CmdLine,
-			capacity,
-			status,
-		}
-	}
-	return tbl.DisplayTable(cellText)
+    cellText := make([][]string, len(poolStatuses)+1)
+    cellText[0] = []string{
+        "ID",
+        "Pools",
+        "Drives Usage",
+        "Status",
+    }
+    for idx, pool := range poolStatuses {
+        idx++
+        totalSize := uint64(pool.Decommission.TotalSize)
+        usedCurrent := uint64(pool.Decommission.TotalSize - pool.Decommission.CurrentSize)
+        var capacity string
+        if totalSize == 0 {
+            capacity = "0% (total: 0B)"
+        } else {
+            capacity = fmt.Sprintf("%.1f%% (total: %s)", 100*float64(usedCurrent)/float64(totalSize), humanize.IBytes(totalSize))
+        }
+        status := "Active"
+        if pool.Decommission != nil {
+            if pool.Decommission.Complete {
+                status = "Complete"
+            } else if pool.Decommission.Failed {
+                status = "Draining(Failed)"
+            } else if pool.Decommission.Canceled {
+                status = "Draining(Canceled)"
+            } else if !pool.Decommission.StartTime.IsZero() {
+                status = "Draining"
+            }
+        }
+        cellText[idx] = []string{
+            humanize.Ordinal(pool.ID + 1),
+            pool.CmdLine,
+            capacity,
+            status,
+        }
+    }
+    return tbl.DisplayTable(cellText)
 }

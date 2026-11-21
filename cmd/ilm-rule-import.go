@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
-	"os"
+    "context"
+    "os"
 
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/lifecycle"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/lifecycle"
+    "github.com/minio/pkg/v3/console"
 )
 
 var ilmImportCmd = cli.Command{
-	Name:         "import",
-	Usage:        "import lifecycle configuration in JSON format",
-	Action:       mainILMImport,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "import",
+    Usage:        "import lifecycle configuration in JSON format",
+    Action:       mainILMImport,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -54,68 +54,68 @@ EXAMPLES:
 }
 
 type ilmImportMessage struct {
-	Status string `json:"status"`
-	Target string `json:"target"`
+    Status string `json:"status"`
+    Target string `json:"target"`
 }
 
 func (i ilmImportMessage) String() string {
-	return console.Colorize(ilmThemeResultSuccess, "Lifecycle configuration imported successfully to `"+i.Target+"`.")
+    return console.Colorize(ilmThemeResultSuccess, "Lifecycle configuration imported successfully to `"+i.Target+"`.")
 }
 
 func (i ilmImportMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(i, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(i, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 // readILMConfig read from stdin, returns XML.
 func readILMConfig() (*lifecycle.Configuration, *probe.Error) {
-	// User is expected to enter the lifecycleConfiguration instance contents in JSON format
-	cfg := lifecycle.NewConfiguration()
+    // User is expected to enter the lifecycleConfiguration instance contents in JSON format
+    cfg := lifecycle.NewConfiguration()
 
-	// Consume json from STDIN
-	dec := json.NewDecoder(os.Stdin)
-	if e := dec.Decode(cfg); e != nil {
-		return cfg, probe.NewError(e)
-	}
+    // Consume json from STDIN
+    dec := json.NewDecoder(os.Stdin)
+    if e := dec.Decode(cfg); e != nil {
+        return cfg, probe.NewError(e)
+    }
 
-	return cfg, nil
+    return cfg, nil
 }
 
 // checkILMImportSyntax - validate arguments passed by user
 func checkILMImportSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
 }
 
 func mainILMImport(cliCtx *cli.Context) error {
-	ctx, cancelILMImport := context.WithCancel(globalContext)
-	defer cancelILMImport()
+    ctx, cancelILMImport := context.WithCancel(globalContext)
+    defer cancelILMImport()
 
-	checkILMImportSyntax(cliCtx)
-	setILMDisplayColorScheme()
+    checkILMImportSyntax(cliCtx)
+    setILMDisplayColorScheme()
 
-	args := cliCtx.Args()
-	urlStr := args.Get(0)
+    args := cliCtx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
 
-	ilmCfg, err := readILMConfig()
-	fatalIf(err.Trace(args...), "Unable to read ILM configuration")
+    ilmCfg, err := readILMConfig()
+    fatalIf(err.Trace(args...), "Unable to read ILM configuration")
 
-	if len(ilmCfg.Rules) == 0 {
-		// Abort here, otherwise client.SetLifecycle will remove the lifecycle configuration
-		// since no rules are provided and we will show a success message.
-		fatalIf(errDummy(), "The provided ILM configuration does not contain any rule, aborting.")
-	}
+    if len(ilmCfg.Rules) == 0 {
+        // Abort here, otherwise client.SetLifecycle will remove the lifecycle configuration
+        // since no rules are provided and we will show a success message.
+        fatalIf(errDummy(), "The provided ILM configuration does not contain any rule, aborting.")
+    }
 
-	fatalIf(client.SetLifecycle(ctx, ilmCfg).Trace(urlStr), "Unable to set new lifecycle rules")
+    fatalIf(client.SetLifecycle(ctx, ilmCfg).Trace(urlStr), "Unable to set new lifecycle rules")
 
-	printMsg(ilmImportMessage{
-		Status: "success",
-		Target: urlStr,
-	})
-	return nil
+    printMsg(ilmImportMessage{
+        Status: "success",
+        Target: urlStr,
+    })
+    return nil
 }

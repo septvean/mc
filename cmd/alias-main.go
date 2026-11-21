@@ -18,10 +18,10 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 //   Configure an alias in MinIO Client
@@ -38,86 +38,86 @@ import (
 var aliasFlags = []cli.Flag{}
 
 var aliasSubcommands = []cli.Command{
-	aliasSetCmd,
-	aliasListCmd,
-	aliasRemoveCmd,
-	aliasImportCmd,
-	aliasExportCmd,
+    aliasSetCmd,
+    aliasListCmd,
+    aliasRemoveCmd,
+    aliasImportCmd,
+    aliasExportCmd,
 }
 
 var aliasCmd = cli.Command{
-	Name:            "alias",
-	Usage:           "manage server credentials in configuration file",
-	Action:          mainAlias,
-	Before:          setGlobalsFromContext,
-	HideHelpCommand: true,
-	Flags:           append(aliasFlags, globalFlags...),
-	Subcommands:     aliasSubcommands,
+    Name:            "alias",
+    Usage:           "manage server credentials in configuration file",
+    Action:          mainAlias,
+    Before:          setGlobalsFromContext,
+    HideHelpCommand: true,
+    Flags:           append(aliasFlags, globalFlags...),
+    Subcommands:     aliasSubcommands,
 }
 
 // mainAlias is the handle for "mc alias" command. provides sub-commands which write configuration data in json format to config file.
 func mainAlias(ctx *cli.Context) error {
-	commandNotFound(ctx, aliasSubcommands)
-	return nil
-	// Sub-commands like add, list and remove have their own main.
+    commandNotFound(ctx, aliasSubcommands)
+    return nil
+    // Sub-commands like add, list and remove have their own main.
 }
 
 // aliasMessage container for content message structure
 type aliasMessage struct {
-	op          string
-	prettyPrint bool
-	Status      string `json:"status"`
-	Alias       string `json:"alias"`
-	URL         string `json:"URL"`
-	AccessKey   string `json:"accessKey,omitempty"`
-	SecretKey   string `json:"secretKey,omitempty"`
-	API         string `json:"api,omitempty"`
-	Path        string `json:"path,omitempty"`
-	Src         string `json:"src,omitempty"`
-	// Deprecated field, replaced by Path
-	Lookup string `json:"lookup,omitempty"`
+    op          string
+    prettyPrint bool
+    Status      string `json:"status"`
+    Alias       string `json:"alias"`
+    URL         string `json:"URL"`
+    AccessKey   string `json:"accessKey,omitempty"`
+    SecretKey   string `json:"secretKey,omitempty"`
+    API         string `json:"api,omitempty"`
+    Path        string `json:"path,omitempty"`
+    Src         string `json:"src,omitempty"`
+    // Deprecated field, replaced by Path
+    Lookup string `json:"lookup,omitempty"`
 }
 
 // Print the config information of one alias, when prettyPrint flag
 // is activated, fields contents are cut and '...' will be added to
 // show a pretty table of all aliases configurations
 func (h aliasMessage) String() string {
-	switch h.op {
-	case "list":
-		// Create a new pretty table with cols configuration
-		t := newPrettyRecord(2,
-			Row{"Alias", "Alias"},
-			Row{"URL", "URL"},
-			Row{"AccessKey", "AccessKey"},
-			Row{"SecretKey", "SecretKey"},
-			Row{"API", "API"},
-			Row{"Path", "Path"},
-			Row{"Src", "Src"},
-		)
-		// Handle deprecated lookup
-		path := h.Path
-		if path == "" {
-			path = h.Lookup
-		}
-		return t.buildRecord(h.Alias, h.URL, h.AccessKey, h.SecretKey, h.API, path, h.Src)
-	case "remove":
-		return console.Colorize("AliasMessage", "Removed `"+h.Alias+"` successfully.")
-	case "add": // add is deprecated
-		fallthrough
-	case "set":
-		return console.Colorize("AliasMessage", "Added `"+h.Alias+"` successfully.")
-	case "import":
-		return console.Colorize("AliasMessage", "Imported `"+h.Alias+"` successfully.")
-	default:
-		return ""
-	}
+    switch h.op {
+    case "list":
+        // Create a new pretty table with cols configuration
+        t := newPrettyRecord(2,
+            Row{"Alias", "Alias"},
+            Row{"URL", "URL"},
+            Row{"AccessKey", "AccessKey"},
+            Row{"SecretKey", "SecretKey"},
+            Row{"API", "API"},
+            Row{"Path", "Path"},
+            Row{"Src", "Src"},
+        )
+        // Handle deprecated lookup
+        path := h.Path
+        if path == "" {
+            path = h.Lookup
+        }
+        return t.buildRecord(h.Alias, h.URL, h.AccessKey, h.SecretKey, h.API, path, h.Src)
+    case "remove":
+        return console.Colorize("AliasMessage", "Removed `"+h.Alias+"` successfully.")
+    case "add": // add is deprecated
+        fallthrough
+    case "set":
+        return console.Colorize("AliasMessage", "Added `"+h.Alias+"` successfully.")
+    case "import":
+        return console.Colorize("AliasMessage", "Imported `"+h.Alias+"` successfully.")
+    default:
+        return ""
+    }
 }
 
 // JSON jsonified host message
 func (h aliasMessage) JSON() string {
-	h.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(h, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    h.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(h, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonMessageBytes)
+    return string(jsonMessageBytes)
 }

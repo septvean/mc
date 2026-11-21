@@ -18,48 +18,48 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminAccesskeyCreateFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "access-key",
-		Usage: "set an access key for the account",
-	},
-	cli.StringFlag{
-		Name:  "secret-key",
-		Usage: "set a secret key for the  account",
-	},
-	cli.StringFlag{
-		Name:  "policy",
-		Usage: "path to a JSON policy file",
-	},
-	cli.StringFlag{
-		Name:  "name",
-		Usage: "friendly name for the account",
-	},
-	cli.StringFlag{
-		Name:  "description",
-		Usage: "description for the account",
-	},
-	cli.StringFlag{
-		Name:  "expiry-duration",
-		Usage: "duration before the access key expires",
-	},
-	cli.StringFlag{
-		Name:  "expiry",
-		Usage: "expiry date for the access key",
-	},
+    cli.StringFlag{
+        Name:  "access-key",
+        Usage: "set an access key for the account",
+    },
+    cli.StringFlag{
+        Name:  "secret-key",
+        Usage: "set a secret key for the  account",
+    },
+    cli.StringFlag{
+        Name:  "policy",
+        Usage: "path to a JSON policy file",
+    },
+    cli.StringFlag{
+        Name:  "name",
+        Usage: "friendly name for the account",
+    },
+    cli.StringFlag{
+        Name:  "description",
+        Usage: "description for the account",
+    },
+    cli.StringFlag{
+        Name:  "expiry-duration",
+        Usage: "duration before the access key expires",
+    },
+    cli.StringFlag{
+        Name:  "expiry",
+        Usage: "expiry date for the access key",
+    },
 }
 
 var adminAccesskeyCreateCmd = cli.Command{
-	Name:         "create",
-	Usage:        "create access key pairs for users",
-	Action:       mainAdminAccesskeyCreate,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminAccesskeyCreateFlags, globalFlags...),
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "create",
+    Usage:        "create access key pairs for users",
+    Action:       mainAdminAccesskeyCreate,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminAccesskeyCreateFlags, globalFlags...),
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -90,5 +90,5 @@ EXAMPLES:
 }
 
 func mainAdminAccesskeyCreate(ctx *cli.Context) error {
-	return commonAccesskeyCreate(ctx, false)
+    return commonAccesskeyCreate(ctx, false)
 }

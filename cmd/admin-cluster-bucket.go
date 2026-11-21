@@ -20,23 +20,23 @@ package cmd
 import "github.com/minio/cli"
 
 var adminClusterBucketSubcommands = []cli.Command{
-	adminClusterBucketImportCmd,
-	adminClusterBucketExportCmd,
+    adminClusterBucketImportCmd,
+    adminClusterBucketExportCmd,
 }
 
 var adminClusterBucketCmd = cli.Command{
-	Name:            "bucket",
-	Usage:           "manage bucket metadata on MinIO cluster",
-	Action:          mainAdminClusterBucket,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminClusterBucketSubcommands,
-	HideHelpCommand: true,
+    Name:            "bucket",
+    Usage:           "manage bucket metadata on MinIO cluster",
+    Action:          mainAdminClusterBucket,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminClusterBucketSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminClusterBucket is the handle for "mc admin cluster bucket" command.
 func mainAdminClusterBucket(ctx *cli.Context) error {
-	commandNotFound(ctx, adminClusterBucketSubcommands)
-	return nil
-	// Sub-commands like "export", "import" have their own main.
+    commandNotFound(ctx, adminClusterBucketSubcommands)
+    return nil
+    // Sub-commands like "export", "import" have their own main.
 }

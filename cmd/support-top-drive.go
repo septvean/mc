@@ -18,34 +18,34 @@
 package cmd
 
 import (
-	"context"
-	"time"
+    "context"
+    "time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var supportTopDriveFlags = []cli.Flag{
-	cli.IntFlag{
-		Name:  "count, c",
-		Usage: "show up to N drives",
-		Value: 10,
-	},
+    cli.IntFlag{
+        Name:  "count, c",
+        Usage: "show up to N drives",
+        Value: 10,
+    },
 }
 
 var supportTopDriveCmd = cli.Command{
-	Name:            "drive",
-	Aliases:         []string{"disk"},
-	HiddenAliases:   true,
-	Usage:           "show real-time drive metrics",
-	Action:          mainSupportTopDrive,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(supportTopDriveFlags, supportGlobalFlags...),
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "drive",
+    Aliases:         []string{"disk"},
+    HiddenAliases:   true,
+    Usage:           "show real-time drive metrics",
+    Action:          mainSupportTopDrive,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(supportTopDriveFlags, supportGlobalFlags...),
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -62,66 +62,66 @@ EXAMPLES:
 
 // checkSupportTopDriveSyntax - validate all the passed arguments
 func checkSupportTopDriveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainSupportTopDrive(ctx *cli.Context) error {
-	checkSupportTopDriveSyntax(ctx)
+    checkSupportTopDriveSyntax(ctx)
 
-	aliasedURL := ctx.Args().Get(0)
-	alias, _ := url2Alias(aliasedURL)
-	validateClusterRegistered(alias, false)
+    aliasedURL := ctx.Args().Get(0)
+    alias, _ := url2Alias(aliasedURL)
+    validateClusterRegistered(alias, false)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	if err != nil {
-		fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
-		return nil
-	}
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    if err != nil {
+        fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
+        return nil
+    }
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	info, e := client.ServerInfo(ctxt)
-	fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to initialize admin client.")
+    info, e := client.ServerInfo(ctxt)
+    fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to initialize admin client.")
 
-	var disks []madmin.Disk
-	for _, srv := range info.Servers {
-		disks = append(disks, srv.Disks...)
-	}
+    var disks []madmin.Disk
+    for _, srv := range info.Servers {
+        disks = append(disks, srv.Disks...)
+    }
 
-	// MetricsOptions are options provided to Metrics call.
-	opts := madmin.MetricsOptions{
-		Type:     madmin.MetricsDisk,
-		Interval: time.Second,
-		ByDisk:   true,
-		N:        ctx.Int("count"),
-	}
+    // MetricsOptions are options provided to Metrics call.
+    opts := madmin.MetricsOptions{
+        Type:     madmin.MetricsDisk,
+        Interval: time.Second,
+        ByDisk:   true,
+        N:        ctx.Int("count"),
+    }
 
-	p := tea.NewProgram(initTopDriveUI(disks, ctx.Int("count")))
-	go func() {
-		out := func(m madmin.RealtimeMetrics) {
-			for name, metric := range m.ByDisk {
-				p.Send(topDriveResult{
-					diskName: name,
-					stats:    metric.IOStats,
-				})
-			}
-		}
+    p := tea.NewProgram(initTopDriveUI(disks, ctx.Int("count")))
+    go func() {
+        out := func(m madmin.RealtimeMetrics) {
+            for name, metric := range m.ByDisk {
+                p.Send(topDriveResult{
+                    diskName: name,
+                    stats:    metric.IOStats,
+                })
+            }
+        }
 
-		e := client.Metrics(ctxt, opts, out)
-		if e != nil {
-			fatalIf(probe.NewError(e), "Unable to fetch top drives events")
-		}
-		p.Quit()
-	}()
+        e := client.Metrics(ctxt, opts, out)
+        if e != nil {
+            fatalIf(probe.NewError(e), "Unable to fetch top drives events")
+        }
+        p.Quit()
+    }()
 
-	if _, e := p.Run(); e != nil {
-		cancel()
-		fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch top drive events")
-	}
+    if _, e := p.Run(); e != nil {
+        cancel()
+        fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch top drive events")
+    }
 
-	return nil
+    return nil
 }

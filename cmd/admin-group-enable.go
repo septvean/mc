@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminGroupEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "enable a group",
-	Action:       mainAdminGroupEnableDisable,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "enable a group",
+    Action:       mainAdminGroupEnableDisable,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,43 +49,43 @@ EXAMPLES:
 
 // checkAdminGroupEnableSyntax - validate all the passed arguments
 func checkAdminGroupEnableSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminGroupEnableDisable is the handle for "mc admin group enable|disable" command.
 func mainAdminGroupEnableDisable(ctx *cli.Context) error {
-	checkAdminGroupEnableSyntax(ctx)
+    checkAdminGroupEnableSyntax(ctx)
 
-	console.SetColor("GroupMessage", color.New(color.FgGreen))
+    console.SetColor("GroupMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	group := args.Get(1)
-	var status madmin.GroupStatus
-	switch ctx.Command.Name {
-	case "enable":
-		status = madmin.GroupEnabled
-	case "disable":
-		status = madmin.GroupDisabled
-	default:
-		fatalIf(errInvalidArgument().Trace(ctx.Command.Name), "Invalid group status name")
-	}
-	e := client.SetGroupStatus(globalContext, group, status)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable set group status")
+    group := args.Get(1)
+    var status madmin.GroupStatus
+    switch ctx.Command.Name {
+    case "enable":
+        status = madmin.GroupEnabled
+    case "disable":
+        status = madmin.GroupDisabled
+    default:
+        fatalIf(errInvalidArgument().Trace(ctx.Command.Name), "Invalid group status name")
+    }
+    e := client.SetGroupStatus(globalContext, group, status)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable set group status")
 
-	printMsg(groupMessage{
-		op:          ctx.Command.Name,
-		GroupName:   group,
-		GroupStatus: string(status),
-	})
+    printMsg(groupMessage{
+        op:          ctx.Command.Name,
+        GroupName:   group,
+        GroupStatus: string(status),
+    })
 
-	return nil
+    return nil
 }

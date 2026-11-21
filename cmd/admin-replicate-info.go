@@ -18,27 +18,27 @@
 package cmd
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
+    "fmt"
+    "strconv"
+    "strings"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    humanize "github.com/dustin/go-humanize"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminReplicateInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "get site replication information",
-	Action:       mainAdminReplicationInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "get site replication information",
+    Action:       mainAdminReplicationInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -57,92 +57,92 @@ EXAMPLES:
 type srInfo madmin.SiteReplicationInfo
 
 func (i srInfo) JSON() string {
-	bs, e := json.MarshalIndent(madmin.SiteReplicationInfo(i), "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(bs)
+    bs, e := json.MarshalIndent(madmin.SiteReplicationInfo(i), "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(bs)
 }
 
 func (i srInfo) String() string {
-	var messages []string
-	info := madmin.SiteReplicationInfo(i)
-	if info.Enabled {
-		messages = []string{
-			"SiteReplication enabled for:\n",
-		}
-		r := console.Colorize("THeaders", newPrettyTable(" | ",
-			Field{"Deployment ID", 36},
+    var messages []string
+    info := madmin.SiteReplicationInfo(i)
+    if info.Enabled {
+        messages = []string{
+            "SiteReplication enabled for:\n",
+        }
+        r := console.Colorize("THeaders", newPrettyTable(" | ",
+            Field{"Deployment ID", 36},
 
-			Field{"Name", 15},
-			Field{"Endpoint", 46},
-			Field{"Sync", 4},
-			Field{"Bandwidth", 10},
-			Field{"ILM Expiry Replication", 25},
-		).buildRow("Deployment ID", "Site Name", "Endpoint", "Sync", "Bandwidth", "ILM Expiry Replication"))
-		messages = append(messages, r)
+            Field{"Name", 15},
+            Field{"Endpoint", 46},
+            Field{"Sync", 4},
+            Field{"Bandwidth", 10},
+            Field{"ILM Expiry Replication", 25},
+        ).buildRow("Deployment ID", "Site Name", "Endpoint", "Sync", "Bandwidth", "ILM Expiry Replication"))
+        messages = append(messages, r)
 
-		r = console.Colorize("THeaders", newPrettyTable(" | ",
-			Field{"Deployment ID", 36},
+        r = console.Colorize("THeaders", newPrettyTable(" | ",
+            Field{"Deployment ID", 36},
 
-			Field{"Name", 15},
-			Field{"Endpoint", 46},
-			Field{"Sync", 4},
-			Field{"Bandwidth", 10},
-			Field{"ILM Expiry Replication", 25},
-		).buildRow("", "", "", "", "Per Bucket", ""))
-		messages = append(messages, r)
-		for _, peer := range info.Sites {
-			var chk string
-			if peer.SyncState == madmin.SyncEnabled {
-				chk = check
-			}
-			limit := "N/A" // N/A means cluster bandwidth is not configured
-			if peer.DefaultBandwidth.Limit > 0 {
-				limit = humanize.Bytes(uint64(peer.DefaultBandwidth.Limit))
-				limit = fmt.Sprintf("%s/s", limit)
-			}
-			r := console.Colorize("TDetail", newPrettyTable(" | ",
-				Field{"Deployment ID", 36},
-				Field{"Name", 15},
-				Field{"Endpoint", 46},
-				Field{"Sync", 4},
-				Field{"Bandwidth", 10},
-				Field{"ILM Expiry Replication", 25},
-			).buildRow(peer.DeploymentID, peer.Name, peer.Endpoint, chk, limit, strconv.FormatBool(peer.ReplicateILMExpiry)))
-			messages = append(messages, r)
-		}
-	} else {
-		messages = []string{"SiteReplication is not enabled"}
-	}
+            Field{"Name", 15},
+            Field{"Endpoint", 46},
+            Field{"Sync", 4},
+            Field{"Bandwidth", 10},
+            Field{"ILM Expiry Replication", 25},
+        ).buildRow("", "", "", "", "Per Bucket", ""))
+        messages = append(messages, r)
+        for _, peer := range info.Sites {
+            var chk string
+            if peer.SyncState == madmin.SyncEnabled {
+                chk = check
+            }
+            limit := "N/A" // N/A means cluster bandwidth is not configured
+            if peer.DefaultBandwidth.Limit > 0 {
+                limit = humanize.Bytes(uint64(peer.DefaultBandwidth.Limit))
+                limit = fmt.Sprintf("%s/s", limit)
+            }
+            r := console.Colorize("TDetail", newPrettyTable(" | ",
+                Field{"Deployment ID", 36},
+                Field{"Name", 15},
+                Field{"Endpoint", 46},
+                Field{"Sync", 4},
+                Field{"Bandwidth", 10},
+                Field{"ILM Expiry Replication", 25},
+            ).buildRow(peer.DeploymentID, peer.Name, peer.Endpoint, chk, limit, strconv.FormatBool(peer.ReplicateILMExpiry)))
+            messages = append(messages, r)
+        }
+    } else {
+        messages = []string{"SiteReplication is not enabled"}
+    }
 
-	return console.Colorize("UserMessage", strings.Join(messages, "\n"))
+    return console.Colorize("UserMessage", strings.Join(messages, "\n"))
 }
 
 func mainAdminReplicationInfo(ctx *cli.Context) error {
-	{
-		// Check argument count
-		argsNr := len(ctx.Args())
-		if argsNr != 1 {
-			fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
-				"Need exactly one alias argument.")
-		}
-	}
+    {
+        // Check argument count
+        argsNr := len(ctx.Args())
+        if argsNr != 1 {
+            fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
+                "Need exactly one alias argument.")
+        }
+    }
 
-	console.SetColor("UserMessage", color.New(color.FgGreen))
-	console.SetColor("THeaders", color.New(color.Bold, color.FgHiWhite))
-	console.SetColor("TDetail", color.New(color.Bold, color.FgCyan))
+    console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("THeaders", color.New(color.Bold, color.FgHiWhite))
+    console.SetColor("TDetail", color.New(color.Bold, color.FgCyan))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	info, e := client.SiteReplicationInfo(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get cluster replication information")
+    info, e := client.SiteReplicationInfo(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get cluster replication information")
 
-	printMsg(srInfo(info))
+    printMsg(srInfo(info))
 
-	return nil
+    return nil
 }

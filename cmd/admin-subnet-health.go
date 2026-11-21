@@ -18,47 +18,47 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/minio/cli"
-	"github.com/minio/minio-go/v7/pkg/set"
+    "github.com/minio/cli"
+    "github.com/minio/minio-go/v7/pkg/set"
 )
 
 var adminSubnetHealthCmd = cli.Command{
-	Name:               "health",
-	Usage:              "generate MinIO health report for SUBNET",
-	OnUsageError:       onUsageError,
-	Action:             mainSubnetHealth,
-	Before:             setGlobalsFromContext,
-	Hidden:             true,
-	Flags:              supportDiagFlags, // No need to append globalFlags as top level command would add them
-	CustomHelpTemplate: "This command is deprecated and will be removed in a future release. Use 'mc support diag' instead.\n",
+    Name:               "health",
+    Usage:              "generate MinIO health report for SUBNET",
+    OnUsageError:       onUsageError,
+    Action:             mainSubnetHealth,
+    Before:             setGlobalsFromContext,
+    Hidden:             true,
+    Flags:              supportDiagFlags, // No need to append globalFlags as top level command would add them
+    CustomHelpTemplate: "This command is deprecated and will be removed in a future release. Use 'mc support diag' instead.\n",
 }
 
 func mainSubnetHealth(ctx *cli.Context) error {
-	boolValSet := set.CreateStringSet("true", "false")
-	newCmd := []string{"mc support diag"}
-	newCmd = append(newCmd, ctx.Args()...)
-	for _, flg := range ctx.Command.Flags {
-		flgName := flg.GetName()
-		if !ctx.IsSet(flgName) {
-			continue
-		}
+    boolValSet := set.CreateStringSet("true", "false")
+    newCmd := []string{"mc support diag"}
+    newCmd = append(newCmd, ctx.Args()...)
+    for _, flg := range ctx.Command.Flags {
+        flgName := flg.GetName()
+        if !ctx.IsSet(flgName) {
+            continue
+        }
 
-		// replace the deprecated --offline with --airgap
-		if flgName == "offline" {
-			flgName = "airgap"
-		}
+        // replace the deprecated --offline with --airgap
+        if flgName == "offline" {
+            flgName = "airgap"
+        }
 
-		flgStr := "--" + flgName
-		flgVal := ctx.String(flgName)
-		if !boolValSet.Contains(flgVal) {
-			flgStr = fmt.Sprintf("%s \"%s\"", flgStr, flgVal)
-		}
-		newCmd = append(newCmd, flgStr)
-	}
+        flgStr := "--" + flgName
+        flgVal := ctx.String(flgName)
+        if !boolValSet.Contains(flgVal) {
+            flgStr = fmt.Sprintf("%s \"%s\"", flgStr, flgVal)
+        }
+        newCmd = append(newCmd, flgStr)
+    }
 
-	deprecatedError(strings.Join(newCmd, " "))
-	return nil
+    deprecatedError(strings.Join(newCmd, " "))
+    return nil
 }

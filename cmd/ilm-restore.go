@@ -18,47 +18,47 @@
 package cmd
 
 import (
-	"bytes"
-	"context"
-	"fmt"
-	"time"
+    "bytes"
+    "context"
+    "fmt"
+    "time"
 
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
 )
 
 // ilm restore specific flags.
 var (
-	ilmRestoreFlags = []cli.Flag{
-		cli.IntFlag{
-			Name:  "days",
-			Value: 1,
-			Usage: "keep the restored copy for N days",
-		},
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "apply recursively",
-		},
-		cli.BoolFlag{
-			Name:  "versions",
-			Usage: "apply on versions",
-		},
-		cli.StringFlag{
-			Name:  "version-id, vid",
-			Usage: "select a specific version id",
-		},
-	}
+    ilmRestoreFlags = []cli.Flag{
+        cli.IntFlag{
+            Name:  "days",
+            Value: 1,
+            Usage: "keep the restored copy for N days",
+        },
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "apply recursively",
+        },
+        cli.BoolFlag{
+            Name:  "versions",
+            Usage: "apply on versions",
+        },
+        cli.StringFlag{
+            Name:  "version-id, vid",
+            Usage: "select a specific version id",
+        },
+    }
 )
 
 var ilmRestoreCmd = cli.Command{
-	Name:         "restore",
-	Usage:        "restore archived objects",
-	Action:       mainILMRestore,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(ilmRestoreFlags, encCFlag), globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "restore",
+    Usage:        "restore archived objects",
+    Action:       mainILMRestore,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(ilmRestoreFlags, encCFlag), globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -92,247 +92,247 @@ EXAMPLES:
 
 // checkILMRestoreSyntax - validate arguments passed by user
 func checkILMRestoreSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
 
-	if ctx.Int("days") <= 0 {
-		fatalIf(errDummy().Trace(), "--days should be equal or greater than 1")
-	}
+    if ctx.Int("days") <= 0 {
+        fatalIf(errDummy().Trace(), "--days should be equal or greater than 1")
+    }
 
-	if ctx.Bool("version-id") && (ctx.Bool("recursive") || ctx.Bool("versions")) {
-		fatalIf(errDummy().Trace(), "You cannot combine --version-id with --recursive or --versions flags.")
-	}
+    if ctx.Bool("version-id") && (ctx.Bool("recursive") || ctx.Bool("versions")) {
+        fatalIf(errDummy().Trace(), "You cannot combine --version-id with --recursive or --versions flags.")
+    }
 }
 
 // Send Restore S3 API
 func restoreObject(ctx context.Context, targetAlias, targetURL, versionID string, days int) *probe.Error {
-	clnt, err := newClientFromAlias(targetAlias, targetURL)
-	if err != nil {
-		return err
-	}
+    clnt, err := newClientFromAlias(targetAlias, targetURL)
+    if err != nil {
+        return err
+    }
 
-	return clnt.Restore(ctx, versionID, days)
+    return clnt.Restore(ctx, versionID, days)
 }
 
 // Send restore S3 API request to one or more objects depending on the arguments
 func sendRestoreRequests(ctx context.Context, targetAlias, targetURL, targetVersionID string, recursive, applyOnVersions bool, days int, restoreSentReq chan *probe.Error) {
-	defer close(restoreSentReq)
+    defer close(restoreSentReq)
 
-	client, err := newClientFromAlias(targetAlias, targetURL)
-	if err != nil {
-		restoreSentReq <- err
-		return
-	}
+    client, err := newClientFromAlias(targetAlias, targetURL)
+    if err != nil {
+        restoreSentReq <- err
+        return
+    }
 
-	if !recursive {
-		err := restoreObject(ctx, targetAlias, targetURL, targetVersionID, days)
-		restoreSentReq <- err
-		return
-	}
+    if !recursive {
+        err := restoreObject(ctx, targetAlias, targetURL, targetVersionID, days)
+        restoreSentReq <- err
+        return
+    }
 
-	prev := ""
-	for content := range client.List(ctx, ListOptions{
-		Recursive:         true,
-		WithOlderVersions: applyOnVersions,
-		ShowDir:           DirNone,
-	}) {
-		if content.Err != nil {
-			errorIf(content.Err.Trace(client.GetURL().String()), "Unable to list folder.")
-			continue
-		}
-		err := restoreObject(ctx, targetAlias, content.URL.String(), content.VersionID, days)
-		if err != nil {
-			restoreSentReq <- err
-			continue
-		}
-		// Avoid sending the status of each separate version
-		// of the same object name.
-		if prev != content.URL.String() {
-			prev = content.URL.String()
-			restoreSentReq <- nil
-		}
-	}
+    prev := ""
+    for content := range client.List(ctx, ListOptions{
+        Recursive:         true,
+        WithOlderVersions: applyOnVersions,
+        ShowDir:           DirNone,
+    }) {
+        if content.Err != nil {
+            errorIf(content.Err.Trace(client.GetURL().String()), "Unable to list folder.")
+            continue
+        }
+        err := restoreObject(ctx, targetAlias, content.URL.String(), content.VersionID, days)
+        if err != nil {
+            restoreSentReq <- err
+            continue
+        }
+        // Avoid sending the status of each separate version
+        // of the same object name.
+        if prev != content.URL.String() {
+            prev = content.URL.String()
+            restoreSentReq <- nil
+        }
+    }
 }
 
 // Wait until an object which receives restore request is completely restored in the fast tier
 func waitRestoreObject(ctx context.Context, targetAlias, targetURL, versionID string, encKeyDB map[string][]prefixSSEPair) *probe.Error {
-	clnt, err := newClientFromAlias(targetAlias, targetURL)
-	if err != nil {
-		return err
-	}
+    clnt, err := newClientFromAlias(targetAlias, targetURL)
+    if err != nil {
+        return err
+    }
 
-	for {
-		opts := StatOptions{
-			versionID: versionID,
-			sse:       getSSE(targetAlias+clnt.GetURL().Path, encKeyDB[targetAlias]),
-		}
-		st, err := clnt.Stat(ctx, opts)
-		if err != nil {
-			return err
-		}
-		if st.Restore == nil {
-			return probe.NewError(fmt.Errorf("`%s` did not receive restore request", targetURL))
-		}
-		if st.Restore != nil && !st.Restore.OngoingRestore {
-			return nil
-		}
-		// Restore still going on, wait for 5 seconds before checking again
-		time.Sleep(5 * time.Second)
-	}
+    for {
+        opts := StatOptions{
+            versionID: versionID,
+            sse:       getSSE(targetAlias+clnt.GetURL().Path, encKeyDB[targetAlias]),
+        }
+        st, err := clnt.Stat(ctx, opts)
+        if err != nil {
+            return err
+        }
+        if st.Restore == nil {
+            return probe.NewError(fmt.Errorf("`%s` did not receive restore request", targetURL))
+        }
+        if st.Restore != nil && !st.Restore.OngoingRestore {
+            return nil
+        }
+        // Restore still going on, wait for 5 seconds before checking again
+        time.Sleep(5 * time.Second)
+    }
 }
 
 // Check and wait the restore status of one or more objects one by one.
 func checkRestoreStatus(ctx context.Context, targetAlias, targetURL, targetVersionID string, recursive, applyOnVersions bool, encKeyDB map[string][]prefixSSEPair, restoreStatus chan *probe.Error) {
-	defer close(restoreStatus)
+    defer close(restoreStatus)
 
-	client, err := newClientFromAlias(targetAlias, targetURL)
-	if err != nil {
-		restoreStatus <- err
-		return
-	}
+    client, err := newClientFromAlias(targetAlias, targetURL)
+    if err != nil {
+        restoreStatus <- err
+        return
+    }
 
-	if !recursive {
-		restoreStatus <- waitRestoreObject(ctx, targetAlias, targetURL, targetVersionID, encKeyDB)
-		return
-	}
+    if !recursive {
+        restoreStatus <- waitRestoreObject(ctx, targetAlias, targetURL, targetVersionID, encKeyDB)
+        return
+    }
 
-	prev := ""
-	for content := range client.List(ctx, ListOptions{
-		Recursive:         true,
-		WithOlderVersions: applyOnVersions,
-		ShowDir:           DirNone,
-	}) {
-		if content.Err != nil {
-			restoreStatus <- content.Err
-			continue
-		}
+    prev := ""
+    for content := range client.List(ctx, ListOptions{
+        Recursive:         true,
+        WithOlderVersions: applyOnVersions,
+        ShowDir:           DirNone,
+    }) {
+        if content.Err != nil {
+            restoreStatus <- content.Err
+            continue
+        }
 
-		err := waitRestoreObject(ctx, targetAlias, content.URL.String(), content.VersionID, encKeyDB)
-		if err != nil {
-			restoreStatus <- err
-			continue
-		}
+        err := waitRestoreObject(ctx, targetAlias, content.URL.String(), content.VersionID, encKeyDB)
+        if err != nil {
+            restoreStatus <- err
+            continue
+        }
 
-		if prev != content.URL.String() {
-			prev = content.URL.String()
-			restoreStatus <- nil
-		}
-	}
+        if prev != content.URL.String() {
+            prev = content.URL.String()
+            restoreStatus <- nil
+        }
+    }
 }
 
 var dotCycle = 0
 
 // Clear and print text in the same line
 func printStatus(msg string, args ...any) {
-	if globalJSON {
-		return
-	}
+    if globalJSON {
+        return
+    }
 
-	dotCycle++
-	dots := bytes.Repeat([]byte{'.'}, dotCycle%3+1)
-	fmt.Print("\n\033[1A\033[K")
-	fmt.Printf(msg+string(dots), args...)
+    dotCycle++
+    dots := bytes.Repeat([]byte{'.'}, dotCycle%3+1)
+    fmt.Print("\n\033[1A\033[K")
+    fmt.Printf(msg+string(dots), args...)
 }
 
 // Receive restore request & restore finished status and print in the console
 func showRestoreStatus(restoreReqStatus, restoreFinishedStatus chan *probe.Error, doneCh chan struct{}) {
-	var sent, finished int
-	var done bool
+    var sent, finished int
+    var done bool
 
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+    ticker := time.NewTicker(1 * time.Second)
+    defer ticker.Stop()
 
-	for !done {
-		select {
-		case err, ok := <-restoreReqStatus:
-			if !ok {
-				done = true
-				break
-			}
-			errorIf(err.Trace(), "Unable to send restore request.")
-			if err == nil {
-				sent++
-			}
-		case <-ticker.C:
-		}
+    for !done {
+        select {
+        case err, ok := <-restoreReqStatus:
+            if !ok {
+                done = true
+                break
+            }
+            errorIf(err.Trace(), "Unable to send restore request.")
+            if err == nil {
+                sent++
+            }
+        case <-ticker.C:
+        }
 
-		printStatus("Sent restore requests to %d object(s)", sent)
-	}
+        printStatus("Sent restore requests to %d object(s)", sent)
+    }
 
-	if !globalJSON {
-		fmt.Println("")
-	}
+    if !globalJSON {
+        fmt.Println("")
+    }
 
-	done = false
+    done = false
 
-	for !done {
-		select {
-		case err, ok := <-restoreFinishedStatus:
-			if !ok {
-				done = true
-				break
-			}
-			errorIf(err.Trace(), "Unable to check for restore status")
-			if err == nil {
-				finished++
-			}
-		case <-ticker.C:
-		}
-		printStatus("%d/%d object(s) successfully restored", finished, sent)
-	}
+    for !done {
+        select {
+        case err, ok := <-restoreFinishedStatus:
+            if !ok {
+                done = true
+                break
+            }
+            errorIf(err.Trace(), "Unable to check for restore status")
+            if err == nil {
+                finished++
+            }
+        case <-ticker.C:
+        }
+        printStatus("%d/%d object(s) successfully restored", finished, sent)
+    }
 
-	if !globalJSON {
-		fmt.Println("")
-	} else {
-		type ilmRestore struct {
-			Status   string `json:"status"`
-			Restored int    `json:"restored"`
-		}
+    if !globalJSON {
+        fmt.Println("")
+    } else {
+        type ilmRestore struct {
+            Status   string `json:"status"`
+            Restored int    `json:"restored"`
+        }
 
-		msgBytes, _ := json.Marshal(ilmRestore{Status: "success", Restored: sent})
-		fmt.Println(string(msgBytes))
-	}
+        msgBytes, _ := json.Marshal(ilmRestore{Status: "success", Restored: sent})
+        fmt.Println(string(msgBytes))
+    }
 
-	close(doneCh)
+    close(doneCh)
 }
 
 func mainILMRestore(cliCtx *cli.Context) (cErr error) {
-	ctx, cancelILMRestore := context.WithCancel(globalContext)
-	defer cancelILMRestore()
+    ctx, cancelILMRestore := context.WithCancel(globalContext)
+    defer cancelILMRestore()
 
-	checkILMRestoreSyntax(cliCtx)
+    checkILMRestoreSyntax(cliCtx)
 
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
 
-	versionID := cliCtx.String("version-id")
-	recursive := cliCtx.Bool("recursive")
-	includeVersions := cliCtx.Bool("versions")
-	days := cliCtx.Int("days")
+    versionID := cliCtx.String("version-id")
+    recursive := cliCtx.Bool("recursive")
+    includeVersions := cliCtx.Bool("versions")
+    days := cliCtx.Int("days")
 
-	encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
-	fatalIf(err, "Unable to parse encryption keys.")
+    encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
+    fatalIf(err, "Unable to parse encryption keys.")
 
-	targetAlias, targetURL, _ := mustExpandAlias(aliasedURL)
-	if targetAlias == "" {
-		fatalIf(errDummy().Trace(), "Unable to restore the given URL")
-	}
+    targetAlias, targetURL, _ := mustExpandAlias(aliasedURL)
+    if targetAlias == "" {
+        fatalIf(errDummy().Trace(), "Unable to restore the given URL")
+    }
 
-	restoreReqStatus := make(chan *probe.Error)
-	restoreStatus := make(chan *probe.Error)
+    restoreReqStatus := make(chan *probe.Error)
+    restoreStatus := make(chan *probe.Error)
 
-	done := make(chan struct{})
+    done := make(chan struct{})
 
-	go func() {
-		showRestoreStatus(restoreReqStatus, restoreStatus, done)
-	}()
+    go func() {
+        showRestoreStatus(restoreReqStatus, restoreStatus, done)
+    }()
 
-	sendRestoreRequests(ctx, targetAlias, targetURL, versionID, recursive, includeVersions, days, restoreReqStatus)
-	checkRestoreStatus(ctx, targetAlias, targetURL, versionID, recursive, includeVersions, encKeyDB, restoreStatus)
+    sendRestoreRequests(ctx, targetAlias, targetURL, versionID, recursive, includeVersions, days, restoreReqStatus)
+    checkRestoreStatus(ctx, targetAlias, targetURL, versionID, recursive, includeVersions, encKeyDB, restoreStatus)
 
-	// Wait until the UI printed all the status
-	<-done
+    // Wait until the UI printed all the status
+    <-done
 
-	return nil
+    return nil
 }

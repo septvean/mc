@@ -18,122 +18,122 @@
 package cmd
 
 import (
-	"fmt"
-	"sync"
-	"testing"
+    "fmt"
+    "sync"
+    "testing"
 
-	"github.com/rjeczalik/notify"
+    "github.com/rjeczalik/notify"
 )
 
 func testPipeChan(inputCh, outputCh chan notify.EventInfo, totalMsgs int) error {
-	var wg sync.WaitGroup
+    var wg sync.WaitGroup
 
-	msgCtnt := notify.EventInfo(nil)
+    msgCtnt := notify.EventInfo(nil)
 
-	// Send messages up to totalMsgs
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for range totalMsgs {
-			inputCh <- msgCtnt
-		}
-		close(inputCh)
-	}()
+    // Send messages up to totalMsgs
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        for range totalMsgs {
+            inputCh <- msgCtnt
+        }
+        close(inputCh)
+    }()
 
-	// Goroutine to receive and check messages
-	var recvMsgs int
-	var recvErr error
+    // Goroutine to receive and check messages
+    var recvMsgs int
+    var recvErr error
 
-	wg.Add(1)
+    wg.Add(1)
 
-	go func() {
-		defer wg.Done()
-		for msg := range outputCh {
-			recvMsgs++
-			if msg != msgCtnt {
-				recvErr = fmt.Errorf("Corrupted message, expected = `%s`, found = `%s`", msgCtnt, msg)
-				return
-			}
-		}
-	}()
+    go func() {
+        defer wg.Done()
+        for msg := range outputCh {
+            recvMsgs++
+            if msg != msgCtnt {
+                recvErr = fmt.Errorf("Corrupted message, expected = `%s`, found = `%s`", msgCtnt, msg)
+                return
+            }
+        }
+    }()
 
-	// Wait until we finish sending and receiving messages
-	wg.Wait()
+    // Wait until we finish sending and receiving messages
+    wg.Wait()
 
-	if recvErr != nil {
-		return recvErr
-	}
+    if recvErr != nil {
+        return recvErr
+    }
 
-	// Check if all messages are received
-	if recvMsgs != totalMsgs {
-		return fmt.Errorf("unable to receive all messages, expected: %d, lost: %d", totalMsgs, totalMsgs-recvMsgs)
-	}
+    // Check if all messages are received
+    if recvMsgs != totalMsgs {
+        return fmt.Errorf("unable to receive all messages, expected: %d, lost: %d", totalMsgs, totalMsgs-recvMsgs)
+    }
 
-	return nil
+    return nil
 }
 
 // Testing code
 
 func TestPipeChannel(t *testing.T) {
-	fastCh, slowCh := PipeChan(1000)
-	err := testPipeChan(fastCh, slowCh, 10*1000)
-	if err != nil {
-		t.Errorf("ERR: %v\n", err)
-	}
+    fastCh, slowCh := PipeChan(1000)
+    err := testPipeChan(fastCh, slowCh, 10*1000)
+    if err != nil {
+        t.Errorf("ERR: %v\n", err)
+    }
 }
 
 func TestRegularChannel(t *testing.T) {
-	ch := make(chan notify.EventInfo, 1000)
-	err := testPipeChan(ch, ch, 10*1000)
-	if err != nil {
-		t.Errorf("ERR: %v\n", err)
-	}
+    ch := make(chan notify.EventInfo, 1000)
+    err := testPipeChan(ch, ch, 10*1000)
+    if err != nil {
+        t.Errorf("ERR: %v\n", err)
+    }
 }
 
 // Benchmark code
 
 func benchmarkRegular(b *testing.B, msgsNum int) {
-	for n := 0; n < b.N; n++ {
-		ch := make(chan notify.EventInfo, msgsNum)
-		testPipeChan(ch, ch, msgsNum)
-	}
+    for n := 0; n < b.N; n++ {
+        ch := make(chan notify.EventInfo, msgsNum)
+        testPipeChan(ch, ch, msgsNum)
+    }
 }
 
 func benchmarkPipeChan(b *testing.B, msgsNum int) {
-	for n := 0; n < b.N; n++ {
-		fastCh, slowCh := PipeChan(1000)
-		testPipeChan(fastCh, slowCh, msgsNum)
-	}
+    for n := 0; n < b.N; n++ {
+        fastCh, slowCh := PipeChan(1000)
+        testPipeChan(fastCh, slowCh, msgsNum)
+    }
 }
 
 func BenchmarkRegular1M(b *testing.B) {
-	benchmarkRegular(b, 1*1000*1000)
+    benchmarkRegular(b, 1*1000*1000)
 }
 
 func BenchmarkPipeChan1M(b *testing.B) {
-	benchmarkPipeChan(b, 1*1000*1000)
+    benchmarkPipeChan(b, 1*1000*1000)
 }
 
 func BenchmarkRegular100K(b *testing.B) {
-	benchmarkRegular(b, 100*1000)
+    benchmarkRegular(b, 100*1000)
 }
 
 func BenchmarkPipeChan100K(b *testing.B) {
-	benchmarkPipeChan(b, 100*1000)
+    benchmarkPipeChan(b, 100*1000)
 }
 
 func BenchmarkRegular10K(b *testing.B) {
-	benchmarkRegular(b, 10*1000)
+    benchmarkRegular(b, 10*1000)
 }
 
 func BenchmarkPipeChan10K(b *testing.B) {
-	benchmarkPipeChan(b, 10*1000)
+    benchmarkPipeChan(b, 10*1000)
 }
 
 func BenchmarkRegular1K(b *testing.B) {
-	benchmarkRegular(b, 1*1000)
+    benchmarkRegular(b, 1*1000)
 }
 
 func BenchmarkPipeChan1K(b *testing.B) {
-	benchmarkPipeChan(b, 1*1000)
+    benchmarkPipeChan(b, 1*1000)
 }

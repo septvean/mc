@@ -20,21 +20,21 @@ package cmd
 import "github.com/minio/cli"
 
 var corsSubcommands = []cli.Command{
-	corsSetCmd,
-	corsGetCmd,
-	corsRemoveCmd,
+    corsSetCmd,
+    corsGetCmd,
+    corsRemoveCmd,
 }
 
 var corsCmd = cli.Command{
-	Name:        "cors",
-	Usage:       "manage bucket CORS configuration",
-	Action:      mainCors,
-	Before:      setGlobalsFromContext,
-	Flags:       globalFlags,
-	Subcommands: corsSubcommands,
+    Name:        "cors",
+    Usage:       "manage bucket CORS configuration",
+    Action:      mainCors,
+    Before:      setGlobalsFromContext,
+    Flags:       globalFlags,
+    Subcommands: corsSubcommands,
 }
 
 func mainCors(ctx *cli.Context) error {
-	commandNotFound(ctx, corsSubcommands)
-	return nil
+    commandNotFound(ctx, corsSubcommands)
+    return nil
 }

@@ -18,30 +18,30 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var supportProxySubcommands = []cli.Command{
-	supportProxySetCmd,
-	supportProxyRemoveCmd,
-	supportProxyShowCmd,
+    supportProxySetCmd,
+    supportProxyRemoveCmd,
+    supportProxyShowCmd,
 }
 
 var supportProxyCmd = cli.Command{
-	Name:            "proxy",
-	Usage:           "configure proxy",
-	Action:          mainSupportProxy,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           supportGlobalFlags,
-	Subcommands:     supportProxySubcommands,
-	HideHelpCommand: true,
+    Name:            "proxy",
+    Usage:           "configure proxy",
+    Action:          mainSupportProxy,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           supportGlobalFlags,
+    Subcommands:     supportProxySubcommands,
+    HideHelpCommand: true,
 }
 
 // mainSupportProxy is the handler for "mc support proxy" command.
 func mainSupportProxy(ctx *cli.Context) error {
-	commandNotFound(ctx, supportProxySubcommands)
-	return nil
-	// Sub-commands like "set", "remove", "show" have their own main.
-	// Check for command syntax
+    commandNotFound(ctx, supportProxySubcommands)
+    return nil
+    // Sub-commands like "set", "remove", "show" have their own main.
+    // Check for command syntax
 }

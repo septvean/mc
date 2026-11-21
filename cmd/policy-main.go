@@ -18,31 +18,31 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var policyFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "recursive, r",
-		Usage: "list recursively",
-	},
+    cli.BoolFlag{
+        Name:  "recursive, r",
+        Usage: "list recursively",
+    },
 }
 
 // Manage anonymous access to buckets and objects.
 var policyCmd = cli.Command{
-	Name:         "policy",
-	Usage:        "manage anonymous access to buckets and objects",
-	Action:       mainPolicy,
-	Hidden:       true,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(policyFlags, globalFlags...),
-	CustomHelpTemplate: `Please use 'mc anonymous'
+    Name:         "policy",
+    Usage:        "manage anonymous access to buckets and objects",
+    Action:       mainPolicy,
+    Hidden:       true,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(policyFlags, globalFlags...),
+    CustomHelpTemplate: `Please use 'mc anonymous'
 `,
 }
 
 func mainPolicy(_ *cli.Context) error {
-	console.Infoln("Please use 'mc anonymous'")
-	return nil
+    console.Infoln("Please use 'mc anonymous'")
+    return nil
 }

@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserSvcAcctEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "enable a service account",
-	Action:       mainAdminUserSvcAcctEnable,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "enable a service account",
+    Action:       mainAdminUserSvcAcctEnable,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,37 +49,37 @@ EXAMPLES:
 
 // checkAdminUserSvcAcctEnableSyntax - validate all the passed arguments
 func checkAdminUserSvcAcctEnableSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 }
 
 // mainAdminUserSvcAcctEnable is the handle for "mc admin user svcacct enable" command.
 func mainAdminUserSvcAcctEnable(ctx *cli.Context) error {
-	checkAdminUserSvcAcctEnableSyntax(ctx)
+    checkAdminUserSvcAcctEnableSyntax(ctx)
 
-	console.SetColor("AccMessage", color.New(color.FgGreen))
+    console.SetColor("AccMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	svcAccount := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    svcAccount := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	opts := madmin.UpdateServiceAccountReq{
-		NewStatus: "on",
-	}
+    opts := madmin.UpdateServiceAccountReq{
+        NewStatus: "on",
+    }
 
-	e := client.UpdateServiceAccount(globalContext, svcAccount, opts)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to enable the specified service account")
+    e := client.UpdateServiceAccount(globalContext, svcAccount, opts)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to enable the specified service account")
 
-	printMsg(acctMessage{
-		op:        svcAccOpEnable,
-		AccessKey: svcAccount,
-	})
+    printMsg(acctMessage{
+        op:        svcAccOpEnable,
+        AccessKey: svcAccount,
+    })
 
-	return nil
+    return nil
 }

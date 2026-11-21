@@ -18,46 +18,46 @@
 package cmd
 
 import (
-	"bytes"
-	"io"
-	"net/http"
-	"strconv"
+    "bytes"
+    "io"
+    "net/http"
+    "strconv"
 )
 
 type adminPolicyHandler struct {
-	endpoint string
-	name     string
-	policy   []byte
+    endpoint string
+    name     string
+    policy   []byte
 }
 
 func (h adminPolicyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if ak := r.Header.Get("Authorization"); len(ak) == 0 {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-	switch r.Method {
-	case "PUT":
-		length, e := strconv.Atoi(r.Header.Get("Content-Length"))
-		if e != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+    if ak := r.Header.Get("Authorization"); len(ak) == 0 {
+        w.WriteHeader(http.StatusForbidden)
+        return
+    }
+    switch r.Method {
+    case "PUT":
+        length, e := strconv.Atoi(r.Header.Get("Content-Length"))
+        if e != nil {
+            w.WriteHeader(http.StatusBadRequest)
+            return
+        }
 
-		var buffer bytes.Buffer
-		if _, e = io.CopyN(&buffer, r.Body, int64(length)); e != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+        var buffer bytes.Buffer
+        if _, e = io.CopyN(&buffer, r.Body, int64(length)); e != nil {
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
 
-		if len(h.policy) != buffer.Len() {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+        if len(h.policy) != buffer.Len() {
+            w.WriteHeader(http.StatusBadRequest)
+            return
+        }
 
-		w.Header().Set("Content-Length", "0")
-		w.WriteHeader(http.StatusOK)
+        w.Header().Set("Content-Length", "0")
+        w.WriteHeader(http.StatusOK)
 
-	default:
-		w.WriteHeader(http.StatusForbidden)
-	}
+    default:
+        w.WriteHeader(http.StatusForbidden)
+    }
 }

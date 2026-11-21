@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var licenseUpdateCmd = cli.Command{
-	Name:         "update",
-	Usage:        "update the license",
-	OnUsageError: onUsageError,
-	Action:       mainLicenseUpdate,
-	Before:       setGlobalsFromContext,
-	Flags:        supportGlobalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "update",
+    Usage:        "update the license",
+    OnUsageError: onUsageError,
+    Action:       mainLicenseUpdate,
+    Before:       setGlobalsFromContext,
+    Flags:        supportGlobalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -56,80 +56,80 @@ EXAMPLES:
 const licUpdateMsgTag = "licenseUpdateMessage"
 
 type licUpdateMessage struct {
-	Status string `json:"status"`
-	Alias  string `json:"-"`
+    Status string `json:"status"`
+    Alias  string `json:"-"`
 }
 
 // String colorized license update message
 func (li licUpdateMessage) String() string {
-	return console.Colorize(licUpdateMsgTag, "License updated successfully for "+li.Alias)
+    return console.Colorize(licUpdateMsgTag, "License updated successfully for "+li.Alias)
 }
 
 // JSON jsonified license update message
 func (li licUpdateMessage) JSON() string {
-	jsonBytes, e := json.MarshalIndent(li, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    jsonBytes, e := json.MarshalIndent(li, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonBytes)
+    return string(jsonBytes)
 }
 
 func mainLicenseUpdate(ctx *cli.Context) error {
-	args := ctx.Args()
-	argsLen := len(args)
-	if argsLen > 2 || argsLen < 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    args := ctx.Args()
+    argsLen := len(args)
+    if argsLen > 2 || argsLen < 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	console.SetColor(licUpdateMsgTag, color.New(color.FgGreen, color.Bold))
+    console.SetColor(licUpdateMsgTag, color.New(color.FgGreen, color.Bold))
 
-	aliasedURL := args.Get(0)
-	alias, _ := url2Alias(aliasedURL)
+    aliasedURL := args.Get(0)
+    alias, _ := url2Alias(aliasedURL)
 
-	if argsLen == 2 {
-		licFile := args.Get(1)
-		printMsg(performLicenseUpdate(licFile, alias))
-		return nil
-	}
+    if argsLen == 2 {
+        licFile := args.Get(1)
+        printMsg(performLicenseUpdate(licFile, alias))
+        return nil
+    }
 
-	// renew the license
-	printMsg(performLicenseRenew(alias))
-	return nil
+    // renew the license
+    printMsg(performLicenseRenew(alias))
+    return nil
 }
 
 func performLicenseRenew(alias string) licUpdateMessage {
-	apiKey, _, e := getSubnetCreds(alias)
-	fatalIf(probe.NewError(e), "Error getting subnet creds")
+    apiKey, _, e := getSubnetCreds(alias)
+    fatalIf(probe.NewError(e), "Error getting subnet creds")
 
-	if len(apiKey) == 0 {
-		errMsg := fmt.Sprintf("Please register the cluster first by running 'mc license register %s'", alias)
-		fatal(errDummy().Trace(), errMsg)
-	}
+    if len(apiKey) == 0 {
+        errMsg := fmt.Sprintf("Please register the cluster first by running 'mc license register %s'", alias)
+        fatal(errDummy().Trace(), errMsg)
+    }
 
-	renewURL := subnetLicenseRenewURL()
-	headers := SubnetAPIKeyAuthHeaders(apiKey)
-	headers.addDeploymentIDHeader(alias)
-	resp, e := SubnetPostReq(renewURL, nil, headers)
-	fatalIf(probe.NewError(e), "Error renewing license for %s", alias)
+    renewURL := subnetLicenseRenewURL()
+    headers := SubnetAPIKeyAuthHeaders(apiKey)
+    headers.addDeploymentIDHeader(alias)
+    resp, e := SubnetPostReq(renewURL, nil, headers)
+    fatalIf(probe.NewError(e), "Error renewing license for %s", alias)
 
-	extractAndSaveSubnetCreds(alias, resp)
+    extractAndSaveSubnetCreds(alias, resp)
 
-	return licUpdateMessage{
-		Alias:  alias,
-		Status: "success",
-	}
+    return licUpdateMessage{
+        Alias:  alias,
+        Status: "success",
+    }
 }
 
 func performLicenseUpdate(licFile, alias string) licUpdateMessage {
-	lum := licUpdateMessage{
-		Alias:  alias,
-		Status: "success",
-	}
+    lum := licUpdateMessage{
+        Alias:  alias,
+        Status: "success",
+    }
 
-	licBytes, e := os.ReadFile(licFile)
-	fatalIf(probe.NewError(e), fmt.Sprintf("Unable to read license file %s", licFile))
+    licBytes, e := os.ReadFile(licFile)
+    fatalIf(probe.NewError(e), fmt.Sprintf("Unable to read license file %s", licFile))
 
-	lic := string(licBytes)
-	validateAndSaveLic(lic, alias, true)
+    lic := string(licBytes)
+    validateAndSaveLic(lic, alias, true)
 
-	return lum
+    return lum
 }

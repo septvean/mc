@@ -18,29 +18,29 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminDecommissionSubcommands = []cli.Command{
-	adminDecommissionStartCmd,
-	adminDecommissionStatusCmd,
-	adminDecommissionCancelCmd,
+    adminDecommissionStartCmd,
+    adminDecommissionStatusCmd,
+    adminDecommissionCancelCmd,
 }
 
 var adminDecommissionCmd = cli.Command{
-	Name:            "decommission",
-	Aliases:         []string{"decom"},
-	Usage:           "manage MinIO server pool decommissioning",
-	Action:          mainAdminDecommission,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminDecommissionSubcommands,
-	HideHelpCommand: true,
+    Name:            "decommission",
+    Aliases:         []string{"decom"},
+    Usage:           "manage MinIO server pool decommissioning",
+    Action:          mainAdminDecommission,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminDecommissionSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminDecommission is the handle for "mc admin decommission" command.
 func mainAdminDecommission(ctx *cli.Context) error {
-	commandNotFound(ctx, adminDecommissionSubcommands)
-	return nil
-	// Sub-commands like "get", "set" have their own main.
+    commandNotFound(ctx, adminDecommissionSubcommands)
+    return nil
+    // Sub-commands like "get", "set" have their own main.
 }

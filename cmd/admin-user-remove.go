@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove user",
-	Action:       mainAdminUserRemove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove user",
+    Action:       mainAdminUserRemove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,32 +49,32 @@ EXAMPLES:
 
 // checkAdminUserRemoveSyntax - validate all the passed arguments
 func checkAdminUserRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminUserRemove is the handle for "mc admin user remove" command.
 func mainAdminUserRemove(ctx *cli.Context) error {
-	checkAdminUserRemoveSyntax(ctx)
+    checkAdminUserRemoveSyntax(ctx)
 
-	console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("UserMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.RemoveUser(globalContext, args.Get(1))
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to remove %s", args.Get(1))
+    e := client.RemoveUser(globalContext, args.Get(1))
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to remove %s", args.Get(1))
 
-	printMsg(userMessage{
-		op:        ctx.Command.Name,
-		AccessKey: args.Get(1),
-	})
+    printMsg(userMessage{
+        op:        ctx.Command.Name,
+        AccessKey: args.Get(1),
+    })
 
-	return nil
+    return nil
 }

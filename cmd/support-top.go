@@ -20,26 +20,26 @@ package cmd
 import "github.com/minio/cli"
 
 var supportTopSubcommands = []cli.Command{
-	supportTopAPICmd,
-	supportTopDriveCmd,
-	supportTopLocksCmd,
-	supportTopNetCmd,
-	supportTopRPCCmd,
+    supportTopAPICmd,
+    supportTopDriveCmd,
+    supportTopLocksCmd,
+    supportTopNetCmd,
+    supportTopRPCCmd,
 }
 
 var supportTopCmd = cli.Command{
-	Name:            "top",
-	Usage:           "provide top like statistics for MinIO",
-	Action:          mainSupportTop,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     supportTopSubcommands,
-	HideHelpCommand: true,
+    Name:            "top",
+    Usage:           "provide top like statistics for MinIO",
+    Action:          mainSupportTop,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     supportTopSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainSupportTop is the handle for "mc support top" command.
 func mainSupportTop(ctx *cli.Context) error {
-	commandNotFound(ctx, supportTopSubcommands)
-	return nil
-	// Sub-commands like "locks" have their own main.
+    commandNotFound(ctx, supportTopSubcommands)
+    return nil
+    // Sub-commands like "locks" have their own main.
 }

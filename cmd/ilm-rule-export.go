@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
-	"errors"
-	"time"
+    "context"
+    "errors"
+    "time"
 
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/lifecycle"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/lifecycle"
 )
 
 var ilmExportCmd = cli.Command{
-	Name:         "export",
-	Usage:        "export lifecycle configuration in JSON format",
-	Action:       mainILMExport,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "export",
+    Usage:        "export lifecycle configuration in JSON format",
+    Action:       mainILMExport,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -54,59 +54,59 @@ EXAMPLES:
 }
 
 type ilmExportMessage struct {
-	Status    string                   `json:"status"`
-	Target    string                   `json:"target"`
-	Config    *lifecycle.Configuration `json:"config"`
-	UpdatedAt time.Time                `json:"updatedAt,omitempty"`
+    Status    string                   `json:"status"`
+    Target    string                   `json:"target"`
+    Config    *lifecycle.Configuration `json:"config"`
+    UpdatedAt time.Time                `json:"updatedAt,omitempty"`
 }
 
 func (i ilmExportMessage) String() string {
-	msgBytes, e := json.MarshalIndent(i.Config, "", " ")
-	fatalIf(probe.NewError(e), "Unable to export ILM configuration")
+    msgBytes, e := json.MarshalIndent(i.Config, "", " ")
+    fatalIf(probe.NewError(e), "Unable to export ILM configuration")
 
-	return string(msgBytes)
+    return string(msgBytes)
 }
 
 func (i ilmExportMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(i, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal ILM message")
+    msgBytes, e := json.MarshalIndent(i, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal ILM message")
 
-	return string(msgBytes)
+    return string(msgBytes)
 }
 
 // checkILMExportSyntax - validate arguments passed by user
 func checkILMExportSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
 }
 
 func mainILMExport(cliCtx *cli.Context) error {
-	ctx, cancelILMExport := context.WithCancel(globalContext)
-	defer cancelILMExport()
+    ctx, cancelILMExport := context.WithCancel(globalContext)
+    defer cancelILMExport()
 
-	checkILMExportSyntax(cliCtx)
-	setILMDisplayColorScheme()
+    checkILMExportSyntax(cliCtx)
+    setILMDisplayColorScheme()
 
-	args := cliCtx.Args()
-	urlStr := args.Get(0)
+    args := cliCtx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(args...), "Unable to initialize client for "+urlStr+".")
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(args...), "Unable to initialize client for "+urlStr+".")
 
-	ilmCfg, updatedAt, err := client.GetLifecycle(ctx)
-	fatalIf(err.Trace(args...), "Unable to get lifecycle configuration")
-	if len(ilmCfg.Rules) == 0 {
-		fatalIf(probe.NewError(errors.New("lifecycle configuration not set")).Trace(urlStr),
-			"Unable to export lifecycle configuration")
-	}
+    ilmCfg, updatedAt, err := client.GetLifecycle(ctx)
+    fatalIf(err.Trace(args...), "Unable to get lifecycle configuration")
+    if len(ilmCfg.Rules) == 0 {
+        fatalIf(probe.NewError(errors.New("lifecycle configuration not set")).Trace(urlStr),
+            "Unable to export lifecycle configuration")
+    }
 
-	printMsg(ilmExportMessage{
-		Status:    "success",
-		Target:    urlStr,
-		Config:    ilmCfg,
-		UpdatedAt: updatedAt,
-	})
+    printMsg(ilmExportMessage{
+        Status:    "success",
+        Target:    urlStr,
+        Config:    ilmCfg,
+        UpdatedAt: updatedAt,
+    })
 
-	return nil
+    return nil
 }

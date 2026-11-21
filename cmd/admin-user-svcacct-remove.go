@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserSvcAcctRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove a service account",
-	Action:       mainAdminUserSvcAcctRemove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove a service account",
+    Action:       mainAdminUserSvcAcctRemove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,33 +49,33 @@ EXAMPLES:
 
 // checkAdminUserSvcAcctRemoveSyntax - validate all the passed arguments
 func checkAdminUserSvcAcctRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 }
 
 // mainAdminUserSvcAcctRemove is the handle for "mc admin user svcacct rm" command.
 func mainAdminUserSvcAcctRemove(ctx *cli.Context) error {
-	console.SetColor("AccMessage", color.New(color.FgGreen))
+    console.SetColor("AccMessage", color.New(color.FgGreen))
 
-	checkAdminUserSvcAcctRemoveSyntax(ctx)
+    checkAdminUserSvcAcctRemoveSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	svcAccount := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    svcAccount := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.DeleteServiceAccount(globalContext, svcAccount)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to remove the specified service account")
+    e := client.DeleteServiceAccount(globalContext, svcAccount)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to remove the specified service account")
 
-	printMsg(acctMessage{
-		op:        svcAccOpRemove,
-		AccessKey: svcAccount,
-	})
+    printMsg(acctMessage{
+        op:        svcAccOpRemove,
+        AccessKey: svcAccount,
+    })
 
-	return nil
+    return nil
 }

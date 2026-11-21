@@ -18,27 +18,27 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var supportRegisterFlags = append([]cli.Flag{
-	cli.StringFlag{
-		Name:  "name",
-		Usage: "Specify the name to associate to this MinIO cluster in SUBNET",
-	},
+    cli.StringFlag{
+        Name:  "name",
+        Usage: "Specify the name to associate to this MinIO cluster in SUBNET",
+    },
 }, subnetCommonFlags...)
 
 var supportRegisterCmd = cli.Command{
-	Name:               "register",
-	Usage:              "register with MinIO subscription network",
-	OnUsageError:       onUsageError,
-	Action:             mainSupportRegister,
-	Before:             setGlobalsFromContext,
-	Flags:              supportRegisterFlags,
-	CustomHelpTemplate: "Please use 'mc license register'",
+    Name:               "register",
+    Usage:              "register with MinIO subscription network",
+    OnUsageError:       onUsageError,
+    Action:             mainSupportRegister,
+    Before:             setGlobalsFromContext,
+    Flags:              supportRegisterFlags,
+    CustomHelpTemplate: "Please use 'mc license register'",
 }
 
 func mainSupportRegister(_ *cli.Context) error {
-	deprecatedError("mc license register")
-	return nil
+    deprecatedError("mc license register")
+    return nil
 }

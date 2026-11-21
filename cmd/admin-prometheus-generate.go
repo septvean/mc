@@ -18,38 +18,38 @@
 package cmd
 
 import (
-	"net/url"
-	"time"
+    "net/url"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 
-	json "github.com/minio/colorjson"
-	yaml "gopkg.in/yaml.v2"
+    json "github.com/minio/colorjson"
+    yaml "gopkg.in/yaml.v2"
 )
 
 const (
-	defaultJobName    = "minio-job"
-	metricsV2BasePath = "/minio/v2/metrics"
+    defaultJobName    = "minio-job"
+    metricsV2BasePath = "/minio/v2/metrics"
 )
 
 var prometheusFlags = append(metricsFlags,
-	cli.BoolFlag{
-		Name:  "public",
-		Usage: "disable bearer token generation for scrape_configs",
-	})
+    cli.BoolFlag{
+        Name:  "public",
+        Usage: "disable bearer token generation for scrape_configs",
+    })
 
 var adminPrometheusGenerateCmd = cli.Command{
-	Name:            "generate",
-	Usage:           "generates prometheus config",
-	Action:          mainAdminPrometheusGenerate,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(prometheusFlags, globalFlags...),
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "generate",
+    Usage:           "generates prometheus config",
+    Action:          mainAdminPrometheusGenerate,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(prometheusFlags, globalFlags...),
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -123,149 +123,149 @@ EXAMPLES (v2):
 
 // PrometheusConfig - container to hold the top level scrape config.
 type PrometheusConfig struct {
-	ScrapeConfigs []ScrapeConfig `yaml:"scrape_configs,omitempty"`
+    ScrapeConfigs []ScrapeConfig `yaml:"scrape_configs,omitempty"`
 }
 
 // String colorized prometheus config yaml.
 func (c PrometheusConfig) String() string {
-	b, e := yaml.Marshal(c)
-	fatalIf(probe.NewError(e), "Unable to generate Prometheus config")
+    b, e := yaml.Marshal(c)
+    fatalIf(probe.NewError(e), "Unable to generate Prometheus config")
 
-	return console.Colorize("yaml", string(b))
+    return console.Colorize("yaml", string(b))
 }
 
 // JSON jsonified prometheus config.
 func (c PrometheusConfig) JSON() string {
-	jsonMessageBytes, e := json.MarshalIndent(c.ScrapeConfigs[0], "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    jsonMessageBytes, e := json.MarshalIndent(c.ScrapeConfigs[0], "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 // StatConfig - container to hold the targets config.
 type StatConfig struct {
-	Targets []string `yaml:",flow" json:"targets"`
+    Targets []string `yaml:",flow" json:"targets"`
 }
 
 // String colorized stat config yaml.
 func (t StatConfig) String() string {
-	b, e := yaml.Marshal(t)
-	fatalIf(probe.NewError(e), "Unable to generate Prometheus config")
+    b, e := yaml.Marshal(t)
+    fatalIf(probe.NewError(e), "Unable to generate Prometheus config")
 
-	return console.Colorize("yaml", string(b))
+    return console.Colorize("yaml", string(b))
 }
 
 // JSON jsonified stat config.
 func (t StatConfig) JSON() string {
-	jsonMessageBytes, e := json.MarshalIndent(t.Targets, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    jsonMessageBytes, e := json.MarshalIndent(t.Targets, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 // ScrapeConfig configures a scraping unit for Prometheus.
 type ScrapeConfig struct {
-	JobName       string       `yaml:"job_name" json:"jobName"`
-	BearerToken   string       `yaml:"bearer_token,omitempty" json:"bearerToken,omitempty"`
-	MetricsPath   string       `yaml:"metrics_path,omitempty" json:"metricsPath"`
-	Scheme        string       `yaml:"scheme,omitempty" json:"scheme"`
-	StaticConfigs []StatConfig `yaml:"static_configs,omitempty" json:"staticConfigs"`
+    JobName       string       `yaml:"job_name" json:"jobName"`
+    BearerToken   string       `yaml:"bearer_token,omitempty" json:"bearerToken,omitempty"`
+    MetricsPath   string       `yaml:"metrics_path,omitempty" json:"metricsPath"`
+    Scheme        string       `yaml:"scheme,omitempty" json:"scheme"`
+    StaticConfigs []StatConfig `yaml:"static_configs,omitempty" json:"staticConfigs"`
 }
 
 const (
-	defaultPrometheusJWTExpiry = 100 * 365 * 24 * time.Hour
+    defaultPrometheusJWTExpiry = 100 * 365 * 24 * time.Hour
 )
 
 // checkAdminPrometheusSyntax - validate all the passed arguments
 func checkAdminPrometheusSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func generatePrometheusConfig(ctx *cli.Context) error {
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	alias := cleanAlias(args.Get(0))
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    alias := cleanAlias(args.Get(0))
 
-	if !isValidAlias(alias) {
-		fatalIf(errInvalidAlias(alias), "Invalid alias.")
-	}
+    if !isValidAlias(alias) {
+        fatalIf(errInvalidAlias(alias), "Invalid alias.")
+    }
 
-	hostConfig := mustGetHostConfig(alias)
-	if hostConfig == nil {
-		fatalIf(errInvalidAliasedURL(alias), "No such alias `"+alias+"` found.")
-		return nil
-	}
+    hostConfig := mustGetHostConfig(alias)
+    if hostConfig == nil {
+        fatalIf(errInvalidAliasedURL(alias), "No such alias `"+alias+"` found.")
+        return nil
+    }
 
-	u, e := url.Parse(hostConfig.URL)
-	if e != nil {
-		return e
-	}
+    u, e := url.Parse(hostConfig.URL)
+    if e != nil {
+        return e
+    }
 
-	metricsSubSystem := args.Get(1)
-	apiVer := ctx.String("api-version")
-	jobName := defaultJobName
-	metricsPath := ""
+    metricsSubSystem := args.Get(1)
+    apiVer := ctx.String("api-version")
+    jobName := defaultJobName
+    metricsPath := ""
 
-	switch apiVer {
-	case "v2":
-		if metricsSubSystem == "" {
-			metricsSubSystem = "cluster"
-		}
-		validateV2Args(ctx, metricsSubSystem)
-		if metricsSubSystem != "cluster" {
-			jobName = defaultJobName + "-" + metricsSubSystem
-		}
-		metricsPath = metricsV2BasePath + "/" + metricsSubSystem
-	case "v3":
-		bucket := ctx.String("bucket")
-		validateV3Args(metricsSubSystem, bucket)
-		metricsPath = getMetricsV3Path(metricsSubSystem, bucket)
-		if metricsSubSystem != "" {
-			jobName = defaultJobName + "-" + metricsSubSystem
-		}
-	default:
-		fatalIf(errInvalidArgument().Trace(), "Invalid api version `"+apiVer+"`")
-	}
+    switch apiVer {
+    case "v2":
+        if metricsSubSystem == "" {
+            metricsSubSystem = "cluster"
+        }
+        validateV2Args(ctx, metricsSubSystem)
+        if metricsSubSystem != "cluster" {
+            jobName = defaultJobName + "-" + metricsSubSystem
+        }
+        metricsPath = metricsV2BasePath + "/" + metricsSubSystem
+    case "v3":
+        bucket := ctx.String("bucket")
+        validateV3Args(metricsSubSystem, bucket)
+        metricsPath = getMetricsV3Path(metricsSubSystem, bucket)
+        if metricsSubSystem != "" {
+            jobName = defaultJobName + "-" + metricsSubSystem
+        }
+    default:
+        fatalIf(errInvalidArgument().Trace(), "Invalid api version `"+apiVer+"`")
+    }
 
-	config := PrometheusConfig{
-		ScrapeConfigs: []ScrapeConfig{
-			{
-				JobName:     jobName,
-				MetricsPath: metricsPath,
-				StaticConfigs: []StatConfig{
-					{
-						Targets: []string{""},
-					},
-				},
-			},
-		},
-	}
+    config := PrometheusConfig{
+        ScrapeConfigs: []ScrapeConfig{
+            {
+                JobName:     jobName,
+                MetricsPath: metricsPath,
+                StaticConfigs: []StatConfig{
+                    {
+                        Targets: []string{""},
+                    },
+                },
+            },
+        },
+    }
 
-	if !ctx.Bool("public") {
-		token, e := getPrometheusToken(hostConfig)
-		if e != nil {
-			return e
-		}
-		// Setting the values
-		config.ScrapeConfigs[0].BearerToken = token
-	}
-	config.ScrapeConfigs[0].Scheme = u.Scheme
-	config.ScrapeConfigs[0].StaticConfigs[0].Targets[0] = u.Host
+    if !ctx.Bool("public") {
+        token, e := getPrometheusToken(hostConfig)
+        if e != nil {
+            return e
+        }
+        // Setting the values
+        config.ScrapeConfigs[0].BearerToken = token
+    }
+    config.ScrapeConfigs[0].Scheme = u.Scheme
+    config.ScrapeConfigs[0].StaticConfigs[0].Targets[0] = u.Host
 
-	printMsg(config)
+    printMsg(config)
 
-	return nil
+    return nil
 }
 
 // mainAdminPrometheus is the handle for "mc admin prometheus generate" sub-command.
 func mainAdminPrometheusGenerate(ctx *cli.Context) error {
-	console.SetColor("yaml", color.New(color.FgGreen))
+    console.SetColor("yaml", color.New(color.FgGreen))
 
-	checkAdminPrometheusSyntax(ctx)
+    checkAdminPrometheusSyntax(ctx)
 
-	if err := generatePrometheusConfig(ctx); err != nil {
-		return nil
-	}
+    if err := generatePrometheusConfig(ctx); err != nil {
+        return nil
+    }
 
-	return nil
+    return nil
 }

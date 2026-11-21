@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminServiceStopCmd = cli.Command{
-	Name:         "stop",
-	Usage:        "stop a MinIO cluster",
-	Action:       mainAdminServiceStop,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	Hidden:       true, // this command is hidden on purpose, please do not enable it.
-	CustomHelpTemplate: `NAME:
+    Name:         "stop",
+    Usage:        "stop a MinIO cluster",
+    Action:       mainAdminServiceStop,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    Hidden:       true, // this command is hidden on purpose, please do not enable it.
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -50,48 +50,48 @@ EXAMPLES:
 
 // serviceStopMessage is container for make bucket success and failure messages.
 type serviceStopMessage struct {
-	Status    string `json:"status"`
-	ServerURL string `json:"serverURL"`
+    Status    string `json:"status"`
+    ServerURL string `json:"serverURL"`
 }
 
 // String colorized make bucket message.
 func (s serviceStopMessage) String() string {
-	return console.Colorize("ServiceStop", "Stopped `"+s.ServerURL+"` successfully.")
+    return console.Colorize("ServiceStop", "Stopped `"+s.ServerURL+"` successfully.")
 }
 
 // JSON jsonified make bucket message.
 func (s serviceStopMessage) JSON() string {
-	serviceStopJSONBytes, e := json.MarshalIndent(s, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    serviceStopJSONBytes, e := json.MarshalIndent(s, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(serviceStopJSONBytes)
+    return string(serviceStopJSONBytes)
 }
 
 // checkAdminServiceStopSyntax - validate all the passed arguments
 func checkAdminServiceStopSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainAdminServiceStop(ctx *cli.Context) error {
-	// Validate serivce stop syntax.
-	checkAdminServiceStopSyntax(ctx)
+    // Validate serivce stop syntax.
+    checkAdminServiceStopSyntax(ctx)
 
-	// Set color.
-	console.SetColor("ServiceStop", color.New(color.FgGreen, color.Bold))
+    // Set color.
+    console.SetColor("ServiceStop", color.New(color.FgGreen, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	// Stop the specified MinIO server
-	fatalIf(probe.NewError(client.ServiceStopV2(globalContext)), "Unable to stop the server.")
+    // Stop the specified MinIO server
+    fatalIf(probe.NewError(client.ServiceStopV2(globalContext)), "Unable to stop the server.")
 
-	// Success..
-	printMsg(serviceStopMessage{Status: "success", ServerURL: aliasedURL})
-	return nil
+    // Success..
+    printMsg(serviceStopMessage{Status: "success", ServerURL: aliasedURL})
+    return nil
 }

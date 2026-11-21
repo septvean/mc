@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminPolicyUnsetCmd = cli.Command{
-	Name:               "unset",
-	Usage:              "unset an IAM policy for a user or group",
-	Action:             mainAdminPolicyUnsetErr,
-	OnUsageError:       onUsageError,
-	Before:             setGlobalsFromContext,
-	Flags:              globalFlags,
-	HideHelpCommand:    true,
-	Hidden:             true,
-	CustomHelpTemplate: `Please use 'mc admin policy detach'`,
+    Name:               "unset",
+    Usage:              "unset an IAM policy for a user or group",
+    Action:             mainAdminPolicyUnsetErr,
+    OnUsageError:       onUsageError,
+    Before:             setGlobalsFromContext,
+    Flags:              globalFlags,
+    HideHelpCommand:    true,
+    Hidden:             true,
+    CustomHelpTemplate: `Please use 'mc admin policy detach'`,
 }
 
 func mainAdminPolicyUnsetErr(_ *cli.Context) error {
-	deprecatedError("mc admin policy detach")
-	return nil
+    deprecatedError("mc admin policy detach")
+    return nil
 }

@@ -20,24 +20,24 @@ package cmd
 import "github.com/minio/cli"
 
 var adminTierDepCmds = []cli.Command{
-	adminTierDepInfoCmd,
-	adminTierDepListCmd,
-	adminTierDepAddCmd,
-	adminTierDepEditCmd,
-	adminTierDepVerifyCmd,
-	adminTierDepRmCmd,
+    adminTierDepInfoCmd,
+    adminTierDepListCmd,
+    adminTierDepAddCmd,
+    adminTierDepEditCmd,
+    adminTierDepVerifyCmd,
+    adminTierDepRmCmd,
 }
 
 var (
-	adminTierDepInfoCmd = cli.Command{
-		Name:         "info",
-		Usage:        "display tier statistics",
-		Action:       mainAdminTierInfo,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    adminTierDepInfoCmd = cli.Command{
+        Name:         "info",
+        Usage:        "display tier statistics",
+        Action:       mainAdminTierInfo,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -54,17 +54,17 @@ EXAMPLES:
   2. Print per-tier statistics of given tier name 'MINIOTIER-1':
      {{.Prompt}} {{.HelpName}} myminio MINIOTIER-1
 `,
-	}
+    }
 
-	adminTierDepListCmd = cli.Command{
-		Name:         "ls",
-		Usage:        "lists configured remote tier targets",
-		Action:       mainAdminTierList,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    adminTierDepListCmd = cli.Command{
+        Name:         "ls",
+        Usage:        "lists configured remote tier targets",
+        Action:       mainAdminTierList,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -78,17 +78,17 @@ EXAMPLES:
   1. List remote tier targets configured on 'myminio':
      {{.Prompt}} {{.HelpName}} myminio
 `,
-	}
+    }
 
-	adminTierDepAddCmd = cli.Command{
-		Name:         "add",
-		Usage:        "add a new remote tier target",
-		Action:       mainAdminTierAdd,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(globalFlags, adminTierAddFlags...),
-		CustomHelpTemplate: `NAME:
+    adminTierDepAddCmd = cli.Command{
+        Name:         "add",
+        Usage:        "add a new remote tier target",
+        Action:       mainAdminTierAdd,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(globalFlags, adminTierAddFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -121,16 +121,16 @@ EXAMPLES:
      {{.Prompt}} {{.HelpName}} gcs myminio GCSTIER --credentials-file /path/to/credentials.json \
         --bucket mygcsbucket  --prefix mygcsprefix/
 `,
-	}
-	adminTierDepEditCmd = cli.Command{
-		Name:         "edit",
-		Usage:        "update an existing remote tier configuration",
-		Action:       mainAdminTierEdit,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(globalFlags, adminTierEditFlags...),
-		CustomHelpTemplate: `NAME:
+    }
+    adminTierDepEditCmd = cli.Command{
+        Name:         "edit",
+        Usage:        "update an existing remote tier configuration",
+        Action:       mainAdminTierEdit,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(globalFlags, adminTierEditFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -152,17 +152,17 @@ EXAMPLES:
   3. Update credentials for an existing Google Cloud Storage remote tier:
      {{.Prompt}} {{.HelpName}} myminio GCSTIER --credentials-file /path/to/credentials.json
 `,
-	}
+    }
 
-	adminTierDepVerifyCmd = cli.Command{
-		Name:         "verify",
-		Usage:        "verifies if remote tier configuration is valid",
-		Action:       mainAdminTierVerify,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    adminTierDepVerifyCmd = cli.Command{
+        Name:         "verify",
+        Usage:        "verifies if remote tier configuration is valid",
+        Action:       mainAdminTierVerify,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -178,17 +178,17 @@ EXAMPLES:
   1. Verify if a tier config is valid.
      {{.Prompt}} {{.HelpName}} myminio WARM-TIER
 `,
-	}
+    }
 
-	adminTierDepRmCmd = cli.Command{
-		Name:         "rm",
-		Usage:        "removes an empty remote tier",
-		Action:       mainAdminTierRm,
-		Hidden:       true,
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    adminTierDepRmCmd = cli.Command{
+        Name:         "rm",
+        Usage:        "removes an empty remote tier",
+        Action:       mainAdminTierRm,
+        Hidden:       true,
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -204,5 +204,5 @@ EXAMPLES:
   1. Remove an empty tier by name 'WARM-TIER':
      {{.Prompt}} {{.HelpName}} myminio WARM-TIER
 `,
-	}
+    }
 )

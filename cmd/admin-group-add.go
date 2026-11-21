@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminGroupAddCmd = cli.Command{
-	Name:         "add",
-	Usage:        "add users to a new or existing group",
-	Action:       mainAdminGroupAdd,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "add",
+    Usage:        "add users to a new or existing group",
+    Action:       mainAdminGroupAdd,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -57,93 +57,93 @@ EXAMPLES:
 
 // checkAdminGroupAddSyntax - validate all the passed arguments
 func checkAdminGroupAddSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) < 3 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) < 3 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // groupMessage container for content message structure
 type groupMessage struct {
-	op          string
-	Status      string   `json:"status"`
-	GroupName   string   `json:"groupName,omitempty"`
-	Groups      []string `json:"groups,omitempty"`
-	Members     []string `json:"members,omitempty"`
-	GroupStatus string   `json:"groupStatus,omitempty"`
-	GroupPolicy string   `json:"groupPolicy,omitempty"`
+    op          string
+    Status      string   `json:"status"`
+    GroupName   string   `json:"groupName,omitempty"`
+    Groups      []string `json:"groups,omitempty"`
+    Members     []string `json:"members,omitempty"`
+    GroupStatus string   `json:"groupStatus,omitempty"`
+    GroupPolicy string   `json:"groupPolicy,omitempty"`
 }
 
 func (u groupMessage) String() string {
-	switch u.op {
-	case "list":
-		var s []string
-		for _, g := range u.Groups {
-			s = append(s, console.Colorize("GroupMessage", g))
-		}
-		return strings.Join(s, "\n")
-	case "disable":
-		return console.Colorize("GroupMessage", "Disabled group `"+u.GroupName+"` successfully.")
-	case "enable":
-		return console.Colorize("GroupMessage", "Enabled group `"+u.GroupName+"` successfully.")
-	case "add":
-		membersStr := fmt.Sprintf("`%s`", strings.Join(u.Members, ","))
-		return console.Colorize("GroupMessage", "Added members "+membersStr+" to group `"+u.GroupName+"` successfully.")
-	case "remove":
-		if len(u.Members) > 0 {
-			membersStr := fmt.Sprintf("{%s}", strings.Join(u.Members, ","))
-			return console.Colorize("GroupMessage", "Removed members "+membersStr+" from group "+u.GroupName+" successfully.")
-		}
-		return console.Colorize("GroupMessage", "Removed group "+u.GroupName+" successfully.")
-	case "info":
-		return strings.Join([]string{
-			console.Colorize("GroupMessage", "Group: "+u.GroupName),
-			console.Colorize("GroupMessage", "Status: "+u.GroupStatus),
-			console.Colorize("GroupMessage", "Policy: "+u.GroupPolicy),
-			console.Colorize("GroupMessage", "Members: "+strings.Join(u.Members, ",")),
-		}, "\n")
+    switch u.op {
+    case "list":
+        var s []string
+        for _, g := range u.Groups {
+            s = append(s, console.Colorize("GroupMessage", g))
+        }
+        return strings.Join(s, "\n")
+    case "disable":
+        return console.Colorize("GroupMessage", "Disabled group `"+u.GroupName+"` successfully.")
+    case "enable":
+        return console.Colorize("GroupMessage", "Enabled group `"+u.GroupName+"` successfully.")
+    case "add":
+        membersStr := fmt.Sprintf("`%s`", strings.Join(u.Members, ","))
+        return console.Colorize("GroupMessage", "Added members "+membersStr+" to group `"+u.GroupName+"` successfully.")
+    case "remove":
+        if len(u.Members) > 0 {
+            membersStr := fmt.Sprintf("{%s}", strings.Join(u.Members, ","))
+            return console.Colorize("GroupMessage", "Removed members "+membersStr+" from group "+u.GroupName+" successfully.")
+        }
+        return console.Colorize("GroupMessage", "Removed group "+u.GroupName+" successfully.")
+    case "info":
+        return strings.Join([]string{
+            console.Colorize("GroupMessage", "Group: "+u.GroupName),
+            console.Colorize("GroupMessage", "Status: "+u.GroupStatus),
+            console.Colorize("GroupMessage", "Policy: "+u.GroupPolicy),
+            console.Colorize("GroupMessage", "Members: "+strings.Join(u.Members, ",")),
+        }, "\n")
 
-	}
-	return ""
+    }
+    return ""
 }
 
 func (u groupMessage) JSON() string {
-	u.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonMessageBytes)
+    return string(jsonMessageBytes)
 }
 
 // mainAdminGroupAdd is the handle for "mc admin group add" command.
 func mainAdminGroupAdd(ctx *cli.Context) error {
-	checkAdminGroupAddSyntax(ctx)
+    checkAdminGroupAddSyntax(ctx)
 
-	console.SetColor("GroupMessage", color.New(color.FgGreen))
+    console.SetColor("GroupMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	members := []string{}
-	for i := 2; i < ctx.NArg(); i++ {
-		members = append(members, args.Get(i))
-	}
-	gAddRemove := madmin.GroupAddRemove{
-		Group:    args.Get(1),
-		Members:  members,
-		IsRemove: false,
-	}
-	fatalIf(probe.NewError(client.UpdateGroupMembers(globalContext, gAddRemove)).Trace(args...), "Unable to add new group")
+    members := []string{}
+    for i := 2; i < ctx.NArg(); i++ {
+        members = append(members, args.Get(i))
+    }
+    gAddRemove := madmin.GroupAddRemove{
+        Group:    args.Get(1),
+        Members:  members,
+        IsRemove: false,
+    }
+    fatalIf(probe.NewError(client.UpdateGroupMembers(globalContext, gAddRemove)).Trace(args...), "Unable to add new group")
 
-	printMsg(groupMessage{
-		op:        ctx.Command.Name,
-		GroupName: args.Get(1),
-		Members:   members,
-	})
+    printMsg(groupMessage{
+        op:        ctx.Command.Name,
+        GroupName: args.Get(1),
+        Members:   members,
+    })
 
-	return nil
+    return nil
 }

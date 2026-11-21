@@ -18,38 +18,38 @@
 package cmd
 
 import (
-	"net/url"
+    "net/url"
 
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 type supportProxySetMessage struct {
-	Status string `json:"status"`
-	Proxy  string `json:"proxy"`
+    Status string `json:"status"`
+    Proxy  string `json:"proxy"`
 }
 
 // String colorized proxy set message
 func (s supportProxySetMessage) String() string {
-	return console.Colorize(supportSuccessMsgTag, "Proxy is now set to "+s.Proxy)
+    return console.Colorize(supportSuccessMsgTag, "Proxy is now set to "+s.Proxy)
 }
 
 // JSON jsonified proxy set message
 func (s supportProxySetMessage) JSON() string {
-	s.Status = "success"
-	return toJSON(s)
+    s.Status = "success"
+    return toJSON(s)
 }
 
 var supportProxySetCmd = cli.Command{
-	Name:            "set",
-	Usage:           "configure proxy to given URL",
-	Action:          mainSupportProxySet,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "set",
+    Usage:           "configure proxy to given URL",
+    Action:          mainSupportProxySet,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -65,40 +65,40 @@ EXAMPLES:
 }
 
 func checkSupportProxySetSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainSupportProxySet is the handle for "mc support proxy set" command.
 func mainSupportProxySet(ctx *cli.Context) error {
-	// Check for command syntax
-	checkSupportProxySetSyntax(ctx)
-	setSuccessMessageColor()
+    // Check for command syntax
+    checkSupportProxySetSyntax(ctx)
+    setSuccessMessageColor()
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	alias, _ := url2Alias(aliasedURL)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    alias, _ := url2Alias(aliasedURL)
 
-	validateClusterRegistered(alias, false)
+    validateClusterRegistered(alias, false)
 
-	// Create a new MinIO Admin Client
-	client := getClient(aliasedURL)
+    // Create a new MinIO Admin Client
+    client := getClient(aliasedURL)
 
-	// Call set config API
-	proxy := args.Get(1)
-	if len(proxy) == 0 {
-		fatal(errDummy().Trace(), "Proxy must not be empty")
-	}
+    // Call set config API
+    proxy := args.Get(1)
+    if len(proxy) == 0 {
+        fatal(errDummy().Trace(), "Proxy must not be empty")
+    }
 
-	_, e := url.Parse(proxy)
-	fatalIf(probe.NewError(e), "Invalid proxy:")
+    _, e := url.Parse(proxy)
+    fatalIf(probe.NewError(e), "Invalid proxy:")
 
-	// Main execution
-	_, e = client.SetConfigKV(globalContext, "subnet proxy="+proxy)
-	fatalIf(probe.NewError(e), "Unable to set proxy '%s':", proxy)
+    // Main execution
+    _, e = client.SetConfigKV(globalContext, "subnet proxy="+proxy)
+    fatalIf(probe.NewError(e), "Unable to set proxy '%s':", proxy)
 
-	printMsg(supportProxySetMessage{Proxy: proxy})
-	return nil
+    printMsg(supportProxySetMessage{Proxy: proxy})
+    return nil
 }

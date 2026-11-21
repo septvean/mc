@@ -20,13 +20,13 @@ package cmd
 import "github.com/minio/cli"
 
 var ilmTierCheckCmd = cli.Command{
-	Name:         "check",
-	Usage:        "validate remote tier configuration",
-	Action:       mainAdminTierVerify,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "check",
+    Usage:        "validate remote tier configuration",
+    Action:       mainAdminTierVerify,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:

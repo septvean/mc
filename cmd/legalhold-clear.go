@@ -18,42 +18,42 @@
 package cmd
 
 import (
-	"context"
-	"time"
+    "context"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/pkg/v3/console"
 )
 
 var lhClearFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "recursive, r",
-		Usage: "clear legal hold recursively",
-	},
-	cli.StringFlag{
-		Name:  "version-id, vid",
-		Usage: "clear legal hold of a specific object version",
-	},
-	cli.StringFlag{
-		Name:  "rewind",
-		Usage: "clear legal hold on an object version at specified time",
-	},
-	cli.BoolFlag{
-		Name:  "versions",
-		Usage: "clear legal hold on multiple versions of object(s)",
-	},
+    cli.BoolFlag{
+        Name:  "recursive, r",
+        Usage: "clear legal hold recursively",
+    },
+    cli.StringFlag{
+        Name:  "version-id, vid",
+        Usage: "clear legal hold of a specific object version",
+    },
+    cli.StringFlag{
+        Name:  "rewind",
+        Usage: "clear legal hold on an object version at specified time",
+    },
+    cli.BoolFlag{
+        Name:  "versions",
+        Usage: "clear legal hold on multiple versions of object(s)",
+    },
 }
 
 var legalHoldClearCmd = cli.Command{
-	Name:         "clear",
-	Usage:        "clear legal hold for object(s)",
-	Action:       mainLegalHoldClear,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(lhClearFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "clear",
+    Usage:        "clear legal hold for object(s)",
+    Action:       mainLegalHoldClear,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(lhClearFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -80,25 +80,25 @@ EXAMPLES:
 
 // main for legalhold clear command.
 func mainLegalHoldClear(cliCtx *cli.Context) error {
-	console.SetColor("LegalHoldSuccess", color.New(color.FgGreen, color.Bold))
-	console.SetColor("LegalHoldPartialFailure", color.New(color.FgRed, color.Bold))
-	console.SetColor("LegalHoldMessageFailure", color.New(color.FgYellow))
+    console.SetColor("LegalHoldSuccess", color.New(color.FgGreen, color.Bold))
+    console.SetColor("LegalHoldPartialFailure", color.New(color.FgRed, color.Bold))
+    console.SetColor("LegalHoldMessageFailure", color.New(color.FgYellow))
 
-	targetURL, versionID, timeRef, recursive, withVersions := parseLegalHoldArgs(cliCtx)
-	if timeRef.IsZero() && withVersions {
-		timeRef = time.Now().UTC()
-	}
+    targetURL, versionID, timeRef, recursive, withVersions := parseLegalHoldArgs(cliCtx)
+    if timeRef.IsZero() && withVersions {
+        timeRef = time.Now().UTC()
+    }
 
-	ctx, cancelCopy := context.WithCancel(globalContext)
-	defer cancelCopy()
+    ctx, cancelCopy := context.WithCancel(globalContext)
+    defer cancelCopy()
 
-	enabled, err := isBucketLockEnabled(ctx, targetURL)
-	if err != nil {
-		fatalIf(err, "Unable to clear legalhold of `%s`", targetURL)
-	}
-	if !enabled {
-		fatalIf(errDummy().Trace(), "Bucket locking needs to be enabled in order to use this feature.")
-	}
+    enabled, err := isBucketLockEnabled(ctx, targetURL)
+    if err != nil {
+        fatalIf(err, "Unable to clear legalhold of `%s`", targetURL)
+    }
+    if !enabled {
+        fatalIf(errDummy().Trace(), "Bucket locking needs to be enabled in order to use this feature.")
+    }
 
-	return setLegalHold(ctx, targetURL, versionID, timeRef, withVersions, recursive, minio.LegalHoldDisabled)
+    return setLegalHold(ctx, targetURL, versionID, timeRef, withVersions, recursive, minio.LegalHoldDisabled)
 }

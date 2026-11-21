@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var supportProxyShowCmd = cli.Command{
-	Name:            "show",
-	Usage:           "Show the configured proxy",
-	Action:          mainSupportProxyShow,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "show",
+    Usage:           "Show the configured proxy",
+    Action:          mainSupportProxyShow,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -46,51 +46,51 @@ EXAMPLES:
 }
 
 type supportProxyShowMessage struct {
-	Status string `json:"status"`
-	Proxy  string `json:"proxy"`
+    Status string `json:"status"`
+    Proxy  string `json:"proxy"`
 }
 
 // String colorized proxy show message
 func (s supportProxyShowMessage) String() string {
-	msg := s.Proxy
-	if len(msg) == 0 {
-		msg = "Proxy is not configured"
-	}
-	return console.Colorize(supportSuccessMsgTag, msg)
+    msg := s.Proxy
+    if len(msg) == 0 {
+        msg = "Proxy is not configured"
+    }
+    return console.Colorize(supportSuccessMsgTag, msg)
 }
 
 // JSON jsonified proxy show message
 func (s supportProxyShowMessage) JSON() string {
-	s.Status = "success"
-	return toJSON(s)
+    s.Status = "success"
+    return toJSON(s)
 }
 
 func checkSupportProxyShowSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainSupportProxyShow is the handler for "mc support proxy show" command.
 func mainSupportProxyShow(ctx *cli.Context) error {
-	// Check for command syntax
-	checkSupportProxyShowSyntax(ctx)
-	setSuccessMessageColor()
+    // Check for command syntax
+    checkSupportProxyShowSyntax(ctx)
+    setSuccessMessageColor()
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	alias, _ := url2Alias(aliasedURL)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    alias, _ := url2Alias(aliasedURL)
 
-	validateClusterRegistered(alias, false)
+    validateClusterRegistered(alias, false)
 
-	// Main execution
-	// get the subnet proxy config from MinIO if available
-	proxy, supported := getKeyFromSubnetConfig(alias, "proxy")
-	if !supported {
-		fatal(errDummy().Trace(), "Proxy configuration not supported in this version of MinIO.")
-	}
+    // Main execution
+    // get the subnet proxy config from MinIO if available
+    proxy, supported := getKeyFromSubnetConfig(alias, "proxy")
+    if !supported {
+        fatal(errDummy().Trace(), "Proxy configuration not supported in this version of MinIO.")
+    }
 
-	printMsg(supportProxyShowMessage{Proxy: proxy})
-	return nil
+    printMsg(supportProxyShowMessage{Proxy: proxy})
+    return nil
 }

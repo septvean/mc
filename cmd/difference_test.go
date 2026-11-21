@@ -18,46 +18,46 @@
 package cmd
 
 import (
-	"testing"
+    "testing"
 )
 
 var testCases = []struct {
-	pattern []string
+    pattern []string
 
-	srcSuffix string
+    srcSuffix string
 
-	match bool
+    match bool
 
-	typ ClientURLType
+    typ ClientURLType
 }{
-	{nil, "testfile", false, objectStorage},
-	{[]string{"test*"}, "testfile", true, objectStorage},
-	{[]string{"file*"}, "file/abc/bcd/def", true, objectStorage},
-	{[]string{"*"}, "file/abc/bcd/def", true, objectStorage},
-	{[]string{""}, "file/abc/bcd/def", false, objectStorage},
-	{[]string{"abc*"}, "file/abc/bcd/def", false, objectStorage},
-	{[]string{"abc*", "*abc/*"}, "file/abc/bcd/def", true, objectStorage},
-	{[]string{"*.txt"}, "file/abc/bcd/def.txt", true, objectStorage},
-	{[]string{".*"}, ".sys", true, objectStorage},
-	{[]string{"*."}, ".sys.", true, objectStorage},
-	{nil, "testfile", false, fileSystem},
-	{[]string{"test*"}, "testfile", true, fileSystem},
-	{[]string{"file*"}, "file/abc/bcd/def", true, fileSystem},
-	{[]string{"*"}, "file/abc/bcd/def", true, fileSystem},
-	{[]string{""}, "file/abc/bcd/def", false, fileSystem},
-	{[]string{"abc*"}, "file/abc/bcd/def", false, fileSystem},
-	{[]string{"abc*", "*abc/*"}, "file/abc/bcd/def", true, fileSystem},
-	{[]string{"abc*", "*abc/*"}, "/file/abc/bcd/def", true, fileSystem},
-	{[]string{"*.txt"}, "file/abc/bcd/def.txt", true, fileSystem},
-	{[]string{"*.txt"}, "/file/abc/bcd/def.txt", true, fileSystem},
-	{[]string{".*"}, ".sys", true, fileSystem},
-	{[]string{"*."}, ".sys.", true, fileSystem},
+    {nil, "testfile", false, objectStorage},
+    {[]string{"test*"}, "testfile", true, objectStorage},
+    {[]string{"file*"}, "file/abc/bcd/def", true, objectStorage},
+    {[]string{"*"}, "file/abc/bcd/def", true, objectStorage},
+    {[]string{""}, "file/abc/bcd/def", false, objectStorage},
+    {[]string{"abc*"}, "file/abc/bcd/def", false, objectStorage},
+    {[]string{"abc*", "*abc/*"}, "file/abc/bcd/def", true, objectStorage},
+    {[]string{"*.txt"}, "file/abc/bcd/def.txt", true, objectStorage},
+    {[]string{".*"}, ".sys", true, objectStorage},
+    {[]string{"*."}, ".sys.", true, objectStorage},
+    {nil, "testfile", false, fileSystem},
+    {[]string{"test*"}, "testfile", true, fileSystem},
+    {[]string{"file*"}, "file/abc/bcd/def", true, fileSystem},
+    {[]string{"*"}, "file/abc/bcd/def", true, fileSystem},
+    {[]string{""}, "file/abc/bcd/def", false, fileSystem},
+    {[]string{"abc*"}, "file/abc/bcd/def", false, fileSystem},
+    {[]string{"abc*", "*abc/*"}, "file/abc/bcd/def", true, fileSystem},
+    {[]string{"abc*", "*abc/*"}, "/file/abc/bcd/def", true, fileSystem},
+    {[]string{"*.txt"}, "file/abc/bcd/def.txt", true, fileSystem},
+    {[]string{"*.txt"}, "/file/abc/bcd/def.txt", true, fileSystem},
+    {[]string{".*"}, ".sys", true, fileSystem},
+    {[]string{"*."}, ".sys.", true, fileSystem},
 }
 
 func TestExcludeOptions(t *testing.T) {
-	for _, test := range testCases {
-		if matchExcludeOptions(test.pattern, test.srcSuffix, test.typ) != test.match {
-			t.Fatalf("Unexpected result %t, with pattern %s and srcSuffix %s \n", !test.match, test.pattern, test.srcSuffix)
-		}
-	}
+    for _, test := range testCases {
+        if matchExcludeOptions(test.pattern, test.srcSuffix, test.typ) != test.match {
+            t.Fatalf("Unexpected result %t, with pattern %s and srcSuffix %s \n", !test.match, test.pattern, test.srcSuffix)
+        }
+    }
 }

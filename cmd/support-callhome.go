@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var supportCallhomeCmd = cli.Command{
-	Name:         "callhome",
-	Usage:        "configure callhome settings",
-	OnUsageError: onUsageError,
-	Action:       mainCallhome,
-	Before:       setGlobalsFromContext,
-	Flags:        supportGlobalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "callhome",
+    Usage:        "configure callhome settings",
+    OnUsageError: onUsageError,
+    Action:       mainCallhome,
+    Before:       setGlobalsFromContext,
+    Flags:        supportGlobalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -59,69 +59,69 @@ EXAMPLES:
 }
 
 type supportCallhomeMessage struct {
-	Status string `json:"status"`
+    Status string `json:"status"`
 }
 
 // String colorized callhome command output message.
 func (s supportCallhomeMessage) String() string {
-	return console.Colorize(supportSuccessMsgTag, "Callhome is "+s.Status)
+    return console.Colorize(supportSuccessMsgTag, "Callhome is "+s.Status)
 }
 
 // JSON jsonified callhome command output message.
 func (s supportCallhomeMessage) JSON() string {
-	jsonBytes, e := json.MarshalIndent(s, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    jsonBytes, e := json.MarshalIndent(s, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonBytes)
+    return string(jsonBytes)
 }
 
 func isDiagCallhomeEnabled(alias string) bool {
-	return isFeatureEnabled(alias, "callhome", madmin.Default)
+    return isFeatureEnabled(alias, "callhome", madmin.Default)
 }
 
 func mainCallhome(ctx *cli.Context) error {
-	initLicInfoColors()
+    initLicInfoColors()
 
-	setSuccessMessageColor()
-	alias, arg := checkToggleCmdSyntax(ctx)
-	validateClusterRegistered(alias, false)
+    setSuccessMessageColor()
+    alias, arg := checkToggleCmdSyntax(ctx)
+    validateClusterRegistered(alias, false)
 
-	if arg == "status" {
-		printCallhomeStatus(alias)
-		return nil
-	}
+    if arg == "status" {
+        printCallhomeStatus(alias)
+        return nil
+    }
 
-	toggleCallhome(alias, arg)
+    toggleCallhome(alias, arg)
 
-	return nil
+    return nil
 }
 
 func printCallhomeStatus(alias string) {
-	resultMsg := supportCallhomeMessage{Status: featureStatusStr(isDiagCallhomeEnabled(alias))}
-	printMsg(resultMsg)
+    resultMsg := supportCallhomeMessage{Status: featureStatusStr(isDiagCallhomeEnabled(alias))}
+    printMsg(resultMsg)
 }
 
 func toggleCallhome(alias, arg string) {
-	enable := arg == "enable"
-	setCallhomeConfig(alias, enable)
-	resultMsg := supportCallhomeMessage{Status: featureStatusStr(enable)}
-	printMsg(resultMsg)
+    enable := arg == "enable"
+    setCallhomeConfig(alias, enable)
+    resultMsg := supportCallhomeMessage{Status: featureStatusStr(enable)}
+    printMsg(resultMsg)
 }
 
 func setCallhomeConfig(alias string, enableCallhome bool) {
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(alias)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(alias)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	if !minioConfigSupportsSubSys(client, "callhome") {
-		fatal(errDummy().Trace(), "Your version of MinIO doesn't support this configuration")
-	}
+    if !minioConfigSupportsSubSys(client, "callhome") {
+        fatal(errDummy().Trace(), "Your version of MinIO doesn't support this configuration")
+    }
 
-	enableStr := "off"
-	if enableCallhome {
-		enableStr = "on"
-	}
-	configStr := "callhome enable=" + enableStr
-	_, e := client.SetConfigKV(globalContext, configStr)
-	fatalIf(probe.NewError(e), "Unable to set callhome config on minio")
+    enableStr := "off"
+    if enableCallhome {
+        enableStr = "on"
+    }
+    configStr := "callhome enable=" + enableStr
+    _, e := client.SetConfigKV(globalContext, configStr)
+    fatalIf(probe.NewError(e), "Unable to set callhome config on minio")
 }

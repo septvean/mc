@@ -22,58 +22,58 @@ import "github.com/minio/cli"
 var adminFlags = []cli.Flag{}
 
 const (
-	// dot represents a list item, for eg. server status - online (green) or offline (red)
-	dot = "●"
-	// check represents successful operation
-	check = "✔"
+    // dot represents a list item, for eg. server status - online (green) or offline (red)
+    dot = "●"
+    // check represents successful operation
+    check = "✔"
 )
 
 var adminCmdSubcommands = []cli.Command{
-	adminServiceCmd,
-	adminServerUpdateCmd,
-	adminInfoCmd,
-	adminInspectCmd,
-	adminUserCmd,
-	adminGroupCmd,
-	adminPolicyCmd,
-	adminReplicateCmd,
-	adminIDPCmd,
-	adminConfigCmd,
-	adminDecommissionCmd,
-	adminHealCmd,
-	adminPrometheusCmd,
-	adminKMSCmd,
-	adminHealthCmd(),
-	adminSubnetCmd,
-	adminBucketCmd,
-	adminTierCmd,
-	adminSpeedtestCmd,
-	adminProfileCmd,
-	adminScannerCmd,
-	adminTopCmd,
-	adminTraceCmd,
-	adminConsoleCmd,
-	adminClusterCmd,
-	adminRebalanceCmd,
-	adminLogsCmd,
-	adminAccesskeyCmd,
+    adminServiceCmd,
+    adminServerUpdateCmd,
+    adminInfoCmd,
+    adminInspectCmd,
+    adminUserCmd,
+    adminGroupCmd,
+    adminPolicyCmd,
+    adminReplicateCmd,
+    adminIDPCmd,
+    adminConfigCmd,
+    adminDecommissionCmd,
+    adminHealCmd,
+    adminPrometheusCmd,
+    adminKMSCmd,
+    adminHealthCmd(),
+    adminSubnetCmd,
+    adminBucketCmd,
+    adminTierCmd,
+    adminSpeedtestCmd,
+    adminProfileCmd,
+    adminScannerCmd,
+    adminTopCmd,
+    adminTraceCmd,
+    adminConsoleCmd,
+    adminClusterCmd,
+    adminRebalanceCmd,
+    adminLogsCmd,
+    adminAccesskeyCmd,
 }
 
 var adminCmd = cli.Command{
-	Name:            "admin",
-	Usage:           "manage MinIO servers",
-	Action:          mainAdmin,
-	Subcommands:     adminCmdSubcommands,
-	HideHelpCommand: true,
-	Before:          setGlobalsFromContext,
-	Flags:           append(adminFlags, globalFlags...),
+    Name:            "admin",
+    Usage:           "manage MinIO servers",
+    Action:          mainAdmin,
+    Subcommands:     adminCmdSubcommands,
+    HideHelpCommand: true,
+    Before:          setGlobalsFromContext,
+    Flags:           append(adminFlags, globalFlags...),
 }
 
 const dateTimeFormatFilename = "2006-01-02T15-04-05.999999-07-00"
 
 // mainAdmin is the handle for "mc admin" command.
 func mainAdmin(ctx *cli.Context) error {
-	commandNotFound(ctx, adminCmdSubcommands)
-	return nil
-	// Sub-commands like "service", "heal", "top" have their own main.
+    commandNotFound(ctx, adminCmdSubcommands)
+    return nil
+    // Sub-commands like "service", "heal", "top" have their own main.
 }

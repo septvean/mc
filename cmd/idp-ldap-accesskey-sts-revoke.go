@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var idpLdapAccesskeySTSRevokeCmd = cli.Command{
-	Name:         "sts-revoke",
-	Usage:        "revokes all STS accounts or specified types for the specified user",
-	Action:       mainIdpLdapAccesskeySTSRevoke,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminAccesskeySTSRevokeFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "sts-revoke",
+    Usage:        "revokes all STS accounts or specified types for the specified user",
+    Action:       mainIdpLdapAccesskeySTSRevoke,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminAccesskeySTSRevokeFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -61,30 +61,30 @@ EXAMPLES:
 
 // mainIdpLdapAccesskeySTSRevoke is the handle for "mc idp ldap accesskey sts-revoke" command.
 func mainIdpLdapAccesskeySTSRevoke(ctx *cli.Context) error {
-	checkSTSRevokeSyntax(ctx)
+    checkSTSRevokeSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	user := args.Get(1) // will be empty if --self flag is set
-	tokenRevokeType := ctx.String("token-type")
-	fullRevoke := ctx.Bool("all")
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    user := args.Get(1) // will be empty if --self flag is set
+    tokenRevokeType := ctx.String("token-type")
+    fullRevoke := ctx.Bool("all")
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.RevokeTokens(globalContext, madmin.RevokeTokensReq{
-		User:            user,
-		TokenRevokeType: tokenRevokeType,
-		FullRevoke:      fullRevoke,
-	})
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to revoke tokens for %s", user)
+    e := client.RevokeTokens(globalContext, madmin.RevokeTokensReq{
+        User:            user,
+        TokenRevokeType: tokenRevokeType,
+        FullRevoke:      fullRevoke,
+    })
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to revoke tokens for %s", user)
 
-	printMsg(stsRevokeMessage{
-		User:            user,
-		TokenRevokeType: tokenRevokeType,
-	})
+    printMsg(stsRevokeMessage{
+        User:            user,
+        TokenRevokeType: tokenRevokeType,
+    })
 
-	return nil
+    return nil
 }

@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminUserInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "display info of a user",
-	Action:       mainAdminUserInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "display info of a user",
+    Action:       mainAdminUserInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,63 +52,63 @@ EXAMPLES:
 
 // checkAdminUserAddSyntax - validate all the passed arguments
 func checkAdminUserInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminUserInfo is the handler for "mc admin user info" command.
 func mainAdminUserInfo(ctx *cli.Context) error {
-	checkAdminUserInfoSyntax(ctx)
+    checkAdminUserInfoSyntax(ctx)
 
-	console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("UserMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	user, e := client.GetUserInfo(globalContext, args.Get(1))
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get user info")
+    user, e := client.GetUserInfo(globalContext, args.Get(1))
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get user info")
 
-	memberOf := []userGroup{}
-	for _, group := range user.MemberOf {
-		gd, e := client.GetGroupDescription(globalContext, group)
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
-		policies := []string{}
-		if gd.Policy != "" {
-			policies = strings.Split(gd.Policy, ",")
-		}
-		memberOf = append(memberOf, userGroup{
-			Name:     gd.Name,
-			Policies: policies,
-		})
-	}
+    memberOf := []userGroup{}
+    for _, group := range user.MemberOf {
+        gd, e := client.GetGroupDescription(globalContext, group)
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
+        policies := []string{}
+        if gd.Policy != "" {
+            policies = strings.Split(gd.Policy, ",")
+        }
+        memberOf = append(memberOf, userGroup{
+            Name:     gd.Name,
+            Policies: policies,
+        })
+    }
 
-	printMsg(userMessage{
-		op:             ctx.Command.Name,
-		AccessKey:      args.Get(1),
-		PolicyName:     user.PolicyName,
-		UserStatus:     string(user.Status),
-		MemberOf:       memberOf,
-		Authentication: authInfoToUserMessage(user.AuthInfo),
-	})
+    printMsg(userMessage{
+        op:             ctx.Command.Name,
+        AccessKey:      args.Get(1),
+        PolicyName:     user.PolicyName,
+        UserStatus:     string(user.Status),
+        MemberOf:       memberOf,
+        Authentication: authInfoToUserMessage(user.AuthInfo),
+    })
 
-	return nil
+    return nil
 }
 
 func authInfoToUserMessage(a *madmin.UserAuthInfo) string {
-	if a == nil {
-		return ""
-	}
+    if a == nil {
+        return ""
+    }
 
-	authServer := ""
-	if a.Type != madmin.BuiltinUserAuthType {
-		authServer = "/" + a.AuthServer
-	}
+    authServer := ""
+    if a.Type != madmin.BuiltinUserAuthType {
+        authServer = "/" + a.AuthServer
+    }
 
-	return fmt.Sprintf("%s%s (%s)", a.Type, authServer, a.AuthServerUserID)
+    return fmt.Sprintf("%s%s (%s)", a.Type, authServer, a.AuthServerUserID)
 }

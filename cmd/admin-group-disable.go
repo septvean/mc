@@ -18,17 +18,17 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminGroupDisableCmd = cli.Command{
-	Name:         "disable",
-	Usage:        "disable a group",
-	Action:       mainAdminGroupEnableDisable,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "disable",
+    Usage:        "disable a group",
+    Action:       mainAdminGroupEnableDisable,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:

@@ -18,20 +18,20 @@
 package cmd
 
 import (
-	"strings"
+    "strings"
 
-	"github.com/charmbracelet/lipgloss"
-	"github.com/minio/cli"
+    "github.com/charmbracelet/lipgloss"
+    "github.com/minio/cli"
 )
 
 var idpLdapAccesskeyInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "info about given access key pairs for LDAP",
-	Action:       mainIDPLdapAccesskeyInfo,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "info about given access key pairs for LDAP",
+    Action:       mainIDPLdapAccesskeyInfo,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,17 +49,17 @@ EXAMPLES:
 }
 
 type ldapAccessKeyInfo struct {
-	Username string `json:"username,omitempty"`
+    Username string `json:"username,omitempty"`
 }
 
 func (l ldapAccessKeyInfo) String() string {
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575")) // green
-	o := strings.Builder{}
-	o.WriteString(labelStyle.Render("Username: "))
-	o.WriteString(l.Username)
-	return o.String()
+    labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575")) // green
+    o := strings.Builder{}
+    o.WriteString(labelStyle.Render("Username: "))
+    o.WriteString(l.Username)
+    return o.String()
 }
 
 func mainIDPLdapAccesskeyInfo(ctx *cli.Context) error {
-	return commonAccesskeyInfo(ctx)
+    return commonAccesskeyInfo(ctx)
 }

@@ -18,91 +18,91 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-	"io"
-	"sync"
-	"time"
+    "errors"
+    "fmt"
+    "io"
+    "sync"
+    "time"
 
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/vbauerster/mpb/v8"
-	"github.com/vbauerster/mpb/v8/decor"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/vbauerster/mpb/v8"
+    "github.com/vbauerster/mpb/v8/decor"
 )
 
 func receiveHealthInfo(decoder *json.Decoder) (info madmin.HealthInfo, e error) {
-	var wg sync.WaitGroup
-	pg := mpb.New(mpb.WithWaitGroup(&wg), mpb.WithWidth(16))
+    var wg sync.WaitGroup
+    pg := mpb.New(mpb.WithWaitGroup(&wg), mpb.WithWidth(16))
 
-	spinnerStyle := mpb.SpinnerStyle().Meta(func(s string) string {
-		return infoText(s)
-	}).PositionLeft()
+    spinnerStyle := mpb.SpinnerStyle().Meta(func(s string) string {
+        return infoText(s)
+    }).PositionLeft()
 
-	type progressSpinner struct {
-		name    string
-		spinner *mpb.Bar
-		cond    func(madmin.HealthInfo) bool
-	}
-	spinners := []progressSpinner{}
+    type progressSpinner struct {
+        name    string
+        spinner *mpb.Bar
+        cond    func(madmin.HealthInfo) bool
+    }
+    spinners := []progressSpinner{}
 
-	createSpinner := func(name string, cond func(madmin.HealthInfo) bool) {
-		caption := fmt.Sprintf("%s %s ...", dot, name)
-		wip := mpb.PrependDecorators(decor.Name(greenText(caption)))
-		done := mpb.BarFillerOnComplete(greenText(check))
-		spinner := pg.New(1, spinnerStyle, wip, done)
-		spinners = append(spinners, progressSpinner{
-			name:    name,
-			cond:    cond,
-			spinner: spinner,
-		})
-	}
+    createSpinner := func(name string, cond func(madmin.HealthInfo) bool) {
+        caption := fmt.Sprintf("%s %s ...", dot, name)
+        wip := mpb.PrependDecorators(decor.Name(greenText(caption)))
+        done := mpb.BarFillerOnComplete(greenText(check))
+        spinner := pg.New(1, spinnerStyle, wip, done)
+        spinners = append(spinners, progressSpinner{
+            name:    name,
+            cond:    cond,
+            spinner: spinner,
+        })
+    }
 
-	createSpinner("CPU Info", func(info madmin.HealthInfo) bool { return len(info.Sys.CPUInfo) > 0 })
-	createSpinner("Disk Info", func(info madmin.HealthInfo) bool { return len(info.Sys.Partitions) > 0 })
-	createSpinner("Net Info", func(info madmin.HealthInfo) bool { return len(info.Sys.NetInfo) > 0 })
-	createSpinner("OS Info", func(info madmin.HealthInfo) bool { return len(info.Sys.OSInfo) > 0 })
-	createSpinner("Mem Info", func(info madmin.HealthInfo) bool { return len(info.Sys.MemInfo) > 0 })
-	createSpinner("Process Info", func(info madmin.HealthInfo) bool { return len(info.Sys.ProcInfo) > 0 })
-	createSpinner("Server Config", func(info madmin.HealthInfo) bool { return info.Minio.Config.Config != nil })
-	createSpinner("System Errors", func(info madmin.HealthInfo) bool { return len(info.Sys.SysErrs) > 0 })
-	createSpinner("System Services", func(info madmin.HealthInfo) bool { return len(info.Sys.SysServices) > 0 })
-	createSpinner("System Config", func(info madmin.HealthInfo) bool { return len(info.Sys.SysConfig) > 0 })
-	createSpinner("Admin Info", func(info madmin.HealthInfo) bool { return len(info.Minio.Info.Servers) > 0 })
+    createSpinner("CPU Info", func(info madmin.HealthInfo) bool { return len(info.Sys.CPUInfo) > 0 })
+    createSpinner("Disk Info", func(info madmin.HealthInfo) bool { return len(info.Sys.Partitions) > 0 })
+    createSpinner("Net Info", func(info madmin.HealthInfo) bool { return len(info.Sys.NetInfo) > 0 })
+    createSpinner("OS Info", func(info madmin.HealthInfo) bool { return len(info.Sys.OSInfo) > 0 })
+    createSpinner("Mem Info", func(info madmin.HealthInfo) bool { return len(info.Sys.MemInfo) > 0 })
+    createSpinner("Process Info", func(info madmin.HealthInfo) bool { return len(info.Sys.ProcInfo) > 0 })
+    createSpinner("Server Config", func(info madmin.HealthInfo) bool { return info.Minio.Config.Config != nil })
+    createSpinner("System Errors", func(info madmin.HealthInfo) bool { return len(info.Sys.SysErrs) > 0 })
+    createSpinner("System Services", func(info madmin.HealthInfo) bool { return len(info.Sys.SysServices) > 0 })
+    createSpinner("System Config", func(info madmin.HealthInfo) bool { return len(info.Sys.SysConfig) > 0 })
+    createSpinner("Admin Info", func(info madmin.HealthInfo) bool { return len(info.Minio.Info.Servers) > 0 })
 
-	wg.Add(len(spinners))
-	start := time.Now()
+    wg.Add(len(spinners))
+    start := time.Now()
 
-	markDone := func(bar *mpb.Bar) {
-		if bar.Current() == 0 {
-			bar.EwmaIncrement(time.Since(start))
-			wg.Done()
-		}
-	}
+    markDone := func(bar *mpb.Bar) {
+        if bar.Current() == 0 {
+            bar.EwmaIncrement(time.Since(start))
+            wg.Done()
+        }
+    }
 
-	receivedLast := false
-	progress := func(info madmin.HealthInfo) {
-		receivedLast = len(info.Minio.Info.Servers) > 0
+    receivedLast := false
+    progress := func(info madmin.HealthInfo) {
+        receivedLast = len(info.Minio.Info.Servers) > 0
 
-		for _, bar := range spinners {
-			if receivedLast || bar.cond(info) {
-				markDone(bar.spinner)
-			}
-		}
-	}
+        for _, bar := range spinners {
+            if receivedLast || bar.cond(info) {
+                markDone(bar.spinner)
+            }
+        }
+    }
 
-	go func() {
-		for {
-			if e = decoder.Decode(&info); e != nil {
-				if errors.Is(e, io.EOF) {
-					e = nil
-				}
+    go func() {
+        for {
+            if e = decoder.Decode(&info); e != nil {
+                if errors.Is(e, io.EOF) {
+                    e = nil
+                }
 
-				break
-			}
+                break
+            }
 
-			progress(info)
-		}
-	}()
-	pg.Wait()
-	return
+            progress(info)
+        }
+    }()
+    pg.Wait()
+    return
 }

@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var versionSuspendCmd = cli.Command{
-	Name:         "suspend",
-	Usage:        "suspend bucket versioning",
-	Action:       mainVersionSuspend,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "suspend",
+    Usage:        "suspend bucket versioning",
+    Action:       mainVersionSuspend,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,52 +52,52 @@ EXAMPLES:
 
 // checkVersionSuspendSyntax - validate all the passed arguments
 func checkVersionSuspendSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type versionSuspendMessage struct {
-	Op         string
-	Status     string `json:"status"`
-	URL        string `json:"url"`
-	Versioning struct {
-		Status    string `json:"status"`
-		MFADelete string `json:"MFADelete"`
-	} `json:"versioning"`
+    Op         string
+    Status     string `json:"status"`
+    URL        string `json:"url"`
+    Versioning struct {
+        Status    string `json:"status"`
+        MFADelete string `json:"MFADelete"`
+    }   `json:"versioning"`
 }
 
 func (v versionSuspendMessage) JSON() string {
-	v.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    v.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (v versionSuspendMessage) String() string {
-	return console.Colorize("versionSuspendMessage", fmt.Sprintf("%s versioning is suspended", v.URL))
+    return console.Colorize("versionSuspendMessage", fmt.Sprintf("%s versioning is suspended", v.URL))
 }
 
 func mainVersionSuspend(cliCtx *cli.Context) error {
-	ctx, cancelVersionSuspend := context.WithCancel(globalContext)
-	defer cancelVersionSuspend()
+    ctx, cancelVersionSuspend := context.WithCancel(globalContext)
+    defer cancelVersionSuspend()
 
-	console.SetColor("versionSuspendMessage", color.New(color.FgGreen))
+    console.SetColor("versionSuspendMessage", color.New(color.FgGreen))
 
-	checkVersionSuspendSyntax(cliCtx)
+    checkVersionSuspendSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	fatalIf(client.SetVersion(ctx, "suspend", nil, false), "Unable to suspend versioning")
-	printMsg(versionSuspendMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	})
-	return nil
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    fatalIf(client.SetVersion(ctx, "suspend", nil, false), "Unable to suspend versioning")
+    printMsg(versionSuspendMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    })
+    return nil
 }

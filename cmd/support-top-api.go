@@ -18,42 +18,42 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var supportTopAPIFlags = []cli.Flag{
-	cli.StringSliceFlag{
-		Name:  "name",
-		Usage: "summarize current calls for matching API name",
-	},
-	cli.StringSliceFlag{
-		Name:  "path",
-		Usage: "summarize current API calls only on matching path",
-	},
-	cli.StringSliceFlag{
-		Name:  "node",
-		Usage: "summarize current API calls only on matching servers",
-	},
-	cli.BoolFlag{
-		Name:  "errors, e",
-		Usage: "summarize current API calls throwing only errors",
-	},
+    cli.StringSliceFlag{
+        Name:  "name",
+        Usage: "summarize current calls for matching API name",
+    },
+    cli.StringSliceFlag{
+        Name:  "path",
+        Usage: "summarize current API calls only on matching path",
+    },
+    cli.StringSliceFlag{
+        Name:  "node",
+        Usage: "summarize current API calls only on matching servers",
+    },
+    cli.BoolFlag{
+        Name:  "errors, e",
+        Usage: "summarize current API calls throwing only errors",
+    },
 }
 
 var supportTopAPICmd = cli.Command{
-	Name:            "api",
-	Usage:           "summarize API events on MinIO server in real-time",
-	Action:          mainSupportTopAPI,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           append(supportTopAPIFlags, supportGlobalFlags...),
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "api",
+    Usage:           "summarize API events on MinIO server in real-time",
+    Action:          mainSupportTopAPI,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           append(supportTopAPIFlags, supportGlobalFlags...),
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -73,57 +73,57 @@ EXAMPLES:
 
 // checkSupportTopAPISyntax - validate all the passed arguments
 func checkSupportTopAPISyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainSupportTopAPI(ctx *cli.Context) error {
-	checkSupportTopAPISyntax(ctx)
+    checkSupportTopAPISyntax(ctx)
 
-	aliasedURL := ctx.Args().Get(0)
-	alias, _ := url2Alias(aliasedURL)
-	validateClusterRegistered(alias, false)
+    aliasedURL := ctx.Args().Get(0)
+    alias, _ := url2Alias(aliasedURL)
+    validateClusterRegistered(alias, false)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	if err != nil {
-		fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
-		return nil
-	}
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    if err != nil {
+        fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client.")
+        return nil
+    }
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	opts, e := tracingOpts(ctx, ctx.StringSlice("call"))
-	fatalIf(probe.NewError(e), "Unable to start tracing")
+    opts, e := tracingOpts(ctx, ctx.StringSlice("call"))
+    fatalIf(probe.NewError(e), "Unable to start tracing")
 
-	mopts := matchingOpts(ctx)
+    mopts := matchingOpts(ctx)
 
-	// Start listening on all trace activity.
-	traceCh := client.ServiceTrace(ctxt, opts)
+    // Start listening on all trace activity.
+    traceCh := client.ServiceTrace(ctxt, opts)
 
-	filteredTraces := make(chan madmin.ServiceTraceInfo, 1)
-	ui := tea.NewProgram(initTraceStatsUI(false, 30, filteredTraces))
-	var te error
-	go func() {
-		for t := range traceCh {
-			if t.Err != nil {
-				te = t.Err
-				ui.Kill()
-				return
-			}
-			if mopts.matches(t) {
-				filteredTraces <- t
-			}
-		}
-	}()
-	if _, e := ui.Run(); e != nil {
-		cancel()
-		if te != nil {
-			e = te
-		}
-		fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch http trace statistics")
-	}
-	return nil
+    filteredTraces := make(chan madmin.ServiceTraceInfo, 1)
+    ui := tea.NewProgram(initTraceStatsUI(false, 30, filteredTraces))
+    var te error
+    go func() {
+        for t := range traceCh {
+            if t.Err != nil {
+                te = t.Err
+                ui.Kill()
+                return
+            }
+            if mopts.matches(t) {
+                filteredTraces <- t
+            }
+        }
+    }()
+    if _, e := ui.Run(); e != nil {
+        cancel()
+        if te != nil {
+            e = te
+        }
+        fatalIf(probe.NewError(e).Trace(aliasedURL), "Unable to fetch http trace statistics")
+    }
+    return nil
 }

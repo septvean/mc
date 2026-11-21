@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminTierCmd = cli.Command{
-	Name:            "tier",
-	Usage:           "manage remote tier targets for ILM transition",
-	Action:          mainAdminTier,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Hidden:          true,
-	HideHelpCommand: true,
-	Subcommands:     adminTierDepCmds,
+    Name:            "tier",
+    Usage:           "manage remote tier targets for ILM transition",
+    Action:          mainAdminTier,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Hidden:          true,
+    HideHelpCommand: true,
+    Subcommands:     adminTierDepCmds,
 }
 
 // mainAdminTier is the handle for "mc admin tier" command.
 func mainAdminTier(_ *cli.Context) error {
-	deprecatedError("mc ilm tier")
-	return nil
+    deprecatedError("mc ilm tier")
+    return nil
 }

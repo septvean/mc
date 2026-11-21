@@ -18,55 +18,55 @@
 package cmd
 
 import (
-	"fmt"
-	"runtime"
+    "fmt"
+    "runtime"
 
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 func checkCopySyntax(cliCtx *cli.Context) {
-	if len(cliCtx.Args()) < 2 {
-		showCommandHelpAndExit(cliCtx, 1) // last argument is exit code.
-	}
-	parseChecksum(cliCtx)
+    if len(cliCtx.Args()) < 2 {
+        showCommandHelpAndExit(cliCtx, 1) // last argument is exit code.
+    }
+    parseChecksum(cliCtx)
 
-	// extract URLs.
-	URLs := cliCtx.Args()
-	if len(URLs) < 2 {
-		fatalIf(errDummy().Trace(cliCtx.Args()...), "Unable to parse source and target arguments.")
-	}
+    // extract URLs.
+    URLs := cliCtx.Args()
+    if len(URLs) < 2 {
+        fatalIf(errDummy().Trace(cliCtx.Args()...), "Unable to parse source and target arguments.")
+    }
 
-	srcURLs := URLs[:len(URLs)-1]
-	tgtURL := URLs[len(URLs)-1]
-	isZip := cliCtx.Bool("zip")
-	versionID := cliCtx.String("version-id")
+    srcURLs := URLs[:len(URLs)-1]
+    tgtURL := URLs[len(URLs)-1]
+    isZip := cliCtx.Bool("zip")
+    versionID := cliCtx.String("version-id")
 
-	if versionID != "" && len(srcURLs) > 1 {
-		fatalIf(errDummy().Trace(cliCtx.Args()...), "Unable to pass --version flag with multiple copy sources arguments.")
-	}
+    if versionID != "" && len(srcURLs) > 1 {
+        fatalIf(errDummy().Trace(cliCtx.Args()...), "Unable to pass --version flag with multiple copy sources arguments.")
+    }
 
-	if isZip && cliCtx.String("rewind") != "" {
-		fatalIf(errDummy().Trace(cliCtx.Args()...), "--zip and --rewind cannot be used together")
-	}
+    if isZip && cliCtx.String("rewind") != "" {
+        fatalIf(errDummy().Trace(cliCtx.Args()...), "--zip and --rewind cannot be used together")
+    }
 
-	// Check if bucket name is passed for URL type arguments.
-	url := newClientURL(tgtURL)
-	if url.Host != "" {
-		if url.Path == string(url.Separator) {
-			fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Target `%s` does not contain bucket name.", tgtURL))
-		}
-	}
+    // Check if bucket name is passed for URL type arguments.
+    url := newClientURL(tgtURL)
+    if url.Host != "" {
+        if url.Path == string(url.Separator) {
+            fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Target `%s` does not contain bucket name.", tgtURL))
+        }
+    }
 
-	if cliCtx.String(rdFlag) != "" && cliCtx.String(rmFlag) == "" {
-		fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Both object retention flags `--%s` and `--%s` are required.\n", rdFlag, rmFlag))
-	}
+    if cliCtx.String(rdFlag) != "" && cliCtx.String(rmFlag) == "" {
+        fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Both object retention flags `--%s` and `--%s` are required.\n", rdFlag, rmFlag))
+    }
 
-	if cliCtx.String(rdFlag) == "" && cliCtx.String(rmFlag) != "" {
-		fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Both object retention flags `--%s` and `--%s` are required.\n", rdFlag, rmFlag))
-	}
+    if cliCtx.String(rdFlag) == "" && cliCtx.String(rmFlag) != "" {
+        fatalIf(errInvalidArgument().Trace(), fmt.Sprintf("Both object retention flags `--%s` and `--%s` are required.\n", rdFlag, rmFlag))
+    }
 
-	// Preserve functionality not supported for windows
-	if cliCtx.Bool("preserve") && runtime.GOOS == "windows" {
-		fatalIf(errInvalidArgument().Trace(), "Permissions are not preserved on windows platform.")
-	}
+    // Preserve functionality not supported for windows
+    if cliCtx.Bool("preserve") && runtime.GOOS == "windows" {
+        fatalIf(errInvalidArgument().Trace(), "Permissions are not preserved on windows platform.")
+    }
 }

@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminReplicateResyncCancelCmd = cli.Command{
-	Name:         "cancel",
-	Usage:        "cancel ongoing resync operation",
-	Action:       mainAdminReplicateResyncCancel,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "cancel",
+    Usage:        "cancel ongoing resync operation",
+    Action:       mainAdminReplicateResyncCancel,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -55,61 +55,61 @@ EXAMPLES:
 type resyncCancelMessage madmin.SRResyncOpStatus
 
 func (m resyncCancelMessage) JSON() string {
-	bs, e := json.MarshalIndent(madmin.SRResyncOpStatus(m), "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(bs)
+    bs, e := json.MarshalIndent(madmin.SRResyncOpStatus(m), "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(bs)
 }
 
 func (m resyncCancelMessage) String() string {
-	v := madmin.SRResyncOpStatus(m)
-	messages := []string{}
-	th := "ResyncMessage"
-	if v.ErrDetail != "" {
-		messages = append(messages, v.ErrDetail)
-		th = "ResyncErr"
-	} else {
-		messages = append(messages, fmt.Sprintf("Site resync with ID %s canceled successfully.", v.ResyncID))
-	}
-	return console.Colorize(th, strings.Join(messages, "\n"))
+    v := madmin.SRResyncOpStatus(m)
+    messages := []string{}
+    th := "ResyncMessage"
+    if v.ErrDetail != "" {
+        messages = append(messages, v.ErrDetail)
+        th = "ResyncErr"
+    } else {
+        messages = append(messages, fmt.Sprintf("Site resync with ID %s canceled successfully.", v.ResyncID))
+    }
+    return console.Colorize(th, strings.Join(messages, "\n"))
 }
 
 func mainAdminReplicateResyncCancel(ctx *cli.Context) error {
-	// Check argument count
-	argsNr := len(ctx.Args())
-	if argsNr != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    // Check argument count
+    argsNr := len(ctx.Args())
+    if argsNr != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	console.SetColor("ResyncMessage", color.New(color.FgGreen))
+    console.SetColor("ResyncMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
-	info, e := client.SiteReplicationInfo(globalContext)
-	fatalIf(probe.NewError(e), "Unable to fetch site replication info.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
+    info, e := client.SiteReplicationInfo(globalContext)
+    fatalIf(probe.NewError(e), "Unable to fetch site replication info.")
 
-	peerClient := getClient(args.Get(1))
-	peerAdmInfo, e := peerClient.ServerInfo(globalContext)
-	fatalIf(probe.NewError(e), "Unable to fetch server info of the peer.")
+    peerClient := getClient(args.Get(1))
+    peerAdmInfo, e := peerClient.ServerInfo(globalContext)
+    fatalIf(probe.NewError(e), "Unable to fetch server info of the peer.")
 
-	var peer madmin.PeerInfo
-	for _, site := range info.Sites {
-		if peerAdmInfo.DeploymentID == site.DeploymentID {
-			peer = site
-		}
-	}
-	if peer.DeploymentID == "" {
-		fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
-			"alias provided is not part of cluster replication.")
-	}
-	res, e := client.SiteReplicationResyncOp(globalContext, peer, madmin.SiteResyncCancel)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to cancel replication resync")
+    var peer madmin.PeerInfo
+    for _, site := range info.Sites {
+        if peerAdmInfo.DeploymentID == site.DeploymentID {
+            peer = site
+        }
+    }
+    if peer.DeploymentID == "" {
+        fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
+            "alias provided is not part of cluster replication.")
+    }
+    res, e := client.SiteReplicationResyncOp(globalContext, peer, madmin.SiteResyncCancel)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to cancel replication resync")
 
-	printMsg(resyncCancelMessage(res))
+    printMsg(resyncCancelMessage(res))
 
-	return nil
+    return nil
 }

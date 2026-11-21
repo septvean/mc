@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var corsRemoveCmd = cli.Command{
-	Name:         "remove",
-	Usage:        "remove a bucket CORS configuration",
-	Action:       mainCorsRemove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    Usage:        "remove a bucket CORS configuration",
+    Action:       mainCorsRemove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -47,31 +47,31 @@ EXAMPLES:
 
 // checkCorsRemoveSyntax - validate all the passed arguments
 func checkCorsRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainCorsRemove is the handle for "mc cors remove" command.
 func mainCorsRemove(ctx *cli.Context) error {
-	checkCorsRemoveSyntax(ctx)
+    checkCorsRemoveSyntax(ctx)
 
-	console.SetColor("CorsMessage", color.New(color.FgGreen))
+    console.SetColor("CorsMessage", color.New(color.FgGreen))
 
-	// args[0] is the ALIAS/BUCKET argument.
-	args := ctx.Args()
-	urlStr := args.Get(0)
+    // args[0] is the ALIAS/BUCKET argument.
+    args := ctx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
 
-	err = client.DeleteBucketCors(globalContext)
-	fatalIf(err.Trace(urlStr), "Unable to remove bucket CORS configuration for "+urlStr)
+    err = client.DeleteBucketCors(globalContext)
+    fatalIf(err.Trace(urlStr), "Unable to remove bucket CORS configuration for "+urlStr)
 
-	printMsg(corsMessage{
-		op:     "remove",
-		Status: "success",
-	})
+    printMsg(corsMessage{
+        op:     "remove",
+        Status: "success",
+    })
 
-	return nil
+    return nil
 }

@@ -18,49 +18,49 @@
 package cmd
 
 import (
-	"os"
-	"os/signal"
+    "os"
+    "os/signal"
 )
 
 // trapSignals traps the registered signals and cancel the global context.
 func trapSignals(sig ...os.Signal) {
-	// channel to receive signals.
-	sigCh := make(chan os.Signal, 1)
-	defer close(sigCh)
+    // channel to receive signals.
+    sigCh := make(chan os.Signal, 1)
+    defer close(sigCh)
 
-	// `signal.Notify` registers the given channel to
-	// receive notifications of the specified signals.
-	signal.Notify(sigCh, sig...)
+    // `signal.Notify` registers the given channel to
+    // receive notifications of the specified signals.
+    signal.Notify(sigCh, sig...)
 
-	// Wait for the signal.
-	s := <-sigCh
+    // Wait for the signal.
+    s := <-sigCh
 
-	// Once signal has been received stop signal Notify handler.
-	signal.Stop(sigCh)
+    // Once signal has been received stop signal Notify handler.
+    signal.Stop(sigCh)
 
-	// If GlobalTrapSignals is set to false, the global context will not be canceled,
-	// allowing the method to cancel the context.
-	if !GlobalTrapSignals {
-		return
-	}
+    // If GlobalTrapSignals is set to false, the global context will not be canceled,
+    // allowing the method to cancel the context.
+    if !GlobalTrapSignals {
+        return
+    }
 
-	// Stop profiling if enabled, this needs to be before canceling the
-	// global context to check for any unusual cpu/mem/goroutines usage
-	stopProfiling()
+    // Stop profiling if enabled, this needs to be before canceling the
+    // global context to check for any unusual cpu/mem/goroutines usage
+    stopProfiling()
 
-	// Cancel the global context
-	globalCancel()
+    // Cancel the global context
+    globalCancel()
 
-	var exitCode int
-	switch s.String() {
-	case "interrupt":
-		exitCode = globalCancelExitStatus
-	case "killed":
-		exitCode = globalKillExitStatus
-	case "terminated":
-		exitCode = globalTerminatExitStatus
-	default:
-		exitCode = globalErrorExitStatus
-	}
-	os.Exit(exitCode)
+    var exitCode int
+    switch s.String() {
+    case "interrupt":
+        exitCode = globalCancelExitStatus
+    case "killed":
+        exitCode = globalKillExitStatus
+    case "terminated":
+        exitCode = globalTerminatExitStatus
+    default:
+        exitCode = globalErrorExitStatus
+    }
+    os.Exit(exitCode)
 }

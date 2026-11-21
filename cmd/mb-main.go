@@ -18,44 +18,44 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var mbFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "region",
-		Value: "us-east-1",
-		Usage: "specify bucket region; defaults to 'us-east-1'",
-	},
-	cli.BoolFlag{
-		Name:  "ignore-existing, p",
-		Usage: "ignore if bucket/directory already exists",
-	},
-	cli.BoolFlag{
-		Name:  "with-lock, l",
-		Usage: "enable object lock",
-	},
-	cli.BoolFlag{
-		Name:  "with-versioning",
-		Usage: "enable versioned bucket",
-	},
+    cli.StringFlag{
+        Name:  "region",
+        Value: "us-east-1",
+        Usage: "specify bucket region; defaults to 'us-east-1'",
+    },
+    cli.BoolFlag{
+        Name:  "ignore-existing, p",
+        Usage: "ignore if bucket/directory already exists",
+    },
+    cli.BoolFlag{
+        Name:  "with-lock, l",
+        Usage: "enable object lock",
+    },
+    cli.BoolFlag{
+        Name:  "with-versioning",
+        Usage: "enable versioned bucket",
+    },
 }
 
 // make a bucket.
 var mbCmd = cli.Command{
-	Name:         "mb",
-	Usage:        "make a bucket",
-	Action:       mainMakeBucket,
-	Before:       setGlobalsFromContext,
-	OnUsageError: onUsageError,
-	Flags:        append(mbFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "mb",
+    Usage:        "make a bucket",
+    Action:       mainMakeBucket,
+    Before:       setGlobalsFromContext,
+    OnUsageError: onUsageError,
+    Flags:        append(mbFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -93,75 +93,75 @@ EXAMPLES:
 
 // makeBucketMessage is container for make bucket success and failure messages.
 type makeBucketMessage struct {
-	Status string `json:"status"`
-	Bucket string `json:"bucket"`
-	Region string `json:"region"`
+    Status string `json:"status"`
+    Bucket string `json:"bucket"`
+    Region string `json:"region"`
 }
 
 // String colorized make bucket message.
 func (s makeBucketMessage) String() string {
-	return console.Colorize("MakeBucket", "Bucket created successfully `"+s.Bucket+"`.")
+    return console.Colorize("MakeBucket", "Bucket created successfully `"+s.Bucket+"`.")
 }
 
 // JSON jsonified make bucket message.
 func (s makeBucketMessage) JSON() string {
-	makeBucketJSONBytes, e := json.MarshalIndent(s, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    makeBucketJSONBytes, e := json.MarshalIndent(s, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(makeBucketJSONBytes)
+    return string(makeBucketJSONBytes)
 }
 
 // Validate command line arguments.
 func checkMakeBucketSyntax(cliCtx *cli.Context) {
-	if !cliCtx.Args().Present() {
-		showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
-	}
+    if !cliCtx.Args().Present() {
+        showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
+    }
 }
 
 // mainMakeBucket is entry point for mb command.
 func mainMakeBucket(cliCtx *cli.Context) error {
-	// check 'mb' cli arguments.
-	checkMakeBucketSyntax(cliCtx)
+    // check 'mb' cli arguments.
+    checkMakeBucketSyntax(cliCtx)
 
-	// Additional command speific theme customization.
-	console.SetColor("MakeBucket", color.New(color.FgGreen, color.Bold))
+    // Additional command speific theme customization.
+    console.SetColor("MakeBucket", color.New(color.FgGreen, color.Bold))
 
-	// Save region.
-	region := cliCtx.String("region")
-	ignoreExisting := cliCtx.Bool("p")
-	withLock := cliCtx.Bool("l")
+    // Save region.
+    region := cliCtx.String("region")
+    ignoreExisting := cliCtx.Bool("p")
+    withLock := cliCtx.Bool("l")
 
-	var cErr error
-	for _, targetURL := range cliCtx.Args() {
-		// Instantiate client for URL.
-		clnt, err := newClient(targetURL)
-		if err != nil {
-			errorIf(err.Trace(targetURL), "Invalid target `%s`.", targetURL)
-			cErr = exitStatus(globalErrorExitStatus)
-			continue
-		}
+    var cErr error
+    for _, targetURL := range cliCtx.Args() {
+        // Instantiate client for URL.
+        clnt, err := newClient(targetURL)
+        if err != nil {
+            errorIf(err.Trace(targetURL), "Invalid target `%s`.", targetURL)
+            cErr = exitStatus(globalErrorExitStatus)
+            continue
+        }
 
-		ctx, cancelMakeBucket := context.WithCancel(globalContext)
-		defer cancelMakeBucket()
+        ctx, cancelMakeBucket := context.WithCancel(globalContext)
+        defer cancelMakeBucket()
 
-		// Make bucket.
-		if err = clnt.MakeBucket(ctx, region, ignoreExisting, withLock); err != nil {
-			switch err.ToGoError().(type) {
-			case BucketNameEmpty:
-				errorIf(err.Trace(targetURL), "Unable to make bucket, please use `mc mb %s`.", urlJoinPath(targetURL, "your-bucket-name"))
-			default:
-				errorIf(err.Trace(targetURL), "Unable to make bucket `%s`.", targetURL)
-			}
-			cErr = exitStatus(globalErrorExitStatus)
-			continue
-		}
+        // Make bucket.
+        if err = clnt.MakeBucket(ctx, region, ignoreExisting, withLock); err != nil {
+            switch err.ToGoError().(type) {
+            case BucketNameEmpty:
+                errorIf(err.Trace(targetURL), "Unable to make bucket, please use `mc mb %s`.", urlJoinPath(targetURL, "your-bucket-name"))
+            default:
+                errorIf(err.Trace(targetURL), "Unable to make bucket `%s`.", targetURL)
+            }
+            cErr = exitStatus(globalErrorExitStatus)
+            continue
+        }
 
-		if cliCtx.Bool("with-versioning") {
-			fatalIf(clnt.SetVersion(ctx, "enable", []string{}, false), "Unable to enable versioning")
-		}
+        if cliCtx.Bool("with-versioning") {
+            fatalIf(clnt.SetVersion(ctx, "enable", []string{}, false), "Unable to enable versioning")
+        }
 
-		// Successfully created a bucket.
-		printMsg(makeBucketMessage{Status: "success", Bucket: targetURL})
-	}
-	return cErr
+        // Successfully created a bucket.
+        printMsg(makeBucketMessage{Status: "success", Bucket: targetURL})
+    }
+    return cErr
 }

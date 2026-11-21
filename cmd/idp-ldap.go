@@ -20,29 +20,29 @@ package cmd
 import "github.com/minio/cli"
 
 var (
-	idpLdapSubcommands = []cli.Command{
-		idpLdapAddCmd,
-		idpLdapUpdateCmd,
-		idpLdapRemoveCmd,
-		idpLdapListCmd,
-		idpLdapInfoCmd,
-		idpLdapEnableCmd,
-		idpLdapDisableCmd,
-		idpLdapPolicyCmd,
-		idpLdapAccesskeyCmd,
-	}
-	idpLdapCmd = cli.Command{
-		Name:            "ldap",
-		Usage:           "manage Ldap IDP server configuration",
-		Action:          mainIDPLdap,
-		Before:          setGlobalsFromContext,
-		Flags:           globalFlags,
-		Subcommands:     idpLdapSubcommands,
-		HideHelpCommand: true,
-	}
+    idpLdapSubcommands = []cli.Command{
+        idpLdapAddCmd,
+        idpLdapUpdateCmd,
+        idpLdapRemoveCmd,
+        idpLdapListCmd,
+        idpLdapInfoCmd,
+        idpLdapEnableCmd,
+        idpLdapDisableCmd,
+        idpLdapPolicyCmd,
+        idpLdapAccesskeyCmd,
+    }
+    idpLdapCmd = cli.Command{
+        Name:            "ldap",
+        Usage:           "manage Ldap IDP server configuration",
+        Action:          mainIDPLdap,
+        Before:          setGlobalsFromContext,
+        Flags:           globalFlags,
+        Subcommands:     idpLdapSubcommands,
+        HideHelpCommand: true,
+    }
 )
 
 func mainIDPLdap(ctx *cli.Context) error {
-	commandNotFound(ctx, idpLdapSubcommands)
-	return nil
+    commandNotFound(ctx, idpLdapSubcommands)
+    return nil
 }

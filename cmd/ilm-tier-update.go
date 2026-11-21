@@ -20,13 +20,13 @@ package cmd
 import "github.com/minio/cli"
 
 var ilmTierUpdateCmd = cli.Command{
-	Name:         "update",
-	Usage:        "update an existing remote tier configuration",
-	Action:       mainAdminTierEdit,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(globalFlags, adminTierEditFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "update",
+    Usage:        "update an existing remote tier configuration",
+    Action:       mainAdminTierEdit,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(globalFlags, adminTierEditFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:

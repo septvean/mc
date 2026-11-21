@@ -18,39 +18,39 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/cmd/ilm"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/cmd/ilm"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var ilmRemoveFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "id",
-		Usage: "id of the lifecycle rule",
-	},
-	cli.BoolFlag{
-		Name:  "force",
-		Usage: "force flag is to be used when deleting all lifecycle configuration rules for the bucket",
-	},
-	cli.BoolFlag{
-		Name:  "all",
-		Usage: "delete all lifecycle configuration rules of the bucket, force flag enforced",
-	},
+    cli.StringFlag{
+        Name:  "id",
+        Usage: "id of the lifecycle rule",
+    },
+    cli.BoolFlag{
+        Name:  "force",
+        Usage: "force flag is to be used when deleting all lifecycle configuration rules for the bucket",
+    },
+    cli.BoolFlag{
+        Name:  "all",
+        Usage: "delete all lifecycle configuration rules of the bucket, force flag enforced",
+    },
 }
 
 var ilmRmCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove (if any) existing lifecycle configuration rule",
-	Action:       mainILMRemove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(ilmRemoveFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove (if any) existing lifecycle configuration rule",
+    Action:       mainILMRemove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(ilmRemoveFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -74,81 +74,81 @@ EXAMPLES:
 }
 
 type ilmRmMessage struct {
-	Status string `json:"status"`
-	ID     string `json:"id"`
-	Target string `json:"target"`
-	All    bool   `json:"all"`
+    Status string `json:"status"`
+    ID     string `json:"id"`
+    Target string `json:"target"`
+    All    bool   `json:"all"`
 }
 
 func (i ilmRmMessage) String() string {
-	msg := "Rule ID `" + i.ID + "` from target " + i.Target + " removed."
-	if i.All {
-		msg = "Rules for `" + i.Target + "` removed."
-	}
-	return console.Colorize(ilmThemeResultSuccess, msg)
+    msg := "Rule ID `" + i.ID + "` from target " + i.Target + " removed."
+    if i.All {
+        msg = "Rules for `" + i.Target + "` removed."
+    }
+    return console.Colorize(ilmThemeResultSuccess, msg)
 }
 
 func (i ilmRmMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(i, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(i, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 func checkILMRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
 
-	ilmAll := ctx.Bool("all")
-	ilmForce := ctx.Bool("force")
-	forceChk := (ilmAll && ilmForce) || (!ilmAll && !ilmForce)
-	if !forceChk {
-		fatalIf(errInvalidArgument(),
-			"It is mandatory to specify --all and --force flag together for mc "+ctx.Command.FullName()+".")
-	}
-	if ilmAll && ilmForce {
-		return
-	}
+    ilmAll := ctx.Bool("all")
+    ilmForce := ctx.Bool("force")
+    forceChk := (ilmAll && ilmForce) || (!ilmAll && !ilmForce)
+    if !forceChk {
+        fatalIf(errInvalidArgument(),
+            "It is mandatory to specify --all and --force flag together for mc "+ctx.Command.FullName()+".")
+    }
+    if ilmAll && ilmForce {
+        return
+    }
 
-	ilmID := ctx.String("id")
-	if ilmID == "" {
-		fatalIf(errInvalidArgument().Trace(ilmID), "ilm ID cannot be empty")
-	}
+    ilmID := ctx.String("id")
+    if ilmID == "" {
+        fatalIf(errInvalidArgument().Trace(ilmID), "ilm ID cannot be empty")
+    }
 }
 
 func mainILMRemove(cliCtx *cli.Context) error {
-	ctx, cancelILMImport := context.WithCancel(globalContext)
-	defer cancelILMImport()
+    ctx, cancelILMImport := context.WithCancel(globalContext)
+    defer cancelILMImport()
 
-	checkILMRemoveSyntax(cliCtx)
-	setILMDisplayColorScheme()
-	args := cliCtx.Args()
-	urlStr := args.Get(0)
+    checkILMRemoveSyntax(cliCtx)
+    setILMDisplayColorScheme()
+    args := cliCtx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(args...), "Unable to initialize client for "+urlStr+".")
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(args...), "Unable to initialize client for "+urlStr+".")
 
-	ilmCfg, _, err := client.GetLifecycle(ctx)
-	fatalIf(err.Trace(urlStr), "Unable to fetch lifecycle rules")
+    ilmCfg, _, err := client.GetLifecycle(ctx)
+    fatalIf(err.Trace(urlStr), "Unable to fetch lifecycle rules")
 
-	ilmAll := cliCtx.Bool("all")
-	ilmForce := cliCtx.Bool("force")
+    ilmAll := cliCtx.Bool("all")
+    ilmForce := cliCtx.Bool("force")
 
-	if ilmAll && ilmForce {
-		ilmCfg.Rules = nil // Remove all rules
-	} else {
-		ilmCfg, err = ilm.RemoveILMRule(ilmCfg, cliCtx.String("id"))
-		fatalIf(err.Trace(urlStr, cliCtx.String("id")), "Unable to remove rule by id")
-	}
+    if ilmAll && ilmForce {
+        ilmCfg.Rules = nil // Remove all rules
+    } else {
+        ilmCfg, err = ilm.RemoveILMRule(ilmCfg, cliCtx.String("id"))
+        fatalIf(err.Trace(urlStr, cliCtx.String("id")), "Unable to remove rule by id")
+    }
 
-	fatalIf(client.SetLifecycle(ctx, ilmCfg).Trace(urlStr), "Unable to set lifecycle rules")
+    fatalIf(client.SetLifecycle(ctx, ilmCfg).Trace(urlStr), "Unable to set lifecycle rules")
 
-	printMsg(ilmRmMessage{
-		Status: "success",
-		ID:     cliCtx.String("id"),
-		All:    ilmAll,
-		Target: urlStr,
-	})
+    printMsg(ilmRmMessage{
+        Status: "success",
+        ID:     cliCtx.String("id"),
+        All:    ilmAll,
+        Target: urlStr,
+    })
 
-	return nil
+    return nil
 }

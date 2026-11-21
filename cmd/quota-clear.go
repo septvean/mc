@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var quotaClearCmd = cli.Command{
-	Name:         "clear",
-	Usage:        "clear bucket quota",
-	Action:       mainQuotaClear,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "clear",
+    Usage:        "clear bucket quota",
+    Action:       mainQuotaClear,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,35 +49,35 @@ EXAMPLES:
 
 // checkQuotaClearSyntax - validate all the passed arguments
 func checkQuotaClearSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainQuotaClear is the handler for "mc quota clear" command.
 func mainQuotaClear(ctx *cli.Context) error {
-	checkQuotaClearSyntax(ctx)
+    checkQuotaClearSyntax(ctx)
 
-	console.SetColor("QuotaMessage", color.New(color.FgGreen))
-	console.SetColor("QuotaInfo", color.New(color.FgCyan))
+    console.SetColor("QuotaMessage", color.New(color.FgGreen))
+    console.SetColor("QuotaInfo", color.New(color.FgCyan))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	_, targetURL := url2Alias(args[0])
-	if e := client.SetBucketQuota(globalContext, targetURL, &madmin.BucketQuota{}); e != nil {
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to clear bucket quota config")
-	}
-	printMsg(quotaMessage{
-		op:     ctx.Command.Name,
-		Bucket: targetURL,
-		Status: "success",
-	})
+    _, targetURL := url2Alias(args[0])
+    if e := client.SetBucketQuota(globalContext, targetURL, &madmin.BucketQuota{}); e != nil {
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to clear bucket quota config")
+    }
+    printMsg(quotaMessage{
+        op:     ctx.Command.Name,
+        Bucket: targetURL,
+        Status: "success",
+    })
 
-	return nil
+    return nil
 }

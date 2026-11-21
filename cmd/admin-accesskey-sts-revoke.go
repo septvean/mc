@@ -18,35 +18,35 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var adminAccesskeySTSRevokeFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "all",
-		Usage: "revoke all STS accounts for the specified user",
-	},
-	cli.BoolFlag{
-		Name:  "self",
-		Usage: "revoke all STS accounts for the authenticated user",
-	},
-	cli.StringFlag{
-		Name:  "token-type",
-		Usage: "specify the token type to revoke",
-	},
+    cli.BoolFlag{
+        Name:  "all",
+        Usage: "revoke all STS accounts for the specified user",
+    },
+    cli.BoolFlag{
+        Name:  "self",
+        Usage: "revoke all STS accounts for the authenticated user",
+    },
+    cli.StringFlag{
+        Name:  "token-type",
+        Usage: "specify the token type to revoke",
+    },
 }
 
 var adminAccesskeySTSRevokeCmd = cli.Command{
-	Name:         "sts-revoke",
-	Usage:        "revokes all STS accounts or specified types for the specified user",
-	Action:       mainAdminAccesskeySTSRevoke,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminAccesskeySTSRevokeFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "sts-revoke",
+    Usage:        "revokes all STS accounts or specified types for the specified user",
+    Action:       mainAdminAccesskeySTSRevoke,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminAccesskeySTSRevokeFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -73,77 +73,77 @@ EXAMPLES:
 }
 
 type stsRevokeMessage struct {
-	Status          string `json:"status"`
-	User            string `json:"user"`
-	TokenRevokeType string `json:"tokenRevokeType,omitempty"`
+    Status          string `json:"status"`
+    User            string `json:"user"`
+    TokenRevokeType string `json:"tokenRevokeType,omitempty"`
 }
 
 func (m stsRevokeMessage) String() string {
-	userString := "user " + m.User
-	if m.User == "" {
-		userString = "authenticated user"
-	}
-	if m.TokenRevokeType == "" {
-		return "Successfully revoked all STS accounts for " + userString
-	}
-	return "Successfully revoked all STS accounts of type " + m.TokenRevokeType + " for " + userString
+    userString := "user " + m.User
+    if m.User == "" {
+        userString = "authenticated user"
+    }
+    if m.TokenRevokeType == "" {
+        return "Successfully revoked all STS accounts for " + userString
+    }
+    return "Successfully revoked all STS accounts of type " + m.TokenRevokeType + " for " + userString
 }
 
 func (m stsRevokeMessage) JSON() string {
-	if m.Status == "" {
-		m.Status = "success"
-	}
-	jsonMessageBytes, e := json.MarshalIndent(m, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    if m.Status == "" {
+        m.Status = "success"
+    }
+    jsonMessageBytes, e := json.MarshalIndent(m, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(jsonMessageBytes)
+    return string(jsonMessageBytes)
 }
 
 // checkSTSRevokeSyntax - validate all the passed arguments
 func checkSTSRevokeSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	if !ctx.Bool("self") && ctx.Args().Get(1) == "" {
-		fatalIf(errInvalidArgument().Trace(), "Must specify user or use --self flag.")
-	}
+    if !ctx.Bool("self") && ctx.Args().Get(1) == "" {
+        fatalIf(errInvalidArgument().Trace(), "Must specify user or use --self flag.")
+    }
 
-	if ctx.Bool("self") && ctx.Args().Get(1) != "" {
-		fatalIf(errInvalidArgument().Trace(), "Cannot specify user with --self flag.")
-	}
+    if ctx.Bool("self") && ctx.Args().Get(1) != "" {
+        fatalIf(errInvalidArgument().Trace(), "Cannot specify user with --self flag.")
+    }
 
-	if (!ctx.Bool("all") && ctx.String("token-type") == "") || (ctx.Bool("all") && ctx.String("token-type") != "") {
-		fatalIf(errDummy().Trace(), "Exactly one of --all or --token-type must be specified.")
-	}
+    if (!ctx.Bool("all") && ctx.String("token-type") == "") || (ctx.Bool("all") && ctx.String("token-type") != "") {
+        fatalIf(errDummy().Trace(), "Exactly one of --all or --token-type must be specified.")
+    }
 }
 
 // mainAdminAccesskeySTSRevoke is the handle for "mc admin accesskey sts-revoke" command.
 func mainAdminAccesskeySTSRevoke(ctx *cli.Context) error {
-	checkSTSRevokeSyntax(ctx)
+    checkSTSRevokeSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	user := args.Get(1) // will be empty if --self flag is set
-	tokenRevokeType := ctx.String("token-type")
-	fullRevoke := ctx.Bool("all")
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    user := args.Get(1) // will be empty if --self flag is set
+    tokenRevokeType := ctx.String("token-type")
+    fullRevoke := ctx.Bool("all")
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	e := client.RevokeTokens(globalContext, madmin.RevokeTokensReq{
-		User:            user,
-		TokenRevokeType: tokenRevokeType,
-		FullRevoke:      fullRevoke,
-	})
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to revoke tokens for %s", user)
+    e := client.RevokeTokens(globalContext, madmin.RevokeTokensReq{
+        User:            user,
+        TokenRevokeType: tokenRevokeType,
+        FullRevoke:      fullRevoke,
+    })
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to revoke tokens for %s", user)
 
-	printMsg(stsRevokeMessage{
-		User:            user,
-		TokenRevokeType: tokenRevokeType,
-	})
+    printMsg(stsRevokeMessage{
+        User:            user,
+        TokenRevokeType: tokenRevokeType,
+    })
 
-	return nil
+    return nil
 }

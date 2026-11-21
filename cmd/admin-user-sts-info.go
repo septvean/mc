@@ -18,52 +18,52 @@
 package cmd
 
 import (
-	"os"
-	"strings"
+    "os"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
-	"github.com/minio/pkg/v3/policy"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
+    "github.com/minio/pkg/v3/policy"
 )
 
 var adminUserSTSAcctSubcommands = []cli.Command{
-	adminUserSTSAcctInfoCmd,
+    adminUserSTSAcctInfoCmd,
 }
 
 var adminUserSTSAcctCmd = cli.Command{
-	Name:            "sts",
-	Usage:           "manage STS accounts",
-	Action:          mainAdminUserSTSAcct,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminUserSTSAcctSubcommands,
-	HideHelpCommand: true,
+    Name:            "sts",
+    Usage:           "manage STS accounts",
+    Action:          mainAdminUserSTSAcct,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminUserSTSAcctSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminUserSTSAcct is the handle for "mc admin user sts" command.
 func mainAdminUserSTSAcct(ctx *cli.Context) error {
-	commandNotFound(ctx, adminUserSTSAcctSubcommands)
-	return nil
+    commandNotFound(ctx, adminUserSTSAcctSubcommands)
+    return nil
 }
 
 var adminUserSTSAcctInfoFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "policy",
-		Usage: "print policy in JSON format",
-	},
+    cli.BoolFlag{
+        Name:  "policy",
+        Usage: "print policy in JSON format",
+    },
 }
 
 var adminUserSTSAcctInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "display temporary account info",
-	Action:       mainAdminUserSTSAcctInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminUserSTSAcctInfoFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "display temporary account info",
+    Action:       mainAdminUserSTSAcctInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminUserSTSAcctInfoFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -80,50 +80,50 @@ EXAMPLES:
 
 // checkAdminUserSTSAcctInfoSyntax - validate all the passed arguments
 func checkAdminUserSTSAcctInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 }
 
 // mainAdminUserSTSAcctInfo is the handle for "mc admin user sts info" command.
 func mainAdminUserSTSAcctInfo(ctx *cli.Context) error {
-	checkAdminUserSTSAcctInfoSyntax(ctx)
+    checkAdminUserSTSAcctInfoSyntax(ctx)
 
-	console.SetColor("AccountMessage", color.New(color.FgGreen))
+    console.SetColor("AccountMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	stsAccount := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    stsAccount := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	stsInfo, e := client.TemporaryAccountInfo(globalContext, stsAccount)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get information of the specified service account")
+    stsInfo, e := client.TemporaryAccountInfo(globalContext, stsAccount)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get information of the specified service account")
 
-	if ctx.Bool("policy") {
-		if stsInfo.Policy == "" {
-			fatalIf(errDummy().Trace(args...), "No policy found associated to the specified service account. Check the policy of its parent user.")
-		}
-		p, e := policy.ParseConfig(strings.NewReader(stsInfo.Policy))
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to parse policy.")
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", " ")
-		fatalIf(probe.NewError(enc.Encode(p)).Trace(args...), "Unable to write policy to stdout.")
-		return nil
-	}
+    if ctx.Bool("policy") {
+        if stsInfo.Policy == "" {
+            fatalIf(errDummy().Trace(args...), "No policy found associated to the specified service account. Check the policy of its parent user.")
+        }
+        p, e := policy.ParseConfig(strings.NewReader(stsInfo.Policy))
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to parse policy.")
+        enc := json.NewEncoder(os.Stdout)
+        enc.SetIndent("", " ")
+        fatalIf(probe.NewError(enc.Encode(p)).Trace(args...), "Unable to write policy to stdout.")
+        return nil
+    }
 
-	printMsg(acctMessage{
-		op:            svcAccOpInfo,
-		AccessKey:     stsAccount,
-		AccountStatus: stsInfo.AccountStatus,
-		ParentUser:    stsInfo.ParentUser,
-		ImpliedPolicy: stsInfo.ImpliedPolicy,
-		Policy:        json.RawMessage(stsInfo.Policy),
-		Expiration:    stsInfo.Expiration,
-	})
+    printMsg(acctMessage{
+        op:            svcAccOpInfo,
+        AccessKey:     stsAccount,
+        AccountStatus: stsInfo.AccountStatus,
+        ParentUser:    stsInfo.ParentUser,
+        ImpliedPolicy: stsInfo.ImpliedPolicy,
+        Policy:        json.RawMessage(stsInfo.Policy),
+        Expiration:    stsInfo.Expiration,
+    })
 
-	return nil
+    return nil
 }

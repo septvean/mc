@@ -18,32 +18,32 @@
 package cmd
 
 import (
-	"context"
-	"strings"
+    "context"
+    "strings"
 
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 // get command flags.
 var (
-	getFlags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "version-id, vid",
-			Usage: "get a specific version of an object",
-		},
-	}
+    getFlags = []cli.Flag{
+        cli.StringFlag{
+            Name:  "version-id, vid",
+            Usage: "get a specific version of an object",
+        },
+    }
 )
 
 // Get command.
 var getCmd = cli.Command{
-	Name:         "get",
-	Usage:        "get s3 object to local",
-	Action:       mainGet,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(globalFlags, encCFlag), getFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "get",
+    Usage:        "get s3 object to local",
+    Action:       mainGet,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(globalFlags, encCFlag), getFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -64,97 +64,97 @@ EXAMPLES:
 
 // mainGet is the entry point for get command.
 func mainGet(cliCtx *cli.Context) (e error) {
-	args := cliCtx.Args()
-	if len(args) != 2 {
-		showCommandHelpAndExit(cliCtx, 1) // last argument is exit code.
-	}
+    args := cliCtx.Args()
+    if len(args) != 2 {
+        showCommandHelpAndExit(cliCtx, 1) // last argument is exit code.
+    }
 
-	ctx, cancelGet := context.WithCancel(globalContext)
-	defer cancelGet()
+    ctx, cancelGet := context.WithCancel(globalContext)
+    defer cancelGet()
 
-	encryptionKeys, err := validateAndCreateEncryptionKeys(cliCtx)
-	if err != nil {
-		err.Trace(cliCtx.Args()...)
-	}
-	fatalIf(err, "unable to parse encryption keys")
+    encryptionKeys, err := validateAndCreateEncryptionKeys(cliCtx)
+    if err != nil {
+        err.Trace(cliCtx.Args()...)
+    }
+    fatalIf(err, "unable to parse encryption keys")
 
-	// get source and target
-	sourceURLs := args[:len(args)-1]
-	targetURL := args[len(args)-1]
+    // get source and target
+    sourceURLs := args[:len(args)-1]
+    targetURL := args[len(args)-1]
 
-	getURLsCh := make(chan URLs, 10000)
-	var totalObjects, totalBytes int64
+    getURLsCh := make(chan URLs, 10000)
+    var totalObjects, totalBytes int64
 
-	// Store a progress bar or an accounter
-	var pg ProgressReader
-	// Enable progress bar reader only during default mode.
-	if !globalQuiet && !globalJSON { // set up progress bar
-		pg = newProgressBar(totalBytes)
-	} else {
-		pg = newAccounter(totalBytes)
-	}
-	go func() {
-		opts := prepareCopyURLsOpts{
-			sourceURLs:              sourceURLs,
-			targetURL:               targetURL,
-			encKeyDB:                encryptionKeys,
-			ignoreBucketExistsCheck: true,
-			versionID:               cliCtx.String("version-id"),
-		}
+    // Store a progress bar or an accounter
+    var pg ProgressReader
+    // Enable progress bar reader only during default mode.
+    if !globalQuiet && !globalJSON { // set up progress bar
+        pg = newProgressBar(totalBytes)
+    } else {
+        pg = newAccounter(totalBytes)
+    }
+    go func() {
+        opts := prepareCopyURLsOpts{
+            sourceURLs:              sourceURLs,
+            targetURL:               targetURL,
+            encKeyDB:                encryptionKeys,
+            ignoreBucketExistsCheck: true,
+            versionID:               cliCtx.String("version-id"),
+        }
 
-		for getURLs := range prepareGetURLs(ctx, opts) {
-			if getURLs.Error != nil {
-				getURLsCh <- getURLs
-				break
-			}
-			totalObjects++
-			getURLsCh <- getURLs
-		}
-		close(getURLsCh)
-	}()
-	for {
-		select {
-		case <-ctx.Done():
-			showLastProgressBar(pg, nil)
-			return
-		case getURLs, ok := <-getURLsCh:
-			if !ok {
-				showLastProgressBar(pg, nil)
-				return
-			}
-			if getURLs.Error != nil {
-				printGetURLsError(&getURLs)
-				showLastProgressBar(pg, getURLs.Error.ToGoError())
-				return
-			}
-			urls := doCopy(ctx, doCopyOpts{
-				cpURLs:              getURLs,
-				pg:                  pg,
-				encryptionKeys:      encryptionKeys,
-				updateProgressTotal: true,
-			})
-			if urls.Error != nil {
-				e = urls.Error.ToGoError()
-				showLastProgressBar(pg, e)
-				return
-			}
-		}
-	}
+        for getURLs := range prepareGetURLs(ctx, opts) {
+            if getURLs.Error != nil {
+                getURLsCh <- getURLs
+                break
+            }
+            totalObjects++
+            getURLsCh <- getURLs
+        }
+        close(getURLsCh)
+    }()
+    for {
+        select {
+        case <-ctx.Done():
+            showLastProgressBar(pg, nil)
+            return
+        case getURLs, ok := <-getURLsCh:
+            if !ok {
+                showLastProgressBar(pg, nil)
+                return
+            }
+            if getURLs.Error != nil {
+                printGetURLsError(&getURLs)
+                showLastProgressBar(pg, getURLs.Error.ToGoError())
+                return
+            }
+            urls := doCopy(ctx, doCopyOpts{
+                cpURLs:              getURLs,
+                pg:                  pg,
+                encryptionKeys:      encryptionKeys,
+                updateProgressTotal: true,
+            })
+            if urls.Error != nil {
+                e = urls.Error.ToGoError()
+                showLastProgressBar(pg, e)
+                return
+            }
+        }
+    }
 }
 
 func printGetURLsError(cpURLs *URLs) {
-	// Print in new line and adjust to top so that we
-	// don't print over the ongoing scan bar
-	if !globalQuiet && !globalJSON {
-		console.Eraseline()
-	}
+    // Print in new line and adjust to top so that we
+    // don't print over the ongoing scan bar
+    if !globalQuiet && !globalJSON {
+        console.Eraseline()
+    }
 
-	if strings.Contains(cpURLs.Error.ToGoError().Error(),
-		" is a folder.") {
-		errorIf(cpURLs.Error.Trace(),
-			"Folder cannot be copied. Please use `...` suffix.")
-	} else {
-		errorIf(cpURLs.Error.Trace(),
-			"Unable to download.")
-	}
+    if strings.Contains(cpURLs.Error.ToGoError().Error(),
+        " is a folder.") {
+        errorIf(cpURLs.Error.Trace(),
+            "Folder cannot be copied. Please use `...` suffix.")
+    } else {
+        errorIf(cpURLs.Error.Trace(),
+            "Unable to download.")
+    }
 }

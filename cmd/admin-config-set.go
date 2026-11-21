@@ -18,25 +18,25 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminConfigSetCmd = cli.Command{
-	Name:         "set",
-	Usage:        "interactively set a config key parameters",
-	Before:       setGlobalsFromContext,
-	Action:       mainAdminConfigSet,
-	OnUsageError: onUsageError,
-	Flags:        append(adminConfigEnvFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "set",
+    Usage:        "interactively set a config key parameters",
+    Before:       setGlobalsFromContext,
+    Action:       mainAdminConfigSet,
+    OnUsageError: onUsageError,
+    Flags:        append(adminConfigEnvFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -59,81 +59,81 @@ EXAMPLES:
 
 // configSetMessage container to hold locks information.
 type configSetMessage struct {
-	Status      string `json:"status"`
-	targetAlias string
-	restart     bool
+    Status      string `json:"status"`
+    targetAlias string
+    restart     bool
 }
 
 // String colorized service status message.
 func (u configSetMessage) String() (msg string) {
-	msg += console.Colorize("SetConfigSuccess",
-		"Successfully applied new settings.")
-	if u.restart {
-		suggestion := color.RedString("mc admin service restart %s", u.targetAlias)
-		msg += console.Colorize("SetConfigSuccess",
-			fmt.Sprintf("\nPlease restart your server '%s'.", suggestion))
-	}
-	return
+    msg += console.Colorize("SetConfigSuccess",
+        "Successfully applied new settings.")
+    if u.restart {
+        suggestion := color.RedString("mc admin service restart %s", u.targetAlias)
+        msg += console.Colorize("SetConfigSuccess",
+            fmt.Sprintf("\nPlease restart your server '%s'.", suggestion))
+    }
+    return
 }
 
 // JSON jsonified service status message.
 func (u configSetMessage) JSON() string {
-	u.Status = "success"
-	statusJSONBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    statusJSONBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(statusJSONBytes)
+    return string(statusJSONBytes)
 }
 
 // checkAdminConfigSetSyntax - validate all the passed arguments
 func checkAdminConfigSetSyntax(ctx *cli.Context) {
-	if !ctx.Args().Present() && len(ctx.Args()) < 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if !ctx.Args().Present() && len(ctx.Args()) < 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // main config set function
 func mainAdminConfigSet(ctx *cli.Context) error {
-	// Check command arguments
-	checkAdminConfigSetSyntax(ctx)
+    // Check command arguments
+    checkAdminConfigSetSyntax(ctx)
 
-	// Set color preference of command outputs
-	console.SetColor("SetConfigSuccess", color.New(color.FgGreen, color.Bold))
+    // Set color preference of command outputs
+    console.SetColor("SetConfigSuccess", color.New(color.FgGreen, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	input := strings.Join(args.Tail(), " ")
+    input := strings.Join(args.Tail(), " ")
 
-	if !strings.Contains(input, madmin.KvSeparator) {
-		// Call get config API
-		hr, e := client.HelpConfigKV(globalContext, args.Get(1), args.Get(2), ctx.Bool("env"))
-		fatalIf(probe.NewError(e), "Unable to get help for the sub-system")
+    if !strings.Contains(input, madmin.KvSeparator) {
+        // Call get config API
+        hr, e := client.HelpConfigKV(globalContext, args.Get(1), args.Get(2), ctx.Bool("env"))
+        fatalIf(probe.NewError(e), "Unable to get help for the sub-system")
 
-		// Print
-		printMsg(configHelpMessage{
-			Value:   hr,
-			envOnly: ctx.Bool("env"),
-		})
+        // Print
+        printMsg(configHelpMessage{
+            Value:   hr,
+            envOnly: ctx.Bool("env"),
+        })
 
-		return nil
+        return nil
 
-	}
+    }
 
-	// Call set config API
-	restart, e := client.SetConfigKV(globalContext, input)
-	fatalIf(probe.NewError(e), "Unable to set '%s' to server", input)
+    // Call set config API
+    restart, e := client.SetConfigKV(globalContext, input)
+    fatalIf(probe.NewError(e), "Unable to set '%s' to server", input)
 
-	// Print set config result
-	printMsg(configSetMessage{
-		targetAlias: aliasedURL,
-		restart:     restart,
-	})
+    // Print set config result
+    printMsg(configSetMessage{
+        targetAlias: aliasedURL,
+        restart:     restart,
+    })
 
-	return nil
+    return nil
 }

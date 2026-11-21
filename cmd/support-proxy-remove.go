@@ -18,35 +18,35 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 type supportProxyRemoveMessage struct {
-	Status string `json:"status"`
+    Status string `json:"status"`
 }
 
 // String colorized proxy remove message
 func (s supportProxyRemoveMessage) String() string {
-	return console.Colorize(supportSuccessMsgTag, "Proxy has been removed")
+    return console.Colorize(supportSuccessMsgTag, "Proxy has been removed")
 }
 
 // JSON jsonified proxy remove message
 func (s supportProxyRemoveMessage) JSON() string {
-	s.Status = "success"
-	return toJSON(s)
+    s.Status = "success"
+    return toJSON(s)
 }
 
 var supportProxyRemoveCmd = cli.Command{
-	Name:            "remove",
-	Usage:           "Remove proxy configuration",
-	Action:          mainSupportProxyRemove,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "remove",
+    Usage:           "Remove proxy configuration",
+    Action:          mainSupportProxyRemove,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -62,31 +62,31 @@ EXAMPLES:
 }
 
 func checkSupportProxyRemoveSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainSupportProxyRemove is the handler for "mc support proxy remove" command.
 func mainSupportProxyRemove(ctx *cli.Context) error {
-	// Check for command syntax
-	checkSupportProxyRemoveSyntax(ctx)
-	setSuccessMessageColor()
+    // Check for command syntax
+    checkSupportProxyRemoveSyntax(ctx)
+    setSuccessMessageColor()
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	alias, _ := url2Alias(aliasedURL)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    alias, _ := url2Alias(aliasedURL)
 
-	validateClusterRegistered(alias, false)
+    validateClusterRegistered(alias, false)
 
-	// Create a new MinIO Admin Client
-	client := getClient(aliasedURL)
+    // Create a new MinIO Admin Client
+    client := getClient(aliasedURL)
 
-	// Main execution
-	_, e := client.DelConfigKV(globalContext, "subnet proxy")
-	fatalIf(probe.NewError(e), "Unable to remove proxy:")
+    // Main execution
+    _, e := client.DelConfigKV(globalContext, "subnet proxy")
+    fatalIf(probe.NewError(e), "Unable to remove proxy:")
 
-	printMsg(supportProxyRemoveMessage{})
-	return nil
+    printMsg(supportProxyRemoveMessage{})
+    return nil
 }

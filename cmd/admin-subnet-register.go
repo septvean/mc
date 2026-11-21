@@ -18,20 +18,20 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminSubnetRegisterCmd = cli.Command{
-	Name:               "register",
-	Usage:              "Register the MinIO Cluster with SUBNET",
-	OnUsageError:       onUsageError,
-	Action:             mainAdminRegister,
-	Before:             setGlobalsFromContext,
-	Hidden:             true,
-	CustomHelpTemplate: "Please use 'mc support register'",
+    Name:               "register",
+    Usage:              "Register the MinIO Cluster with SUBNET",
+    OnUsageError:       onUsageError,
+    Action:             mainAdminRegister,
+    Before:             setGlobalsFromContext,
+    Hidden:             true,
+    CustomHelpTemplate: "Please use 'mc support register'",
 }
 
 func mainAdminRegister(_ *cli.Context) error {
-	deprecatedError("mc support register")
-	return nil
+    deprecatedError("mc support register")
+    return nil
 }

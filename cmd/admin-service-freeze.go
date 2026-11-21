@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminServiceFreezeCmd = cli.Command{
-	Name:         "freeze",
-	Usage:        "freeze S3 API calls on MinIO cluster",
-	Action:       mainAdminServiceFreeze,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	Hidden:       true, // this command is hidden on purpose, please do not enable it.
-	CustomHelpTemplate: `NAME:
+    Name:         "freeze",
+    Usage:        "freeze S3 API calls on MinIO cluster",
+    Action:       mainAdminServiceFreeze,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    Hidden:       true, // this command is hidden on purpose, please do not enable it.
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -50,50 +50,50 @@ EXAMPLES:
 
 // serviceFreezeCommand is container for service freeze command success and failure messages.
 type serviceFreezeCommand struct {
-	Status    string `json:"status"`
-	ServerURL string `json:"serverURL"`
+    Status    string `json:"status"`
+    ServerURL string `json:"serverURL"`
 }
 
 // String colorized service freeze command message.
 func (s serviceFreezeCommand) String() string {
-	return console.Colorize("ServiceFreeze", "Freeze command successfully sent to `"+s.ServerURL+"`.")
+    return console.Colorize("ServiceFreeze", "Freeze command successfully sent to `"+s.ServerURL+"`.")
 }
 
 // JSON jsonified service freeze command message.
 func (s serviceFreezeCommand) JSON() string {
-	serviceFreezeJSONBytes, e := json.MarshalIndent(s, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    serviceFreezeJSONBytes, e := json.MarshalIndent(s, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(serviceFreezeJSONBytes)
+    return string(serviceFreezeJSONBytes)
 }
 
 // checkAdminServiceFreezeSyntax - validate all the passed arguments
 func checkAdminServiceFreezeSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 func mainAdminServiceFreeze(ctx *cli.Context) error {
-	// Validate serivce freeze syntax.
-	checkAdminServiceFreezeSyntax(ctx)
+    // Validate serivce freeze syntax.
+    checkAdminServiceFreezeSyntax(ctx)
 
-	// Set color.
-	console.SetColor("ServiceFreeze", color.New(color.FgGreen, color.Bold))
-	console.SetColor("FailedServiceFreeze", color.New(color.FgRed, color.Bold))
+    // Set color.
+    console.SetColor("ServiceFreeze", color.New(color.FgGreen, color.Bold))
+    console.SetColor("FailedServiceFreeze", color.New(color.FgRed, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	// Freeze the specified MinIO server
-	fatalIf(probe.NewError(client.ServiceFreezeV2(globalContext)), "Unable to freeze the server.")
+    // Freeze the specified MinIO server
+    fatalIf(probe.NewError(client.ServiceFreezeV2(globalContext)), "Unable to freeze the server.")
 
-	// Success..
-	printMsg(serviceFreezeCommand{Status: "success", ServerURL: aliasedURL})
+    // Success..
+    printMsg(serviceFreezeCommand{Status: "success", ServerURL: aliasedURL})
 
-	return nil
+    return nil
 }

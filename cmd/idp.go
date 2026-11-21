@@ -20,21 +20,21 @@ package cmd
 import "github.com/minio/cli"
 
 var idpSubcommands = []cli.Command{
-	idpOpenidCmd,
-	idpLdapCmd,
+    idpOpenidCmd,
+    idpLdapCmd,
 }
 
 var idpCmd = cli.Command{
-	Name:            "idp",
-	Usage:           "manage MinIO IDentity Provider server configuration",
-	Action:          mainIDP,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     idpSubcommands,
-	HideHelpCommand: true,
+    Name:            "idp",
+    Usage:           "manage MinIO IDentity Provider server configuration",
+    Action:          mainIDP,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     idpSubcommands,
+    HideHelpCommand: true,
 }
 
 func mainIDP(ctx *cli.Context) error {
-	commandNotFound(ctx, idpSubcommands)
-	return nil
+    commandNotFound(ctx, idpSubcommands)
+    return nil
 }

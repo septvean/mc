@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var encryptClearCmd = cli.Command{
-	Name:         "clear",
-	Usage:        "clear encryption config",
-	Action:       mainEncryptClear,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "clear",
+    Usage:        "clear encryption config",
+    Action:       mainEncryptClear,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
    
 USAGE:
@@ -52,47 +52,47 @@ EXAMPLES:
 
 // checkEncryptClearSyntax - validate all the passed arguments
 func checkEncryptClearSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type encryptClearMessage struct {
-	Op     string `json:"op"`
-	Status string `json:"status"`
-	URL    string `json:"url"`
+    Op     string `json:"op"`
+    Status string `json:"status"`
+    URL    string `json:"url"`
 }
 
 func (v encryptClearMessage) JSON() string {
-	v.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    v.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (v encryptClearMessage) String() string {
-	return console.Colorize("encryptClearMessage", fmt.Sprintf("Auto encryption configuration has been cleared successfully for %s", v.URL))
+    return console.Colorize("encryptClearMessage", fmt.Sprintf("Auto encryption configuration has been cleared successfully for %s", v.URL))
 }
 
 func mainEncryptClear(cliCtx *cli.Context) error {
-	ctx, cancelencryptClear := context.WithCancel(globalContext)
-	defer cancelencryptClear()
+    ctx, cancelencryptClear := context.WithCancel(globalContext)
+    defer cancelencryptClear()
 
-	console.SetColor("encryptClearMessage", color.New(color.FgGreen))
+    console.SetColor("encryptClearMessage", color.New(color.FgGreen))
 
-	checkEncryptClearSyntax(cliCtx)
+    checkEncryptClearSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	fatalIf(client.DeleteEncryption(ctx), "Unable to clear auto encryption configuration")
-	printMsg(encryptClearMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	})
-	return nil
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    fatalIf(client.DeleteEncryption(ctx), "Unable to clear auto encryption configuration")
+    printMsg(encryptClearMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    })
+    return nil
 }

@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminKMSKeyStatusCmd = cli.Command{
-	Name:         "status",
-	Usage:        "request status information for a KMS master key",
-	Action:       mainAdminKMSKeyStatus,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "status",
+    Usage:        "request status information for a KMS master key",
+    Action:       mainAdminKMSKeyStatus,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -53,68 +53,68 @@ EXAMPLES:
 
 // adminKMSKeyCmd is the handle for the "mc admin kms key" command.
 func mainAdminKMSKeyStatus(ctx *cli.Context) error {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	console.SetColor("StatusSuccess", color.New(color.FgGreen, color.Bold))
-	console.SetColor("StatusError", color.New(color.FgRed, color.Bold))
-	console.SetColor("StatusUnknown", color.New(color.FgYellow, color.Bold))
+    console.SetColor("StatusSuccess", color.New(color.FgGreen, color.Bold))
+    console.SetColor("StatusError", color.New(color.FgRed, color.Bold))
+    console.SetColor("StatusUnknown", color.New(color.FgYellow, color.Bold))
 
-	client, err := newAdminClient(ctx.Args().Get(0))
-	fatalIf(err, "Unable to get a configured admin connection.")
+    client, err := newAdminClient(ctx.Args().Get(0))
+    fatalIf(err, "Unable to get a configured admin connection.")
 
-	var keyID string
-	if len(ctx.Args()) == 2 {
-		keyID = ctx.Args().Get(1)
-	}
-	status, e := client.GetKeyStatus(globalContext, keyID)
-	fatalIf(probe.NewError(e), "Failed to get status information")
+    var keyID string
+    if len(ctx.Args()) == 2 {
+        keyID = ctx.Args().Get(1)
+    }
+    status, e := client.GetKeyStatus(globalContext, keyID)
+    fatalIf(probe.NewError(e), "Failed to get status information")
 
-	printMsg(kmsKeyStatusMsg{
-		KeyID:         status.KeyID,
-		EncryptionErr: status.EncryptionErr,
-		DecryptionErr: status.DecryptionErr,
-	})
-	return nil
+    printMsg(kmsKeyStatusMsg{
+        KeyID:         status.KeyID,
+        EncryptionErr: status.EncryptionErr,
+        DecryptionErr: status.DecryptionErr,
+    })
+    return nil
 }
 
 type kmsKeyStatusMsg struct {
-	KeyID         string `json:"keyId"`
-	EncryptionErr string `json:"encryptionError,omitempty"`
-	DecryptionErr string `json:"decryptionError,omitempty"`
-	Status        string `json:"status"`
+    KeyID         string `json:"keyId"`
+    EncryptionErr string `json:"encryptionError,omitempty"`
+    DecryptionErr string `json:"decryptionError,omitempty"`
+    Status        string `json:"status"`
 }
 
 func (s kmsKeyStatusMsg) JSON() string {
-	s.Status = "success"
-	kmsBytes, e := json.MarshalIndent(s, "", "    ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    s.Status = "success"
+    kmsBytes, e := json.MarshalIndent(s, "", "    ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(kmsBytes)
+    return string(kmsBytes)
 }
 
 func (s kmsKeyStatusMsg) String() string {
-	msg := fmt.Sprintf("Key: %s\n", s.KeyID)
+    msg := fmt.Sprintf("Key: %s\n", s.KeyID)
 
-	success := console.Colorize("StatusSuccess", "✔")
-	failure := console.Colorize("StatusError", "✗")
-	dunno := console.Colorize("StatusUnknown", "?")
+    success := console.Colorize("StatusSuccess", "✔")
+    failure := console.Colorize("StatusError", "✗")
+    dunno := console.Colorize("StatusUnknown", "?")
 
-	formatStatus := func(name string, unknown bool, err string) string {
-		st := ""
-		switch {
-		case !unknown && err == "":
-			st = success
-		case unknown:
-			st = dunno
-		case err != "":
-			st = fmt.Sprintf("%s (%s)", failure, err)
-		}
-		return fmt.Sprintf("   - %s %s\n", name, st)
-	}
+    formatStatus := func(name string, unknown bool, err string) string {
+        st := ""
+        switch {
+        case !unknown && err == "":
+            st = success
+        case unknown:
+            st = dunno
+        case err != "":
+            st = fmt.Sprintf("%s (%s)", failure, err)
+        }
+        return fmt.Sprintf("   - %s %s\n", name, st)
+    }
 
-	msg += formatStatus("Encryption", false, s.EncryptionErr)
-	msg += formatStatus("Decryption", s.EncryptionErr != "", s.DecryptionErr)
-	return msg
+    msg += formatStatus("Encryption", false, s.EncryptionErr)
+    msg += formatStatus("Decryption", s.EncryptionErr != "", s.DecryptionErr)
+    return msg
 }

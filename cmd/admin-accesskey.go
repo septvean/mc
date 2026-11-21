@@ -20,27 +20,27 @@ package cmd
 import "github.com/minio/cli"
 
 var adminAccesskeySubcommands = []cli.Command{
-	adminAccesskeyListCmd,
-	adminAccesskeyRemoveCmd,
-	adminAccesskeyInfoCmd,
-	adminAccesskeyCreateCmd,
-	adminAccesskeyEditCmd,
-	adminAccesskeyEnableCmd,
-	adminAccesskeyDisableCmd,
-	adminAccesskeySTSRevokeCmd,
+    adminAccesskeyListCmd,
+    adminAccesskeyRemoveCmd,
+    adminAccesskeyInfoCmd,
+    adminAccesskeyCreateCmd,
+    adminAccesskeyEditCmd,
+    adminAccesskeyEnableCmd,
+    adminAccesskeyDisableCmd,
+    adminAccesskeySTSRevokeCmd,
 }
 
 var adminAccesskeyCmd = cli.Command{
-	Name:            "accesskey",
-	Usage:           "manage access keys defined in the MinIO server",
-	Action:          mainAdminAccesskey,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminAccesskeySubcommands,
-	HideHelpCommand: true,
+    Name:            "accesskey",
+    Usage:           "manage access keys defined in the MinIO server",
+    Action:          mainAdminAccesskey,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminAccesskeySubcommands,
+    HideHelpCommand: true,
 }
 
 func mainAdminAccesskey(ctx *cli.Context) error {
-	commandNotFound(ctx, adminAccesskeySubcommands)
-	return nil
+    commandNotFound(ctx, adminAccesskeySubcommands)
+    return nil
 }

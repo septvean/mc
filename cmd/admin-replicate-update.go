@@ -18,61 +18,61 @@
 package cmd
 
 import (
-	"net/url"
-	"strings"
+    "net/url"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminReplicateUpdateFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "deployment-id",
-		Usage: "deployment id of the site, should be a unique value",
-	},
-	cli.StringFlag{
-		Name:  "endpoint",
-		Usage: "endpoint for the site",
-	},
-	cli.StringFlag{
-		Name:  "mode",
-		Usage: "change mode of replication for this target, valid values are ['sync', 'async'].",
-		Value: "",
-	},
-	cli.StringFlag{
-		Name:   "sync",
-		Usage:  "enable synchronous replication for this target, valid values are ['enable', 'disable'].",
-		Value:  "disable",
-		Hidden: true, // deprecated Jul 2023
-	},
-	cli.StringFlag{
-		Name:  "bucket-bandwidth",
-		Usage: "Set default bandwidth limit for bucket in bytes per second (K,B,G,T for metric and Ki,Bi,Gi,Ti for IEC units)",
-	},
-	cli.BoolFlag{
-		Name:  "disable-ilm-expiry-replication",
-		Usage: "disable ILM expiry rules replication",
-	},
-	cli.BoolFlag{
-		Name:  "enable-ilm-expiry-replication",
-		Usage: "enable ILM expiry rules replication",
-	},
+    cli.StringFlag{
+        Name:  "deployment-id",
+        Usage: "deployment id of the site, should be a unique value",
+    },
+    cli.StringFlag{
+        Name:  "endpoint",
+        Usage: "endpoint for the site",
+    },
+    cli.StringFlag{
+        Name:  "mode",
+        Usage: "change mode of replication for this target, valid values are ['sync', 'async'].",
+        Value: "",
+    },
+    cli.StringFlag{
+        Name:   "sync",
+        Usage:  "enable synchronous replication for this target, valid values are ['enable', 'disable'].",
+        Value:  "disable",
+        Hidden: true, // deprecated Jul 2023
+    },
+    cli.StringFlag{
+        Name:  "bucket-bandwidth",
+        Usage: "Set default bandwidth limit for bucket in bytes per second (K,B,G,T for metric and Ki,Bi,Gi,Ti for IEC units)",
+    },
+    cli.BoolFlag{
+        Name:  "disable-ilm-expiry-replication",
+        Usage: "disable ILM expiry rules replication",
+    },
+    cli.BoolFlag{
+        Name:  "enable-ilm-expiry-replication",
+        Usage: "enable ILM expiry rules replication",
+    },
 }
 
 var adminReplicateUpdateCmd = cli.Command{
-	Name:          "update",
-	Aliases:       []string{"edit"},
-	HiddenAliases: true,
-	Usage:         "modify endpoint of site participating in site replication",
-	Action:        mainAdminReplicateUpdate,
-	OnUsageError:  onUsageError,
-	Before:        setGlobalsFromContext,
-	Flags:         append(globalFlags, adminReplicateUpdateFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:          "update",
+    Aliases:       []string{"edit"},
+    HiddenAliases: true,
+    Usage:         "modify endpoint of site participating in site replication",
+    Action:        mainAdminReplicateUpdate,
+    OnUsageError:  onUsageError,
+    Before:        setGlobalsFromContext,
+    Flags:         append(globalFlags, adminReplicateUpdateFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -100,113 +100,113 @@ EXAMPLES:
 type updateSuccessMessage madmin.ReplicateEditStatus
 
 func (m updateSuccessMessage) JSON() string {
-	bs, e := json.MarshalIndent(madmin.ReplicateEditStatus(m), "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(bs)
+    bs, e := json.MarshalIndent(madmin.ReplicateEditStatus(m), "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(bs)
 }
 
 func (m updateSuccessMessage) String() string {
-	v := madmin.ReplicateEditStatus(m)
-	messages := []string{v.Status}
+    v := madmin.ReplicateEditStatus(m)
+    messages := []string{v.Status}
 
-	if v.ErrDetail != "" {
-		messages = append(messages, v.ErrDetail)
-	}
-	return console.Colorize("UserMessage", strings.Join(messages, "\n"))
+    if v.ErrDetail != "" {
+        messages = append(messages, v.ErrDetail)
+    }
+    return console.Colorize("UserMessage", strings.Join(messages, "\n"))
 }
 
 func checkAdminReplicateUpdateSyntax(ctx *cli.Context) {
-	// Check argument count
-	argsNr := len(ctx.Args())
-	if argsNr < 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
-	if argsNr != 1 {
-		fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
-			"Invalid arguments specified for edit command.")
-	}
+    // Check argument count
+    argsNr := len(ctx.Args())
+    if argsNr < 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
+    if argsNr != 1 {
+        fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
+            "Invalid arguments specified for edit command.")
+    }
 }
 
 func mainAdminReplicateUpdate(ctx *cli.Context) error {
-	checkAdminReplicateUpdateSyntax(ctx)
-	console.SetColor("UserMessage", color.New(color.FgGreen))
+    checkAdminReplicateUpdateSyntax(ctx)
+    console.SetColor("UserMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	if !ctx.IsSet("deployment-id") && !ctx.IsSet("disable-ilm-expiry-replication") && !ctx.IsSet("enable-ilm-expiry-replication") {
-		fatalIf(errInvalidArgument(), "--deployment-id is a required flag")
-	}
-	if !ctx.IsSet("endpoint") && !ctx.IsSet("mode") && !ctx.IsSet("sync") && !ctx.IsSet("bucket-bandwidth") && !ctx.IsSet("disable-ilm-expiry-replication") && !ctx.IsSet("enable-ilm-expiry-replication") {
-		fatalIf(errInvalidArgument(), "--endpoint, --mode, --bucket-bandwidth, --disable-ilm-expiry-replication or --enable-ilm-expiry-replication is a required flag")
-	}
-	if ctx.IsSet("mode") && ctx.IsSet("sync") {
-		fatalIf(errInvalidArgument(), "either --sync or --mode flag should be specified")
-	}
-	if ctx.IsSet("disable-ilm-expiry-replication") && ctx.IsSet("enable-ilm-expiry-replication") {
-		fatalIf(errInvalidArgument(), "either --disable-ilm-expiry-replication or --enable-ilm-expiry-replication flag should be specified")
-	}
-	if (ctx.IsSet("disable-ilm-expiry-replication") || ctx.IsSet("enable-ilm-expiry-replication")) && ctx.IsSet("deployment-id") {
-		fatalIf(errInvalidArgument(), "--deployment-id should not be set with --disable-ilm-expiry-replication or --enable-ilm-expiry-replication")
-	}
+    if !ctx.IsSet("deployment-id") && !ctx.IsSet("disable-ilm-expiry-replication") && !ctx.IsSet("enable-ilm-expiry-replication") {
+        fatalIf(errInvalidArgument(), "--deployment-id is a required flag")
+    }
+    if !ctx.IsSet("endpoint") && !ctx.IsSet("mode") && !ctx.IsSet("sync") && !ctx.IsSet("bucket-bandwidth") && !ctx.IsSet("disable-ilm-expiry-replication") && !ctx.IsSet("enable-ilm-expiry-replication") {
+        fatalIf(errInvalidArgument(), "--endpoint, --mode, --bucket-bandwidth, --disable-ilm-expiry-replication or --enable-ilm-expiry-replication is a required flag")
+    }
+    if ctx.IsSet("mode") && ctx.IsSet("sync") {
+        fatalIf(errInvalidArgument(), "either --sync or --mode flag should be specified")
+    }
+    if ctx.IsSet("disable-ilm-expiry-replication") && ctx.IsSet("enable-ilm-expiry-replication") {
+        fatalIf(errInvalidArgument(), "either --disable-ilm-expiry-replication or --enable-ilm-expiry-replication flag should be specified")
+    }
+    if (ctx.IsSet("disable-ilm-expiry-replication") || ctx.IsSet("enable-ilm-expiry-replication")) && ctx.IsSet("deployment-id") {
+        fatalIf(errInvalidArgument(), "--deployment-id should not be set with --disable-ilm-expiry-replication or --enable-ilm-expiry-replication")
+    }
 
-	var syncState string
-	if ctx.IsSet("sync") { // for backward compatibility - deprecated Jul 2023
-		syncState = strings.ToLower(ctx.String("sync"))
-		switch syncState {
-		case "enable", "disable":
-		default:
-			fatalIf(errInvalidArgument().Trace(args...), "--sync can be either [enable|disable]")
-		}
-	}
+    var syncState string
+    if ctx.IsSet("sync") { // for backward compatibility - deprecated Jul 2023
+        syncState = strings.ToLower(ctx.String("sync"))
+        switch syncState {
+        case "enable", "disable":
+        default:
+            fatalIf(errInvalidArgument().Trace(args...), "--sync can be either [enable|disable]")
+        }
+    }
 
-	if ctx.IsSet("mode") {
-		mode := strings.ToLower(ctx.String("mode"))
-		switch mode {
-		case "sync":
-			syncState = "enable"
-		case "async":
-			syncState = "disable"
-		default:
-			fatalIf(errInvalidArgument().Trace(args...), "--mode can be either [sync|async]")
-		}
-	}
+    if ctx.IsSet("mode") {
+        mode := strings.ToLower(ctx.String("mode"))
+        switch mode {
+        case "sync":
+            syncState = "enable"
+        case "async":
+            syncState = "disable"
+        default:
+            fatalIf(errInvalidArgument().Trace(args...), "--mode can be either [sync|async]")
+        }
+    }
 
-	var bwDefaults madmin.BucketBandwidth
-	if ctx.IsSet("bucket-bandwidth") {
-		bandwidthStr := ctx.String("bucket-bandwidth")
-		bandwidth, e := getBandwidthInBytes(bandwidthStr)
-		fatalIf(probe.NewError(e).Trace(bandwidthStr), "invalid bandwidth value")
+    var bwDefaults madmin.BucketBandwidth
+    if ctx.IsSet("bucket-bandwidth") {
+        bandwidthStr := ctx.String("bucket-bandwidth")
+        bandwidth, e := getBandwidthInBytes(bandwidthStr)
+        fatalIf(probe.NewError(e).Trace(bandwidthStr), "invalid bandwidth value")
 
-		bwDefaults.Limit = bandwidth
-		bwDefaults.IsSet = true
-	}
-	var ep string
-	if ctx.IsSet("endpoint") {
-		parsedURL := ctx.String("endpoint")
-		u, e := url.Parse(parsedURL)
-		if e != nil {
-			fatalIf(errInvalidArgument().Trace(parsedURL), "Unsupported URL format %v", e)
-		}
-		ep = u.String()
-	}
-	var opts madmin.SREditOptions
-	opts.DisableILMExpiryReplication = ctx.Bool("disable-ilm-expiry-replication")
-	opts.EnableILMExpiryReplication = ctx.Bool("enable-ilm-expiry-replication")
-	res, e := client.SiteReplicationEdit(globalContext, madmin.PeerInfo{
-		DeploymentID:     ctx.String("deployment-id"),
-		Endpoint:         ep,
-		SyncState:        madmin.SyncStatus(syncState),
-		DefaultBandwidth: bwDefaults,
-	}, opts)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to edit cluster replication site endpoint")
+        bwDefaults.Limit = bandwidth
+        bwDefaults.IsSet = true
+    }
+    var ep string
+    if ctx.IsSet("endpoint") {
+        parsedURL := ctx.String("endpoint")
+        u, e := url.Parse(parsedURL)
+        if e != nil {
+            fatalIf(errInvalidArgument().Trace(parsedURL), "Unsupported URL format %v", e)
+        }
+        ep = u.String()
+    }
+    var opts madmin.SREditOptions
+    opts.DisableILMExpiryReplication = ctx.Bool("disable-ilm-expiry-replication")
+    opts.EnableILMExpiryReplication = ctx.Bool("enable-ilm-expiry-replication")
+    res, e := client.SiteReplicationEdit(globalContext, madmin.PeerInfo{
+        DeploymentID:     ctx.String("deployment-id"),
+        Endpoint:         ep,
+        SyncState:        madmin.SyncStatus(syncState),
+        DefaultBandwidth: bwDefaults,
+    }, opts)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to edit cluster replication site endpoint")
 
-	printMsg(updateSuccessMessage(res))
+    printMsg(updateSuccessMessage(res))
 
-	return nil
+    return nil
 }

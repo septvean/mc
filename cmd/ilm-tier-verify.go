@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var adminTierVerifyCmd = cli.Command{
-	Name:         "verify",
-	Usage:        "verifies if remote tier configuration is valid",
-	Action:       mainAdminTierVerify,
-	Hidden:       true,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "verify",
+    Usage:        "verifies if remote tier configuration is valid",
+    Action:       mainAdminTierVerify,
+    Hidden:       true,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,33 +49,33 @@ EXAMPLES:
 }
 
 func mainAdminTierVerify(ctx *cli.Context) error {
-	args := ctx.Args()
-	nArgs := len(args)
-	if nArgs < 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
-	if nArgs != 2 {
-		fatalIf(errInvalidArgument().Trace(args.Tail()...),
-			"Incorrect number of arguments for tier verify command.")
-	}
+    args := ctx.Args()
+    nArgs := len(args)
+    if nArgs < 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
+    if nArgs != 2 {
+        fatalIf(errInvalidArgument().Trace(args.Tail()...),
+            "Incorrect number of arguments for tier verify command.")
+    }
 
-	aliasedURL := args.Get(0)
-	tierName := args.Get(1)
-	if tierName == "" {
-		fatalIf(errInvalidArgument(), "Tier name can't be empty")
-	}
+    aliasedURL := args.Get(0)
+    tierName := args.Get(1)
+    if tierName == "" {
+        fatalIf(errInvalidArgument(), "Tier name can't be empty")
+    }
 
-	// Create a new MinIO Admin Client
-	client, cerr := newAdminClient(aliasedURL)
-	fatalIf(cerr, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, cerr := newAdminClient(aliasedURL)
+    fatalIf(cerr, "Unable to initialize admin connection.")
 
-	e := client.VerifyTier(globalContext, tierName)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to verify remote tier target")
+    e := client.VerifyTier(globalContext, tierName)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to verify remote tier target")
 
-	printMsg(&tierMessage{
-		op:       ctx.Command.Name,
-		Status:   "success",
-		TierName: tierName,
-	})
-	return nil
+    printMsg(&tierMessage{
+        op:       ctx.Command.Name,
+        Status:   "success",
+        TierName: tierName,
+    })
+    return nil
 }

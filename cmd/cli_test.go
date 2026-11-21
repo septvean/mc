@@ -18,32 +18,32 @@
 package cmd
 
 import (
-	"testing"
+    "testing"
 
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 func TestCLIOnUsageError(t *testing.T) {
-	var checkOnUsageError func(cli.Command, string)
-	checkOnUsageError = func(cmd cli.Command, parentCmd string) {
-		if cmd.Subcommands != nil {
-			for _, subCmd := range cmd.Subcommands {
-				if cmd.Hidden {
-					continue
-				}
-				checkOnUsageError(subCmd, parentCmd+" "+cmd.Name)
-			}
-			return
-		}
-		if !cmd.Hidden && cmd.OnUsageError == nil {
-			t.Errorf("On usage error for `%s` not found", parentCmd+" "+cmd.Name)
-		}
-	}
+    var checkOnUsageError func(cli.Command, string)
+    checkOnUsageError = func(cmd cli.Command, parentCmd string) {
+        if cmd.Subcommands != nil {
+            for _, subCmd := range cmd.Subcommands {
+                if cmd.Hidden {
+                    continue
+                }
+                checkOnUsageError(subCmd, parentCmd+" "+cmd.Name)
+            }
+            return
+        }
+        if !cmd.Hidden && cmd.OnUsageError == nil {
+            t.Errorf("On usage error for `%s` not found", parentCmd+" "+cmd.Name)
+        }
+    }
 
-	for _, cmd := range appCmds {
-		if cmd.Hidden {
-			continue
-		}
-		checkOnUsageError(cmd, "")
-	}
+    for _, cmd := range appCmds {
+        if cmd.Hidden {
+            continue
+        }
+        checkOnUsageError(cmd, "")
+    }
 }

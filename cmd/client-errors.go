@@ -18,206 +18,206 @@
 package cmd
 
 import (
-	"fmt"
-	"time"
+    "fmt"
+    "time"
 )
 
 /// Collection of standard errors
 
 // APINotImplemented - api not implemented
 type APINotImplemented struct {
-	API     string
-	APIType string
+    API     string
+    APIType string
 }
 
 func (e APINotImplemented) Error() string {
-	return "`" + e.API + "` is not supported for `" + e.APIType + "`."
+    return "`" + e.API + "` is not supported for `" + e.APIType + "`."
 }
 
 // InvalidArgument - passed argument is invalid for this operation
 type InvalidArgument struct{}
 
 func (e InvalidArgument) Error() string {
-	return "invalid argument"
+    return "invalid argument"
 }
 
 // GenericBucketError - generic bucket operations error
 type GenericBucketError struct {
-	Bucket string
+    Bucket string
 }
 
 // BucketDoesNotExist - bucket does not exist.
 type BucketDoesNotExist GenericBucketError
 
 func (e BucketDoesNotExist) Error() string {
-	return "Bucket `" + e.Bucket + "` does not exist."
+    return "Bucket `" + e.Bucket + "` does not exist."
 }
 
 // BucketExists - bucket exists.
 type BucketExists GenericBucketError
 
 func (e BucketExists) Error() string {
-	return "Bucket `" + e.Bucket + "` exists."
+    return "Bucket `" + e.Bucket + "` exists."
 }
 
 // BucketNameEmpty - bucket name empty (http://goo.gl/wJlzDz)
 type BucketNameEmpty struct{}
 
 func (e BucketNameEmpty) Error() string {
-	return "Bucket name cannot be empty."
+    return "Bucket name cannot be empty."
 }
 
 // ObjectNameEmpty - object name empty.
 type ObjectNameEmpty struct{}
 
 func (e ObjectNameEmpty) Error() string {
-	return "Object name cannot be empty."
+    return "Object name cannot be empty."
 }
 
 // BucketInvalid - bucket name invalid.
 type BucketInvalid struct {
-	Bucket string
+    Bucket string
 }
 
 func (e BucketInvalid) Error() string {
-	return "Bucket name `" + e.Bucket + "` not valid."
+    return "Bucket name `" + e.Bucket + "` not valid."
 }
 
 // ObjectAlreadyExists - typed return for MethodNotAllowed
 type ObjectAlreadyExists struct {
-	Object string
+    Object string
 }
 
 func (e ObjectAlreadyExists) Error() string {
-	return "Object `" + e.Object + "` already exists."
+    return "Object `" + e.Object + "` already exists."
 }
 
 // ObjectAlreadyExistsAsDirectory - typed return for XMinioObjectExistsAsDirectory
 type ObjectAlreadyExistsAsDirectory struct {
-	Object string
+    Object string
 }
 
 func (e ObjectAlreadyExistsAsDirectory) Error() string {
-	return "Object `" + e.Object + "` already exists as directory."
+    return "Object `" + e.Object + "` already exists as directory."
 }
 
 // ObjectOnGlacier - object is of storage class glacier.
 type ObjectOnGlacier struct {
-	Object string
+    Object string
 }
 
 func (e ObjectOnGlacier) Error() string {
-	return "Object `" + e.Object + "` is on Glacier storage."
+    return "Object `" + e.Object + "` is on Glacier storage."
 }
 
 // GenericFileError - generic file error.
 type GenericFileError struct {
-	Path string
+    Path string
 }
 
 // PathNotADirectory - this path does not correspond to a directory
 type PathNotADirectory GenericFileError
 
 func (e PathNotADirectory) Error() string {
-	return "Requested path `" + e.Path + "` not a directory"
+    return "Requested path `" + e.Path + "` not a directory"
 }
 
 // PathNotFound (ENOENT) - file not found.
 type PathNotFound GenericFileError
 
 func (e PathNotFound) Error() string {
-	return "Requested path `" + e.Path + "` not found"
+    return "Requested path `" + e.Path + "` not found"
 }
 
 // PathIsNotRegular (ENOTREG) - file is not a regular file.
 type PathIsNotRegular GenericFileError
 
 func (e PathIsNotRegular) Error() string {
-	return "Requested path `" + e.Path + "` is not a regular file."
+    return "Requested path `" + e.Path + "` is not a regular file."
 }
 
 // PathInsufficientPermission (EPERM) - permission denied.
 type PathInsufficientPermission GenericFileError
 
 func (e PathInsufficientPermission) Error() string {
-	return "Insufficient permissions to access this path `" + e.Path + "`"
+    return "Insufficient permissions to access this path `" + e.Path + "`"
 }
 
 // BrokenSymlink (ENOTENT) - file has broken symlink.
 type BrokenSymlink GenericFileError
 
 func (e BrokenSymlink) Error() string {
-	return "Requested path `" + e.Path + "` has broken symlink"
+    return "Requested path `" + e.Path + "` has broken symlink"
 }
 
 // TooManyLevelsSymlink (ELOOP) - file has too many levels of symlinks.
 type TooManyLevelsSymlink GenericFileError
 
 func (e TooManyLevelsSymlink) Error() string {
-	return "Requested path `" + e.Path + "` has too many levels of symlinks"
+    return "Requested path `" + e.Path + "` has too many levels of symlinks"
 }
 
 // EmptyPath (EINVAL) - invalid argument.
 type EmptyPath struct{}
 
 func (e EmptyPath) Error() string {
-	return "Invalid path, path cannot be empty"
+    return "Invalid path, path cannot be empty"
 }
 
 // ObjectMissing (EINVAL) - object key missing.
 type ObjectMissing struct {
-	timeRef time.Time
+    timeRef time.Time
 }
 
 func (e ObjectMissing) Error() string {
-	if !e.timeRef.IsZero() {
-		return "Object did not exist at `" + e.timeRef.Format(time.RFC1123) + "`"
-	}
-	return "Object does not exist"
+    if !e.timeRef.IsZero() {
+        return "Object did not exist at `" + e.timeRef.Format(time.RFC1123) + "`"
+    }
+    return "Object does not exist"
 }
 
 // ObjectIsDeleteMarker - object is a delete marker as latest
 type ObjectIsDeleteMarker struct{}
 
 func (e ObjectIsDeleteMarker) Error() string {
-	return "Object is marked as deleted"
+    return "Object is marked as deleted"
 }
 
 // UnexpectedShortWrite - write wrote less bytes than expected.
 type UnexpectedShortWrite struct {
-	InputSize int
-	WriteSize int
+    InputSize int
+    WriteSize int
 }
 
 func (e UnexpectedShortWrite) Error() string {
-	msg := fmt.Sprintf("Wrote less data than requested. Expected `%d` bytes, but only wrote `%d` bytes.", e.InputSize, e.WriteSize)
-	return msg
+    msg := fmt.Sprintf("Wrote less data than requested. Expected `%d` bytes, but only wrote `%d` bytes.", e.InputSize, e.WriteSize)
+    return msg
 }
 
 // UnexpectedEOF (EPIPE) - reader closed prematurely.
 type UnexpectedEOF struct {
-	TotalSize    int64
-	TotalWritten int64
+    TotalSize    int64
+    TotalWritten int64
 }
 
 func (e UnexpectedEOF) Error() string {
-	msg := fmt.Sprintf("Input reader closed pre-maturely. Expected `%d` bytes, but only received `%d` bytes.", e.TotalSize, e.TotalWritten)
-	return msg
+    msg := fmt.Sprintf("Input reader closed pre-maturely. Expected `%d` bytes, but only received `%d` bytes.", e.TotalSize, e.TotalWritten)
+    return msg
 }
 
 // UnexpectedExcessRead - reader wrote more data than requested.
 type UnexpectedExcessRead UnexpectedEOF
 
 func (e UnexpectedExcessRead) Error() string {
-	msg := fmt.Sprintf("Received excess data on input reader. Expected only `%d` bytes, but received `%d` bytes.", e.TotalSize, e.TotalWritten)
-	return msg
+    msg := fmt.Sprintf("Received excess data on input reader. Expected only `%d` bytes, but received `%d` bytes.", e.TotalSize, e.TotalWritten)
+    return msg
 }
 
 // SameFile - source and destination are same files.
 type SameFile struct {
-	Source, Destination string
+    Source, Destination string
 }
 
 func (e SameFile) Error() string {
-	return fmt.Sprintf("'%s' and '%s' are the same file", e.Source, e.Destination)
+    return fmt.Sprintf("'%s' and '%s' are the same file", e.Source, e.Destination)
 }

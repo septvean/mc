@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"errors"
-	"strings"
+    "errors"
+    "strings"
 
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var idpLdapAddCmd = cli.Command{
-	Name:         "add",
-	Usage:        "Create an LDAP IDP server configuration",
-	Action:       mainIDPLDAPAdd,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "add",
+    Usage:        "Create an LDAP IDP server configuration",
+    Action:       mainIDPLDAPAdd,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -56,52 +56,52 @@ EXAMPLES:
 }
 
 func mainIDPLDAPAdd(ctx *cli.Context) error {
-	if len(ctx.Args()) < 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) < 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	args := ctx.Args()
+    args := ctx.Args()
 
-	aliasedURL := args.Get(0)
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	cfgName := madmin.Default
-	input := args[1:]
-	if !strings.Contains(args.Get(1), "=") {
-		cfgName = args.Get(1)
-		input = args[2:]
-	}
+    cfgName := madmin.Default
+    input := args[1:]
+    if !strings.Contains(args.Get(1), "=") {
+        cfgName = args.Get(1)
+        input = args[2:]
+    }
 
-	if cfgName != madmin.Default {
-		fatalIf(probe.NewError(errors.New("all config parameters must be of the form \"key=value\"")),
-			"Bad LDAP IDP configuration")
-	}
+    if cfgName != madmin.Default {
+        fatalIf(probe.NewError(errors.New("all config parameters must be of the form \"key=value\"")),
+            "Bad LDAP IDP configuration")
+    }
 
-	inputCfg := strings.Join(input, " ")
+    inputCfg := strings.Join(input, " ")
 
-	restart, e := client.AddOrUpdateIDPConfig(globalContext, madmin.LDAPIDPCfg, cfgName, inputCfg, false)
-	fatalIf(probe.NewError(e), "Unable to add LDAP IDP config to server")
+    restart, e := client.AddOrUpdateIDPConfig(globalContext, madmin.LDAPIDPCfg, cfgName, inputCfg, false)
+    fatalIf(probe.NewError(e), "Unable to add LDAP IDP config to server")
 
-	// Print set config result
-	printMsg(configSetMessage{
-		targetAlias: aliasedURL,
-		restart:     restart,
-	})
+    // Print set config result
+    printMsg(configSetMessage{
+        targetAlias: aliasedURL,
+        restart:     restart,
+    })
 
-	return nil
+    return nil
 }
 
 var idpLdapUpdateCmd = cli.Command{
-	Name:         "update",
-	Usage:        "Update an LDAP IDP configuration",
-	Action:       mainIDPLDAPUpdate,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "update",
+    Usage:        "Update an LDAP IDP configuration",
+    Action:       mainIDPLDAPUpdate,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -119,53 +119,53 @@ EXAMPLES:
 }
 
 func mainIDPLDAPUpdate(ctx *cli.Context) error {
-	if len(ctx.Args()) < 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) < 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	args := ctx.Args()
+    args := ctx.Args()
 
-	aliasedURL := args.Get(0)
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	cfgName := madmin.Default
-	input := args[1:]
-	if !strings.Contains(args.Get(1), "=") {
-		cfgName = args.Get(1)
-		input = args[2:]
-	}
+    cfgName := madmin.Default
+    input := args[1:]
+    if !strings.Contains(args.Get(1), "=") {
+        cfgName = args.Get(1)
+        input = args[2:]
+    }
 
-	if cfgName != madmin.Default {
-		fatalIf(probe.NewError(errors.New("all config parameters must be of the form \"key=value\"")),
-			"Bad LDAP IDP configuration")
-	}
+    if cfgName != madmin.Default {
+        fatalIf(probe.NewError(errors.New("all config parameters must be of the form \"key=value\"")),
+            "Bad LDAP IDP configuration")
+    }
 
-	inputCfg := strings.Join(input, " ")
+    inputCfg := strings.Join(input, " ")
 
-	restart, e := client.AddOrUpdateIDPConfig(globalContext, madmin.LDAPIDPCfg, cfgName, inputCfg, true)
-	fatalIf(probe.NewError(e), "Unable to update LDAP IDP configuration")
+    restart, e := client.AddOrUpdateIDPConfig(globalContext, madmin.LDAPIDPCfg, cfgName, inputCfg, true)
+    fatalIf(probe.NewError(e), "Unable to update LDAP IDP configuration")
 
-	// Print set config result
-	printMsg(configSetMessage{
-		targetAlias: aliasedURL,
-		restart:     restart,
-	})
+    // Print set config result
+    printMsg(configSetMessage{
+        targetAlias: aliasedURL,
+        restart:     restart,
+    })
 
-	return nil
+    return nil
 }
 
 var idpLdapRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove LDAP IDP server configuration",
-	Action:       mainIDPLDAPRemove,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove LDAP IDP server configuration",
+    Action:       mainIDPLDAPRemove,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -181,23 +181,23 @@ EXAMPLES:
 }
 
 func mainIDPLDAPRemove(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	cfgName := madmin.Default
-	return idpRemove(ctx, false, cfgName)
+    cfgName := madmin.Default
+    return idpRemove(ctx, false, cfgName)
 }
 
 var idpLdapListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "list LDAP IDP server configuration(s)",
-	Action:       mainIDPLDAPList,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "list LDAP IDP server configuration(s)",
+    Action:       mainIDPLDAPList,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -213,21 +213,21 @@ EXAMPLES:
 }
 
 func mainIDPLDAPList(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	return idpListCommon(ctx, false)
+    return idpListCommon(ctx, false)
 }
 
 var idpLdapInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "get LDAP IDP server configuration info",
-	Action:       mainIDPLDAPInfo,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "get LDAP IDP server configuration info",
+    Action:       mainIDPLDAPInfo,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -243,22 +243,22 @@ EXAMPLES:
 }
 
 func mainIDPLDAPInfo(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	cfgName := madmin.Default
-	return idpInfo(ctx, false, cfgName)
+    cfgName := madmin.Default
+    return idpInfo(ctx, false, cfgName)
 }
 
 var idpLdapEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "manage LDAP IDP server configuration",
-	Action:       mainIDPLDAPEnable,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "manage LDAP IDP server configuration",
+    Action:       mainIDPLDAPEnable,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -274,22 +274,22 @@ EXAMPLES:
 }
 
 func mainIDPLDAPEnable(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	isOpenID, enable := false, true
-	return idpEnableDisable(ctx, isOpenID, enable)
+    isOpenID, enable := false, true
+    return idpEnableDisable(ctx, isOpenID, enable)
 }
 
 var idpLdapDisableCmd = cli.Command{
-	Name:         "disable",
-	Usage:        "Disable an LDAP IDP server configuration",
-	Action:       mainIDPLDAPDisable,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "disable",
+    Usage:        "Disable an LDAP IDP server configuration",
+    Action:       mainIDPLDAPDisable,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -305,10 +305,10 @@ EXAMPLES:
 }
 
 func mainIDPLDAPDisable(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	isOpenID, enable := false, false
-	return idpEnableDisable(ctx, isOpenID, enable)
+    isOpenID, enable := false, false
+    return idpEnableDisable(ctx, isOpenID, enable)
 }

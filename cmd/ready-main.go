@@ -18,41 +18,41 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"time"
+    "context"
+    "fmt"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 const (
-	healthCheckInterval = 5 * time.Second
+    healthCheckInterval = 5 * time.Second
 )
 
 var readyFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "cluster-read",
-		Usage: "check if the cluster has enough read quorum",
-	},
-	cli.BoolFlag{
-		Name:  "maintenance",
-		Usage: "check if the cluster is taken down for maintenance",
-	},
+    cli.BoolFlag{
+        Name:  "cluster-read",
+        Usage: "check if the cluster has enough read quorum",
+    },
+    cli.BoolFlag{
+        Name:  "maintenance",
+        Usage: "check if the cluster is taken down for maintenance",
+    },
 }
 
 // Checks if the cluster is ready or not
 var readyCmd = cli.Command{
-	Name:         "ready",
-	Usage:        "checks if the cluster is ready or not",
-	Action:       mainReady,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(readyFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "ready",
+    Usage:        "checks if the cluster is ready or not",
+    Action:       mainReady,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(readyFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -74,79 +74,79 @@ EXAMPLES:
 }
 
 type readyMessage struct {
-	Status          string `json:"status"`
-	Alias           string `json:"alias"`
-	Healthy         bool   `json:"healthy"`
-	MaintenanceMode bool   `json:"maintenanceMode"`
-	WriteQuorum     int    `json:"writeQuorum"`
-	HealingDrives   int    `json:"healingDrives"`
+    Status          string `json:"status"`
+    Alias           string `json:"alias"`
+    Healthy         bool   `json:"healthy"`
+    MaintenanceMode bool   `json:"maintenanceMode"`
+    WriteQuorum     int    `json:"writeQuorum"`
+    HealingDrives   int    `json:"healingDrives"`
 
-	Err error `json:"error"`
+    Err error `json:"error"`
 }
 
 func (r readyMessage) String() string {
-	switch {
-	case r.Healthy:
-		return color.GreenString(fmt.Sprintf("The cluster '%s' is ready", r.Alias))
-	case r.Err != nil:
-		return color.RedString(fmt.Sprintf("The cluster '%s' is unreachable: %s", r.Alias, r.Err.Error()))
-	default:
-		return color.RedString(fmt.Sprintf("The cluster '%s' is not ready", r.Alias))
-	}
+    switch {
+    case r.Healthy:
+        return color.GreenString(fmt.Sprintf("The cluster '%s' is ready", r.Alias))
+    case r.Err != nil:
+        return color.RedString(fmt.Sprintf("The cluster '%s' is unreachable: %s", r.Alias, r.Err.Error()))
+    default:
+        return color.RedString(fmt.Sprintf("The cluster '%s' is not ready", r.Alias))
+    }
 }
 
 // JSON jsonified ready result
 func (r readyMessage) JSON() string {
-	jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 // mainReady - main handler for mc ready command.
 func mainReady(cliCtx *cli.Context) error {
-	if !cliCtx.Args().Present() {
-		exitCode := 1
-		showCommandHelpAndExit(cliCtx, exitCode)
-	}
+    if !cliCtx.Args().Present() {
+        exitCode := 1
+        showCommandHelpAndExit(cliCtx, exitCode)
+    }
 
-	// Set command flags from context.
-	clusterRead := cliCtx.Bool("cluster-read")
-	maintenance := cliCtx.Bool("maintenance")
+    // Set command flags from context.
+    clusterRead := cliCtx.Bool("cluster-read")
+    maintenance := cliCtx.Bool("maintenance")
 
-	ctx, cancelClusterReady := context.WithCancel(globalContext)
-	defer cancelClusterReady()
-	aliasedURL := cliCtx.Args().Get(0)
+    ctx, cancelClusterReady := context.WithCancel(globalContext)
+    defer cancelClusterReady()
+    aliasedURL := cliCtx.Args().Get(0)
 
-	anonClient, err := newAnonymousClient(aliasedURL)
-	fatalIf(err.Trace(aliasedURL), "Couldn't construct anonymous client for `"+aliasedURL+"`.")
+    anonClient, err := newAnonymousClient(aliasedURL)
+    fatalIf(err.Trace(aliasedURL), "Couldn't construct anonymous client for `"+aliasedURL+"`.")
 
-	healthOpts := madmin.HealthOpts{
-		ClusterRead: clusterRead,
-		Maintenance: maintenance,
-	}
+    healthOpts := madmin.HealthOpts{
+        ClusterRead: clusterRead,
+        Maintenance: maintenance,
+    }
 
-	timer := time.NewTimer(0)
-	defer timer.Stop()
+    timer := time.NewTimer(0)
+    defer timer.Stop()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-timer.C:
-			healthResult, hErr := anonClient.Healthy(ctx, healthOpts)
-			printMsg(readyMessage{
-				Alias:           aliasedURL,
-				Status:          "success",
-				Healthy:         healthResult.Healthy,
-				MaintenanceMode: healthResult.MaintenanceMode,
-				WriteQuorum:     healthResult.WriteQuorum,
-				HealingDrives:   healthResult.HealingDrives,
-				Err:             hErr,
-			})
-			if healthResult.Healthy {
-				return nil
-			}
-			timer.Reset(healthCheckInterval)
-		}
-	}
+    for {
+        select {
+        case <-ctx.Done():
+            return nil
+        case <-timer.C:
+            healthResult, hErr := anonClient.Healthy(ctx, healthOpts)
+            printMsg(readyMessage{
+                Alias:           aliasedURL,
+                Status:          "success",
+                Healthy:         healthResult.Healthy,
+                MaintenanceMode: healthResult.MaintenanceMode,
+                WriteQuorum:     healthResult.WriteQuorum,
+                HealingDrives:   healthResult.HealingDrives,
+                Err:             hErr,
+            })
+            if healthResult.Healthy {
+                return nil
+            }
+            timer.Reset(healthCheckInterval)
+        }
+    }
 }

@@ -20,27 +20,27 @@ package cmd
 import "github.com/minio/cli"
 
 var adminUserSvcAcctSubcommands = []cli.Command{
-	adminUserSvcAcctAddCmd,
-	adminUserSvcAcctListCmd,
-	adminUserSvcAcctRemoveCmd,
-	adminUserSvcAcctInfoCmd,
-	adminUserSvcAcctSetCmd,
-	adminUserSvcAcctEnableCmd,
-	adminUserSvcAcctDisableCmd,
+    adminUserSvcAcctAddCmd,
+    adminUserSvcAcctListCmd,
+    adminUserSvcAcctRemoveCmd,
+    adminUserSvcAcctInfoCmd,
+    adminUserSvcAcctSetCmd,
+    adminUserSvcAcctEnableCmd,
+    adminUserSvcAcctDisableCmd,
 }
 
 var adminUserSvcAcctCmd = cli.Command{
-	Name:            "svcacct",
-	Usage:           "manage service accounts",
-	Action:          mainAdminUserSvcAcct,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminUserSvcAcctSubcommands,
-	HideHelpCommand: true,
+    Name:            "svcacct",
+    Usage:           "manage service accounts",
+    Action:          mainAdminUserSvcAcct,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminUserSvcAcctSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminUserSvcAcct is the handle for "mc admin user svcacct" command.
 func mainAdminUserSvcAcct(ctx *cli.Context) error {
-	commandNotFound(ctx, adminUserSvcAcctSubcommands)
-	return nil
+    commandNotFound(ctx, adminUserSvcAcctSubcommands)
+    return nil
 }

@@ -18,26 +18,26 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strings"
+    "fmt"
+    "os"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
-	"github.com/minio/pkg/v3/policy"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
+    "github.com/minio/pkg/v3/policy"
 )
 
 var adminUserPolicyCmd = cli.Command{
-	Name:         "policy",
-	Usage:        "export user policies in JSON format",
-	Action:       mainAdminUserPolicy,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "policy",
+    Usage:        "export user policies in JSON format",
+    Action:       mainAdminUserPolicy,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 USAGE:
   {{.HelpName}} TARGET USERNAME
@@ -52,51 +52,51 @@ EXAMPLES:
 
 // checkAdminUserPolicySyntax - validate all the passed arguments
 func checkAdminUserPolicySyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminUserPolicy is the handler for "mc admin user policy" command.
 func mainAdminUserPolicy(ctx *cli.Context) error {
-	checkAdminUserPolicySyntax(ctx)
+    checkAdminUserPolicySyntax(ctx)
 
-	console.SetColor("UserMessage", color.New(color.FgGreen))
+    console.SetColor("UserMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	user, e := client.GetUserInfo(globalContext, args.Get(1))
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get user info")
+    user, e := client.GetUserInfo(globalContext, args.Get(1))
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get user info")
 
-	if user.PolicyName == "" {
-		e = fmt.Errorf("policy not found for user %s", args.Get(1))
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch user policy document")
-	}
+    if user.PolicyName == "" {
+        e = fmt.Errorf("policy not found for user %s", args.Get(1))
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch user policy document")
+    }
 
-	policyNames := strings.Split(user.PolicyName, ",")
+    policyNames := strings.Split(user.PolicyName, ",")
 
-	var policies []policy.Policy
-	for _, policyName := range policyNames {
-		if policyName == "" {
-			continue
-		}
-		policyInfo, e := getPolicyInfo(client, policyName)
-		fatalIf(probe.NewError(e).Trace(), "Unable to fetch user policy document for policy "+policyName)
+    var policies []policy.Policy
+    for _, policyName := range policyNames {
+        if policyName == "" {
+            continue
+        }
+        policyInfo, e := getPolicyInfo(client, policyName)
+        fatalIf(probe.NewError(e).Trace(), "Unable to fetch user policy document for policy "+policyName)
 
-		var policyObj policy.Policy
-		if e := json.Unmarshal(policyInfo.Policy, &policyObj); e != nil {
-			fatalIf(probe.NewError(e).Trace(), "Unable to unmarshal policy")
-		}
-		policies = append(policies, policyObj)
-	}
+        var policyObj policy.Policy
+        if e := json.Unmarshal(policyInfo.Policy, &policyObj); e != nil {
+            fatalIf(probe.NewError(e).Trace(), "Unable to unmarshal policy")
+        }
+        policies = append(policies, policyObj)
+    }
 
-	mergedPolicy := policy.MergePolicies(policies...)
-	json.NewEncoder(os.Stdout).Encode(mergedPolicy)
-	return nil
+    mergedPolicy := policy.MergePolicies(policies...)
+    json.NewEncoder(os.Stdout).Encode(mergedPolicy)
+    return nil
 }

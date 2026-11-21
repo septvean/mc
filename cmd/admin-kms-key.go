@@ -20,23 +20,23 @@ package cmd
 import "github.com/minio/cli"
 
 var adminKMSKeySubcommands = []cli.Command{
-	adminKMSCreateKeyCmd,
-	adminKMSKeyStatusCmd,
-	adminKMSKeyListCmd,
+    adminKMSCreateKeyCmd,
+    adminKMSKeyStatusCmd,
+    adminKMSKeyListCmd,
 }
 
 var adminKMSKeyCmd = cli.Command{
-	Name:            "key",
-	Usage:           "manage KMS master keys: Request key status information",
-	Action:          mainAdminKMSKey,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminKMSKeySubcommands,
-	HideHelpCommand: true,
+    Name:            "key",
+    Usage:           "manage KMS master keys: Request key status information",
+    Action:          mainAdminKMSKey,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminKMSKeySubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminKMSKey is the handle for the "mc admin kms key" command.
 func mainAdminKMSKey(ctx *cli.Context) error {
-	commandNotFound(ctx, adminKMSKeySubcommands)
-	return nil
+    commandNotFound(ctx, adminKMSKeySubcommands)
+    return nil
 }

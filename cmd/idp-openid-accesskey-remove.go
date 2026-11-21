@@ -18,18 +18,18 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var idpOpenidAccesskeyRemoveCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "delete access key pairs for OpenID",
-	Action:       mainIDPOpenIDAccesskeyRemove,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "delete access key pairs for OpenID",
+    Action:       mainIDPOpenIDAccesskeyRemove,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -45,5 +45,5 @@ EXAMPLES:
 }
 
 func mainIDPOpenIDAccesskeyRemove(ctx *cli.Context) error {
-	return commonAccesskeyRemove(ctx)
+    return commonAccesskeyRemove(ctx)
 }

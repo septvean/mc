@@ -18,32 +18,32 @@
 package cmd
 
 import (
-	"os"
-	"strings"
+    "os"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
-	"github.com/minio/pkg/v3/policy"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
+    "github.com/minio/pkg/v3/policy"
 )
 
 var adminUserSvcAcctInfoFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "policy",
-		Usage: "print policy in JSON format",
-	},
+    cli.BoolFlag{
+        Name:  "policy",
+        Usage: "print policy in JSON format",
+    },
 }
 
 var adminUserSvcAcctInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "display service account info",
-	Action:       mainAdminUserSvcAcctInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminUserSvcAcctInfoFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "display service account info",
+    Action:       mainAdminUserSvcAcctInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminUserSvcAcctInfoFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -60,52 +60,52 @@ EXAMPLES:
 
 // checkAdminUserSvcAcctInfoSyntax - validate all the passed arguments
 func checkAdminUserSvcAcctInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 }
 
 // mainAdminUserSvcAcctInfo is the handle for "mc admin user svcacct info" command.
 func mainAdminUserSvcAcctInfo(ctx *cli.Context) error {
-	checkAdminUserSvcAcctInfoSyntax(ctx)
+    checkAdminUserSvcAcctInfoSyntax(ctx)
 
-	console.SetColor("AccMessage", color.New(color.FgGreen))
+    console.SetColor("AccMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	svcAccount := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    svcAccount := args.Get(1)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	svcInfo, e := client.InfoServiceAccount(globalContext, svcAccount)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get information of the specified service account")
+    svcInfo, e := client.InfoServiceAccount(globalContext, svcAccount)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get information of the specified service account")
 
-	if ctx.Bool("policy") {
-		if svcInfo.Policy == "" {
-			fatalIf(errDummy().Trace(args...), "No policy found associated to the specified service account. Check the policy of its parent user.")
-		}
-		p, e := policy.ParseConfig(strings.NewReader(svcInfo.Policy))
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to parse policy.")
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", " ")
-		fatalIf(probe.NewError(enc.Encode(p)).Trace(args...), "Unable to write policy to stdout.")
-		return nil
-	}
+    if ctx.Bool("policy") {
+        if svcInfo.Policy == "" {
+            fatalIf(errDummy().Trace(args...), "No policy found associated to the specified service account. Check the policy of its parent user.")
+        }
+        p, e := policy.ParseConfig(strings.NewReader(svcInfo.Policy))
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to parse policy.")
+        enc := json.NewEncoder(os.Stdout)
+        enc.SetIndent("", " ")
+        fatalIf(probe.NewError(enc.Encode(p)).Trace(args...), "Unable to write policy to stdout.")
+        return nil
+    }
 
-	printMsg(acctMessage{
-		op:            svcAccOpInfo,
-		AccessKey:     svcAccount,
-		Name:          svcInfo.Name,
-		Description:   svcInfo.Description,
-		AccountStatus: svcInfo.AccountStatus,
-		ParentUser:    svcInfo.ParentUser,
-		ImpliedPolicy: svcInfo.ImpliedPolicy,
-		Policy:        json.RawMessage(svcInfo.Policy),
-		Expiration:    svcInfo.Expiration,
-	})
+    printMsg(acctMessage{
+        op:            svcAccOpInfo,
+        AccessKey:     svcAccount,
+        Name:          svcInfo.Name,
+        Description:   svcInfo.Description,
+        AccountStatus: svcInfo.AccountStatus,
+        ParentUser:    svcInfo.ParentUser,
+        ImpliedPolicy: svcInfo.ImpliedPolicy,
+        Policy:        json.RawMessage(svcInfo.Policy),
+        Expiration:    svcInfo.Expiration,
+    })
 
-	return nil
+    return nil
 }

@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
+    "context"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/replication"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/replication"
+    "github.com/minio/pkg/v3/console"
 )
 
 var replicateExportCmd = cli.Command{
-	Name:         "export",
-	Usage:        "export server side replication configuration",
-	Action:       mainReplicateExport,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "export",
+    Usage:        "export server side replication configuration",
+    Action:       mainReplicateExport,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -55,56 +55,56 @@ EXAMPLES:
 
 // checkReplicateExportSyntax - validate all the passed arguments
 func checkReplicateExportSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type replicateExportMessage struct {
-	Op                string             `json:"op"`
-	Status            string             `json:"status"`
-	URL               string             `json:"url"`
-	ReplicationConfig replication.Config `json:"config"`
+    Op                string             `json:"op"`
+    Status            string             `json:"status"`
+    URL               string             `json:"url"`
+    ReplicationConfig replication.Config `json:"config"`
 }
 
 func (r replicateExportMessage) JSON() string {
-	r.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    r.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (r replicateExportMessage) String() string {
-	if r.ReplicationConfig.Empty() {
-		return console.Colorize("ReplicateNMessage", "No replication configuration found for "+r.URL+".")
-	}
-	msgBytes, e := json.MarshalIndent(r.ReplicationConfig, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal replication configuration")
-	return string(msgBytes)
+    if r.ReplicationConfig.Empty() {
+        return console.Colorize("ReplicateNMessage", "No replication configuration found for "+r.URL+".")
+    }
+    msgBytes, e := json.MarshalIndent(r.ReplicationConfig, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal replication configuration")
+    return string(msgBytes)
 }
 
 func mainReplicateExport(cliCtx *cli.Context) error {
-	ctx, cancelReplicateExport := context.WithCancel(globalContext)
-	defer cancelReplicateExport()
+    ctx, cancelReplicateExport := context.WithCancel(globalContext)
+    defer cancelReplicateExport()
 
-	console.SetColor("replicateExportMessage", color.New(color.FgGreen))
-	console.SetColor("replicateExportFailure", color.New(color.FgRed))
+    console.SetColor("replicateExportMessage", color.New(color.FgGreen))
+    console.SetColor("replicateExportFailure", color.New(color.FgRed))
 
-	checkReplicateExportSyntax(cliCtx)
+    checkReplicateExportSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	rCfg, err := client.GetReplication(ctx)
-	fatalIf(err.Trace(args...), "Unable to get replication configuration")
-	printMsg(replicateExportMessage{
-		Op:                cliCtx.Command.Name,
-		Status:            "success",
-		URL:               aliasedURL,
-		ReplicationConfig: rCfg,
-	})
-	return nil
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    rCfg, err := client.GetReplication(ctx)
+    fatalIf(err.Trace(args...), "Unable to get replication configuration")
+    printMsg(replicateExportMessage{
+        Op:                cliCtx.Command.Name,
+        Status:            "success",
+        URL:               aliasedURL,
+        ReplicationConfig: rCfg,
+    })
+    return nil
 }

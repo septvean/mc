@@ -1,22 +1,22 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var aliasExportCmd = cli.Command{
-	Name:            "export",
-	ShortName:       "e",
-	Usage:           "export configuration info to stdout",
-	Action:          mainAliasExport,
-	OnUsageError:    onUsageError,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
-	CustomHelpTemplate: `NAME:
+    Name:            "export",
+    ShortName:       "e",
+    Usage:           "export configuration info to stdout",
+    Action:          mainAliasExport,
+    OnUsageError:    onUsageError,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -46,43 +46,43 @@ EXAMPLES:
 
 // checkAliasExportSyntax - verifies input arguments to 'alias export'.
 func checkAliasExportSyntax(ctx *cli.Context) {
-	args := ctx.Args()
-	if ctx.NArg() == 0 {
-		showCommandHelpAndExit(ctx, 1)
-	}
-	if ctx.NArg() > 1 {
-		fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
-			"Incorrect number of arguments for alias export command.")
-	}
+    args := ctx.Args()
+    if ctx.NArg() == 0 {
+        showCommandHelpAndExit(ctx, 1)
+    }
+    if ctx.NArg() > 1 {
+        fatalIf(errInvalidArgument().Trace(ctx.Args().Tail()...),
+            "Incorrect number of arguments for alias export command.")
+    }
 
-	alias := cleanAlias(args.Get(0))
-	if !isValidAlias(alias) {
-		fatalIf(errInvalidAlias(alias), "Unable to validate alias")
-	}
+    alias := cleanAlias(args.Get(0))
+    if !isValidAlias(alias) {
+        fatalIf(errInvalidAlias(alias), "Unable to validate alias")
+    }
 }
 
 // exportAlias - get an alias config
 func exportAlias(alias string) {
-	mcCfgV10, err := loadMcConfig()
-	fatalIf(err.Trace(globalMCConfigVersion), "Unable to load config `"+mustGetMcConfigPath()+"`.")
+    mcCfgV10, err := loadMcConfig()
+    fatalIf(err.Trace(globalMCConfigVersion), "Unable to load config `"+mustGetMcConfigPath()+"`.")
 
-	cfg, ok := mcCfgV10.Aliases[alias]
-	if !ok {
-		fatalIf(errInvalidArgument().Trace(alias), "Unable to export credentials")
-	}
+    cfg, ok := mcCfgV10.Aliases[alias]
+    if !ok {
+        fatalIf(errInvalidArgument().Trace(alias), "Unable to export credentials")
+    }
 
-	buf, e := json.Marshal(cfg)
-	fatalIf(probe.NewError(e).Trace(alias), "Unable to export credentials")
+    buf, e := json.Marshal(cfg)
+    fatalIf(probe.NewError(e).Trace(alias), "Unable to export credentials")
 
-	console.Println(string(buf))
+    console.Println(string(buf))
 }
 
 func mainAliasExport(cli *cli.Context) error {
-	args := cli.Args()
+    args := cli.Args()
 
-	checkAliasExportSyntax(cli)
+    checkAliasExportSyntax(cli)
 
-	exportAlias(cleanAlias(args.Get(0)))
+    exportAlias(cleanAlias(args.Get(0)))
 
-	return nil
+    return nil
 }

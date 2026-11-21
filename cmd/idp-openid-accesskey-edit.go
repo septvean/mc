@@ -18,44 +18,44 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var idpOpenIDAccesskeyEditFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "secret-key",
-		Usage: "set a secret key for the  account",
-	},
-	cli.StringFlag{
-		Name:  "policy",
-		Usage: "path to a JSON policy file",
-	},
-	cli.StringFlag{
-		Name:  "name",
-		Usage: "friendly name for the account",
-	},
-	cli.StringFlag{
-		Name:  "description",
-		Usage: "description for the account",
-	},
-	cli.StringFlag{
-		Name:  "expiry-duration",
-		Usage: "duration before the access key expires",
-	},
-	cli.StringFlag{
-		Name:  "expiry",
-		Usage: "expiry date for the access key",
-	},
+    cli.StringFlag{
+        Name:  "secret-key",
+        Usage: "set a secret key for the  account",
+    },
+    cli.StringFlag{
+        Name:  "policy",
+        Usage: "path to a JSON policy file",
+    },
+    cli.StringFlag{
+        Name:  "name",
+        Usage: "friendly name for the account",
+    },
+    cli.StringFlag{
+        Name:  "description",
+        Usage: "description for the account",
+    },
+    cli.StringFlag{
+        Name:  "expiry-duration",
+        Usage: "duration before the access key expires",
+    },
+    cli.StringFlag{
+        Name:  "expiry",
+        Usage: "expiry date for the access key",
+    },
 }
 
 var idpOpenidAccesskeyEditCmd = cli.Command{
-	Name:         "edit",
-	Usage:        "edit existing access keys for OpenID",
-	Action:       mainIDPOpenIDAccesskeyEdit,
-	Before:       setGlobalsFromContext,
-	Flags:        append(idpOpenIDAccesskeyEditFlags, globalFlags...),
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "edit",
+    Usage:        "edit existing access keys for OpenID",
+    Action:       mainIDPOpenIDAccesskeyEdit,
+    Before:       setGlobalsFromContext,
+    Flags:        append(idpOpenIDAccesskeyEditFlags, globalFlags...),
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -73,5 +73,5 @@ EXAMPLES:
 }
 
 func mainIDPOpenIDAccesskeyEdit(ctx *cli.Context) error {
-	return commonAccesskeyEdit(ctx)
+    return commonAccesskeyEdit(ctx)
 }

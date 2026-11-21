@@ -18,47 +18,47 @@
 package cmd
 
 import (
-	"bytes"
-	"io"
-	"testing"
+    "bytes"
+    "io"
+    "testing"
 )
 
 func TestPrettyStdout(t *testing.T) {
-	testCases := []struct {
-		originText string
-		prettyText string
-	}{
-		{"", ""},
-		{"text", "text"},
-		// Check with new lines
-		{"text\r\n", "text\r\n"},
-		{"\ttext\n", "\ttext\n"},
-		// Print some unicode characters and check if it is not altered
-		{"добро пожаловать.", "добро пожаловать."},
-		// Print colored text
-		{"\x1b\x5b\x33\x31\x6d\x66\x61\x69\x6c", "^?[31mfail"},
-		// Print clear screen
-		{"\x1b\x63", "^?c"},
-		// Random data
-		{"\x3d\xef\xd2\xb5", "=�ҵ"},
-	}
+    testCases := []struct {
+        originText string
+        prettyText string
+    }{
+        {"", ""},
+        {"text", "text"},
+        // Check with new lines
+        {"text\r\n", "text\r\n"},
+        {"\ttext\n", "\ttext\n"},
+        // Print some unicode characters and check if it is not altered
+        {"добро пожаловать.", "добро пожаловать."},
+        // Print colored text
+        {"\x1b\x5b\x33\x31\x6d\x66\x61\x69\x6c", "^?[31mfail"},
+        // Print clear screen
+        {"\x1b\x63", "^?c"},
+        // Random data
+        {"\x3d\xef\xd2\xb5", "=�ҵ"},
+    }
 
-	for i, testCase := range testCases {
-		reader := bytes.NewReader([]byte(testCase.originText))
-		fakeStdout := bytes.NewBuffer([]byte(""))
-		n, err := io.Copy(newPrettyStdout(fakeStdout), reader)
-		if err != nil {
-			t.Fatalf("Test %d: %v\n", i+1, err)
-		}
-		if int(n) != len(testCase.originText) {
-			t.Fatalf("Test %d: copy error\n", i+1)
-		}
-		prettyText, err := io.ReadAll(fakeStdout)
-		if err != nil {
-			t.Fatalf("Test %d: %v", i+1, err)
-		}
-		if string(prettyText) != testCase.prettyText {
-			t.Fatalf("Test %d: expected output `%s`, found output `%s`", i+1, testCase.prettyText, string(prettyText))
-		}
-	}
+    for i, testCase := range testCases {
+        reader := bytes.NewReader([]byte(testCase.originText))
+        fakeStdout := bytes.NewBuffer([]byte(""))
+        n, err := io.Copy(newPrettyStdout(fakeStdout), reader)
+        if err != nil {
+            t.Fatalf("Test %d: %v\n", i+1, err)
+        }
+        if int(n) != len(testCase.originText) {
+            t.Fatalf("Test %d: copy error\n", i+1)
+        }
+        prettyText, err := io.ReadAll(fakeStdout)
+        if err != nil {
+            t.Fatalf("Test %d: %v", i+1, err)
+        }
+        if string(prettyText) != testCase.prettyText {
+            t.Fatalf("Test %d: expected output `%s`, found output `%s`", i+1, testCase.prettyText, string(prettyText))
+        }
+    }
 }

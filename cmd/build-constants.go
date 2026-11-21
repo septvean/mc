@@ -18,14 +18,14 @@
 package cmd
 
 var (
-	// Version - version time.RFC3339.
-	Version = "DEVELOPMENT.GOGET"
-	// ReleaseTag - release tag in TAG.%Y-%m-%dT%H-%M-%SZ.
-	ReleaseTag = "DEVELOPMENT.GOGET"
-	// CommitID - latest commit id.
-	CommitID = "DEVELOPMENT.GOGET"
-	// ShortCommitID - first 12 characters from CommitID.
-	ShortCommitID = CommitID[:12]
-	// CopyrightYear - dynamic value of the copyright end year
-	CopyrightYear = "0000"
+    // Version - version time.RFC3339.
+    Version = "DEVELOPMENT.GOGET"
+    // ReleaseTag - release tag in TAG.%Y-%m-%dT%H-%M-%SZ.
+    ReleaseTag = "DEVELOPMENT.GOGET"
+    // CommitID - latest commit id.
+    CommitID = "DEVELOPMENT.GOGET"
+    // ShortCommitID - first 12 characters from CommitID.
+    ShortCommitID = CommitID[:12]
+    // CopyrightYear - dynamic value of the copyright end year
+    CopyrightYear = "0000"
 )

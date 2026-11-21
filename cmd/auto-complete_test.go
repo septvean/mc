@@ -18,43 +18,43 @@
 package cmd
 
 import (
-	"fmt"
-	"testing"
+    "fmt"
+    "testing"
 
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 func TestAutoCompletionCompletness(t *testing.T) {
-	var checkCompletion func(cmd cli.Command, cmdPath string) error
+    var checkCompletion func(cmd cli.Command, cmdPath string) error
 
-	checkCompletion = func(cmd cli.Command, cmdPath string) error {
-		if cmd.Subcommands != nil {
-			for _, subCmd := range cmd.Subcommands {
-				if cmd.Hidden {
-					continue
-				}
-				err := checkCompletion(subCmd, cmdPath+"/"+subCmd.Name)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-		_, ok := completeCmds[cmdPath]
-		if !ok && !cmd.Hidden {
-			return fmt.Errorf("Completion for `%s` not found", cmdPath)
-		}
-		return nil
-	}
+    checkCompletion = func(cmd cli.Command, cmdPath string) error {
+        if cmd.Subcommands != nil {
+            for _, subCmd := range cmd.Subcommands {
+                if cmd.Hidden {
+                    continue
+                }
+                err := checkCompletion(subCmd, cmdPath+"/"+subCmd.Name)
+                if err != nil {
+                    return err
+                }
+            }
+            return nil
+        }
+        _, ok := completeCmds[cmdPath]
+        if !ok && !cmd.Hidden {
+            return fmt.Errorf("Completion for `%s` not found", cmdPath)
+        }
+        return nil
+    }
 
-	for _, cmd := range appCmds {
-		if cmd.Hidden {
-			continue
-		}
-		err := checkCompletion(cmd, "/"+cmd.Name)
-		if err != nil {
-			t.Fatalf("Missing completion function: %v", err)
-		}
+    for _, cmd := range appCmds {
+        if cmd.Hidden {
+            continue
+        }
+        err := checkCompletion(cmd, "/"+cmd.Name)
+        if err != nil {
+            t.Fatalf("Missing completion function: %v", err)
+        }
 
-	}
+    }
 }

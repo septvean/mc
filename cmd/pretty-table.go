@@ -18,65 +18,65 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/minio/pkg/v3/console"
+    "github.com/minio/pkg/v3/console"
 )
 
 // Field configuration: color theme and max content length
 type Field struct {
-	colorTheme string
-	maxLen     int
+    colorTheme string
+    maxLen     int
 }
 
 // PrettyTable - an easy struct to format a set of line
 type PrettyTable struct {
-	cols      []Field
-	separator string
+    cols      []Field
+    separator string
 }
 
 // newPrettyTable - creates a new pretty table
 func newPrettyTable(separator string, cols ...Field) PrettyTable {
-	return PrettyTable{
-		cols:      cols,
-		separator: separator,
-	}
+    return PrettyTable{
+        cols:      cols,
+        separator: separator,
+    }
 }
 
 // buildRow - creates a string which represents a line table given
 // some fields contents.
 func (t PrettyTable) buildRow(contents ...string) (line string) {
-	dots := "..."
+    dots := "..."
 
-	// totalColumns is the minimum of the number of fields config
-	// and the number of contents elements.
-	totalColumns := min(len(t.cols), len(contents))
+    // totalColumns is the minimum of the number of fields config
+    // and the number of contents elements.
+    totalColumns := min(len(t.cols), len(contents))
 
-	// Format fields and construct message
-	for i := 0; i < totalColumns; i++ {
-		// Default field format without pretty effect
-		fieldContent := ""
-		fieldFormat := "%s"
-		if t.cols[i].maxLen >= 0 {
-			// Override field format
-			fieldFormat = fmt.Sprintf("%%-%d.%ds", t.cols[i].maxLen, t.cols[i].maxLen)
-			// Cut field string and add '...' if length is greater than maxLen
-			if len(contents[i]) > t.cols[i].maxLen {
-				fieldContent = contents[i][:t.cols[i].maxLen-len(dots)] + dots
-			} else {
-				fieldContent = contents[i]
-			}
-		} else {
-			fieldContent = contents[i]
-		}
+    // Format fields and construct message
+    for i := 0; i < totalColumns; i++ {
+        // Default field format without pretty effect
+        fieldContent := ""
+        fieldFormat := "%s"
+        if t.cols[i].maxLen >= 0 {
+            // Override field format
+            fieldFormat = fmt.Sprintf("%%-%d.%ds", t.cols[i].maxLen, t.cols[i].maxLen)
+            // Cut field string and add '...' if length is greater than maxLen
+            if len(contents[i]) > t.cols[i].maxLen {
+                fieldContent = contents[i][:t.cols[i].maxLen-len(dots)] + dots
+            } else {
+                fieldContent = contents[i]
+            }
+        } else {
+            fieldContent = contents[i]
+        }
 
-		// Add separator if this is not the last column
-		if i < totalColumns-1 {
-			fieldFormat += t.separator
-		}
+        // Add separator if this is not the last column
+        if i < totalColumns-1 {
+            fieldFormat += t.separator
+        }
 
-		// Add the field to the resulted message
-		line += console.Colorize(t.cols[i].colorTheme, fmt.Sprintf(fieldFormat, fieldContent))
-	}
-	return
+        // Add the field to the resulted message
+        line += console.Colorize(t.cols[i].colorTheme, fmt.Sprintf(fieldFormat, fieldContent))
+    }
+    return
 }

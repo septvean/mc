@@ -18,28 +18,28 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminDetachPolicyFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "user, u",
-		Usage: "detach policy from user",
-	},
-	cli.StringFlag{
-		Name:  "group, g",
-		Usage: "detach policy from group",
-	},
+    cli.StringFlag{
+        Name:  "user, u",
+        Usage: "detach policy from user",
+    },
+    cli.StringFlag{
+        Name:  "group, g",
+        Usage: "detach policy from group",
+    },
 }
 
 var adminPolicyDetachCmd = cli.Command{
-	Name:         "detach",
-	Usage:        "detach an IAM policy from a user or group",
-	Action:       mainAdminPolicyDetach,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminDetachPolicyFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "detach",
+    Usage:        "detach an IAM policy from a user or group",
+    Action:       mainAdminPolicyDetach,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminDetachPolicyFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -63,5 +63,5 @@ EXAMPLES:
 
 // mainAdmihPolicyDetach is the handler for "mc admin policy detach" command.
 func mainAdminPolicyDetach(ctx *cli.Context) error {
-	return userAttachOrDetachPolicy(ctx, false)
+    return userAttachOrDetachPolicy(ctx, false)
 }

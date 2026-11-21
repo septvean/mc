@@ -18,20 +18,20 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminGroupInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "display group info",
-	Action:       mainAdminGroupInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "display group info",
+    Action:       mainAdminGroupInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -48,36 +48,36 @@ EXAMPLES:
 
 // checkAdminGroupInfoSyntax - validate all the passed arguments
 func checkAdminGroupInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminGroupInfo is the handle for "mc admin group info" command.
 func mainAdminGroupInfo(ctx *cli.Context) error {
-	checkAdminGroupInfoSyntax(ctx)
+    checkAdminGroupInfoSyntax(ctx)
 
-	console.SetColor("GroupMessage", color.New(color.FgGreen))
+    console.SetColor("GroupMessage", color.New(color.FgGreen))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	group := args.Get(1)
-	gd, e := client.GetGroupDescription(globalContext, group)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
+    group := args.Get(1)
+    gd, e := client.GetGroupDescription(globalContext, group)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to fetch group info")
 
-	printMsg(groupMessage{
-		op:          ctx.Command.Name,
-		GroupName:   group,
-		GroupStatus: gd.Status,
-		GroupPolicy: gd.Policy,
-		Members:     gd.Members,
-	})
+    printMsg(groupMessage{
+        op:          ctx.Command.Name,
+        GroupName:   group,
+        GroupStatus: gd.Status,
+        GroupPolicy: gd.Policy,
+        Members:     gd.Members,
+    })
 
-	return nil
+    return nil
 }

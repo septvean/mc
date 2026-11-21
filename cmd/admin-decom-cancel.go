@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"path/filepath"
+    "path/filepath"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    humanize "github.com/dustin/go-humanize"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminDecommissionCancelCmd = cli.Command{
-	Name:         "cancel",
-	Usage:        "cancel an ongoing decommissioning of a pool",
-	Action:       mainAdminDecommissionCancel,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "cancel",
+    Usage:        "cancel an ongoing decommissioning of a pool",
+    Action:       mainAdminDecommissionCancel,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -55,85 +55,85 @@ EXAMPLES:
 
 // checkAdminDecommissionCancelSyntax - validate all the passed arguments
 func checkAdminDecommissionCancelSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) > 2 || len(ctx.Args()) == 0 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminDecommissionCancel is the handle for "mc admin decommission cancel" command.
 func mainAdminDecommissionCancel(ctx *cli.Context) error {
-	checkAdminDecommissionCancelSyntax(ctx)
+    checkAdminDecommissionCancelSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	aliasedURL = filepath.Clean(aliasedURL)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    aliasedURL = filepath.Clean(aliasedURL)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	if pool := args.Get(1); pool != "" {
-		e := client.CancelDecommissionPool(globalContext, pool)
-		fatalIf(probe.NewError(e).Trace(args...), "Unable to cancel decommissioning, please try again")
-		return nil
-	}
+    if pool := args.Get(1); pool != "" {
+        e := client.CancelDecommissionPool(globalContext, pool)
+        fatalIf(probe.NewError(e).Trace(args...), "Unable to cancel decommissioning, please try again")
+        return nil
+    }
 
-	poolStatuses, e := client.ListPoolsStatus(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get status for all pools")
+    poolStatuses, e := client.ListPoolsStatus(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get status for all pools")
 
-	var newPoolStatuses []madmin.PoolStatus
-	for _, pool := range poolStatuses {
-		if pool.Decommission != nil {
-			if pool.Decommission.StartTime.IsZero() {
-				continue
-			}
-			if pool.Decommission.Complete {
-				continue
-			}
-		}
-		newPoolStatuses = append(newPoolStatuses, pool)
-	}
+    var newPoolStatuses []madmin.PoolStatus
+    for _, pool := range poolStatuses {
+        if pool.Decommission != nil {
+            if pool.Decommission.StartTime.IsZero() {
+                continue
+            }
+            if pool.Decommission.Complete {
+                continue
+            }
+        }
+        newPoolStatuses = append(newPoolStatuses, pool)
+    }
 
-	dspOrder := []col{colGreen} // Header
-	for i := 0; i < len(newPoolStatuses); i++ {
-		dspOrder = append(dspOrder, colGrey)
-	}
-	var printColors []*color.Color
-	for _, c := range dspOrder {
-		printColors = append(printColors, getPrintCol(c))
-	}
+    dspOrder := []col{colGreen} // Header
+    for i := 0; i < len(newPoolStatuses); i++ {
+        dspOrder = append(dspOrder, colGrey)
+    }
+    var printColors []*color.Color
+    for _, c := range dspOrder {
+        printColors = append(printColors, getPrintCol(c))
+    }
 
-	tbl := console.NewTable(printColors, []bool{false, false, false, false}, 0)
+    tbl := console.NewTable(printColors, []bool{false, false, false, false}, 0)
 
-	cellText := make([][]string, len(newPoolStatuses)+1)
-	cellText[0] = []string{
-		"ID",
-		"Pools",
-		"Capacity",
-		"Status",
-	}
-	for idx, pool := range poolStatuses {
-		idx++
-		totalSize := uint64(pool.Decommission.TotalSize)
-		currentSize := uint64(pool.Decommission.CurrentSize)
-		capacity := humanize.IBytes(totalSize-currentSize) + " (used) / " + humanize.IBytes(totalSize) + " (total)"
-		status := ""
-		if pool.Decommission != nil {
-			if pool.Decommission.StartTime.IsZero() {
-				continue
-			}
-			if pool.Decommission.Complete {
-				continue
-			}
-			status = "Draining"
-		}
-		cellText[idx] = []string{
-			humanize.Ordinal(pool.ID + 1),
-			pool.CmdLine,
-			capacity,
-			status,
-		}
-	}
-	return tbl.DisplayTable(cellText)
+    cellText := make([][]string, len(newPoolStatuses)+1)
+    cellText[0] = []string{
+        "ID",
+        "Pools",
+        "Capacity",
+        "Status",
+    }
+    for idx, pool := range poolStatuses {
+        idx++
+        totalSize := uint64(pool.Decommission.TotalSize)
+        currentSize := uint64(pool.Decommission.CurrentSize)
+        capacity := humanize.IBytes(totalSize-currentSize) + " (used) / " + humanize.IBytes(totalSize) + " (total)"
+        status := ""
+        if pool.Decommission != nil {
+            if pool.Decommission.StartTime.IsZero() {
+                continue
+            }
+            if pool.Decommission.Complete {
+                continue
+            }
+            status = "Draining"
+        }
+        cellText[idx] = []string{
+            humanize.Ordinal(pool.ID + 1),
+            pool.CmdLine,
+            capacity,
+            status,
+        }
+    }
+    return tbl.DisplayTable(cellText)
 }

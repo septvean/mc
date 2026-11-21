@@ -20,25 +20,25 @@ package cmd
 import "github.com/minio/cli"
 
 var adminBucketSubcommands = []cli.Command{
-	adminBucketRemoteCmd,
-	adminBucketQuotaCmd,
-	adminBucketInfoCmd,
+    adminBucketRemoteCmd,
+    adminBucketQuotaCmd,
+    adminBucketInfoCmd,
 }
 
 var adminBucketCmd = cli.Command{
-	Name:            "bucket",
-	Usage:           "manage buckets defined in the MinIO server",
-	Action:          mainAdminBucket,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminBucketSubcommands,
-	HideHelpCommand: true,
-	Hidden:          true,
+    Name:            "bucket",
+    Usage:           "manage buckets defined in the MinIO server",
+    Action:          mainAdminBucket,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminBucketSubcommands,
+    HideHelpCommand: true,
+    Hidden:          true,
 }
 
 // mainAdminBucket is the handle for "mc admin bucket" command.
 func mainAdminBucket(ctx *cli.Context) error {
-	commandNotFound(ctx, adminBucketSubcommands)
-	return nil
-	// Sub-commands like "quota", "remote" have their own main.
+    commandNotFound(ctx, adminBucketSubcommands)
+    return nil
+    // Sub-commands like "quota", "remote" have their own main.
 }

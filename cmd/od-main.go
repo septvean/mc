@@ -18,27 +18,27 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "strings"
+    "time"
 
-	json "github.com/minio/colorjson"
+    json "github.com/minio/colorjson"
 
-	humanize "github.com/dustin/go-humanize"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
+    humanize "github.com/dustin/go-humanize"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
 )
 
 // make a bucket.
 var odCmd = cli.Command{
-	Name:         "od",
-	Usage:        "measure single stream upload and download",
-	Action:       mainOD,
-	Before:       setGlobalsFromContext,
-	OnUsageError: onUsageError,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "od",
+    Usage:        "measure single stream upload and download",
+    Action:       mainOD,
+    Before:       setGlobalsFromContext,
+    OnUsageError: onUsageError,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -67,100 +67,100 @@ EXAMPLES:
 }
 
 type odMessage struct {
-	Status    string `json:"status"`
-	Type      string `json:"type"`
-	Source    string `json:"source"`
-	Target    string `json:"target"`
-	PartSize  uint64 `json:"partSize"`
-	TotalSize int64  `json:"totalSize"`
-	Parts     int    `json:"parts"`
-	Skip      int    `json:"skip"`
-	Elapsed   int64  `json:"elapsed"`
+    Status    string `json:"status"`
+    Type      string `json:"type"`
+    Source    string `json:"source"`
+    Target    string `json:"target"`
+    PartSize  uint64 `json:"partSize"`
+    TotalSize int64  `json:"totalSize"`
+    Parts     int    `json:"parts"`
+    Skip      int    `json:"skip"`
+    Elapsed   int64  `json:"elapsed"`
 }
 
 func (o odMessage) String() string {
-	cleanSize := humanize.IBytes(uint64(o.TotalSize))
-	elapsed := time.Duration(o.Elapsed) * time.Millisecond
-	speed := humanize.IBytes(uint64(float64(o.TotalSize) / elapsed.Seconds()))
-	if o.Type == "S3toFS" && o.Parts == 0 {
-		return fmt.Sprintf("Transferred: %s, Full file, Time: %s, Speed: %s/s", cleanSize, elapsed, speed)
-	}
-	return fmt.Sprintf("Transferred: %s, Parts: %d, Time: %s, Speed: %s/s", cleanSize, o.Parts, elapsed, speed)
+    cleanSize := humanize.IBytes(uint64(o.TotalSize))
+    elapsed := time.Duration(o.Elapsed) * time.Millisecond
+    speed := humanize.IBytes(uint64(float64(o.TotalSize) / elapsed.Seconds()))
+    if o.Type == "S3toFS" && o.Parts == 0 {
+        return fmt.Sprintf("Transferred: %s, Full file, Time: %s, Speed: %s/s", cleanSize, elapsed, speed)
+    }
+    return fmt.Sprintf("Transferred: %s, Parts: %d, Time: %s, Speed: %s/s", cleanSize, o.Parts, elapsed, speed)
 }
 
 func (o odMessage) JSON() string {
-	odMessageBytes, e := json.MarshalIndent(o, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    odMessageBytes, e := json.MarshalIndent(o, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(odMessageBytes)
+    return string(odMessageBytes)
 }
 
 // getOdUrls returns the URLs for the object download.
 func getOdUrls(ctx context.Context, args argKVS) (odURLs URLs, e error) {
-	inFile := args.Get("if")
-	outFile := args.Get("of")
+    inFile := args.Get("if")
+    outFile := args.Get("of")
 
-	// Check if outFile is a folder or a file.
-	opts := prepareCopyURLsOpts{
-		sourceURLs: []string{inFile},
-		targetURL:  outFile,
-	}
-	copyURLsContent, err := guessCopyURLType(ctx, opts)
-	fatalIf(err, "Unable to guess copy URL type")
+    // Check if outFile is a folder or a file.
+    opts := prepareCopyURLsOpts{
+        sourceURLs: []string{inFile},
+        targetURL:  outFile,
+    }
+    copyURLsContent, err := guessCopyURLType(ctx, opts)
+    fatalIf(err, "Unable to guess copy URL type")
 
-	// Get content of inFile, set up URLs.
-	switch copyURLsContent.copyType {
-	case copyURLsTypeA:
-		odURLs = makeCopyContentTypeA(*copyURLsContent)
-	case copyURLsTypeB:
-		return URLs{}, fmt.Errorf("invalid source path %s, destination cannot be a directory", outFile)
-	default:
-		return URLs{}, fmt.Errorf("invalid source path %s, source cannot be a directory", inFile)
-	}
+    // Get content of inFile, set up URLs.
+    switch copyURLsContent.copyType {
+    case copyURLsTypeA:
+        odURLs = makeCopyContentTypeA(*copyURLsContent)
+    case copyURLsTypeB:
+        return URLs{}, fmt.Errorf("invalid source path %s, destination cannot be a directory", outFile)
+    default:
+        return URLs{}, fmt.Errorf("invalid source path %s, source cannot be a directory", inFile)
+    }
 
-	return odURLs, nil
+    return odURLs, nil
 }
 
 // odCheckType checks if request is a download or upload and calls the appropriate function
 func odCheckType(ctx context.Context, odURLs URLs, args argKVS) (message, error) {
-	if odURLs.SourceAlias != "" && odURLs.TargetAlias == "" {
-		return odDownload(ctx, odURLs, args)
-	}
+    if odURLs.SourceAlias != "" && odURLs.TargetAlias == "" {
+        return odDownload(ctx, odURLs, args)
+    }
 
-	var odType string
-	if odURLs.SourceAlias == "" && odURLs.TargetAlias != "" {
-		odType = "FStoS3"
-	} else if odURLs.SourceAlias != "" && odURLs.TargetAlias != "" {
-		odType = "S3toS3"
-	} else {
-		odType = "FStoFS"
-	}
-	return odCopy(ctx, odURLs, args, odType)
+    var odType string
+    if odURLs.SourceAlias == "" && odURLs.TargetAlias != "" {
+        odType = "FStoS3"
+    } else if odURLs.SourceAlias != "" && odURLs.TargetAlias != "" {
+        odType = "S3toS3"
+    } else {
+        odType = "FStoFS"
+    }
+    return odCopy(ctx, odURLs, args, odType)
 }
 
 // mainOd is the entry point for the od command.
 func mainOD(cliCtx *cli.Context) error {
-	ctx, cancelCopy := context.WithCancel(globalContext)
-	defer cancelCopy()
+    ctx, cancelCopy := context.WithCancel(globalContext)
+    defer cancelCopy()
 
-	if !cliCtx.Args().Present() {
-		showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
-	}
+    if !cliCtx.Args().Present() {
+        showCommandHelpAndExit(cliCtx, 1) // last argument is exit code
+    }
 
-	var kvsArgs argKVS
-	for _, arg := range cliCtx.Args() {
-		kv := strings.SplitN(arg, "=", 2)
-		kvsArgs.Set(kv[0], kv[1])
-	}
+    var kvsArgs argKVS
+    for _, arg := range cliCtx.Args() {
+        kv := strings.SplitN(arg, "=", 2)
+        kvsArgs.Set(kv[0], kv[1])
+    }
 
-	// Get content from source.
-	odURLs, e := getOdUrls(ctx, kvsArgs)
-	fatalIf(probe.NewError(e), "Unable to get source and target URLs")
+    // Get content from source.
+    odURLs, e := getOdUrls(ctx, kvsArgs)
+    fatalIf(probe.NewError(e), "Unable to get source and target URLs")
 
-	message, e := odCheckType(ctx, odURLs, kvsArgs)
-	fatalIf(probe.NewError(e), "Unable to transfer object")
+    message, e := odCheckType(ctx, odURLs, kvsArgs)
+    fatalIf(probe.NewError(e), "Unable to transfer object")
 
-	// Print message.
-	printMsg(message)
-	return nil
+    // Print message.
+    printMsg(message)
+    return nil
 }

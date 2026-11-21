@@ -18,41 +18,41 @@
 package cmd
 
 import (
-	"bufio"
-	"fmt"
-	"net/http"
-	"net/url"
-	"os"
-	"slices"
+    "bufio"
+    "fmt"
+    "net/http"
+    "net/url"
+    "os"
+    "slices"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/pkg/v3/console"
-	"golang.org/x/term"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/credentials"
+    "github.com/minio/pkg/v3/console"
+    "golang.org/x/term"
 )
 
 var idpLdapAccesskeyCreateWithLoginFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "ldap-username",
-		Usage: "username to login as (prompt if empty)",
-	},
-	cli.StringFlag{
-		Name:  "ldap-password",
-		Usage: "password for ldap-user (prompt if empty)",
-	},
+    cli.StringFlag{
+        Name:  "ldap-username",
+        Usage: "username to login as (prompt if empty)",
+    },
+    cli.StringFlag{
+        Name:  "ldap-password",
+        Usage: "password for ldap-user (prompt if empty)",
+    },
 }
 
 var idpLdapAccesskeyCreateWithLoginCmd = cli.Command{
-	Name:         "create-with-login",
-	Usage:        "login using LDAP credentials to generate access key pair",
-	Action:       mainIDPLdapAccesskeyCreateWithLogin,
-	Before:       setGlobalsFromContext,
-	Flags:        slices.Concat(idpLdapAccesskeyCreateWithLoginFlags, idpLdapAccesskeyCreateFlags, globalFlags),
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "create-with-login",
+    Usage:        "login using LDAP credentials to generate access key pair",
+    Action:       mainIDPLdapAccesskeyCreateWithLogin,
+    Before:       setGlobalsFromContext,
+    Flags:        slices.Concat(idpLdapAccesskeyCreateWithLoginFlags, idpLdapAccesskeyCreateFlags, globalFlags),
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -71,74 +71,74 @@ EXAMPLES:
 }
 
 func mainIDPLdapAccesskeyCreateWithLogin(ctx *cli.Context) error {
-	if !ctx.Args().Present() {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if !ctx.Args().Present() {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
-	if !isTerminal {
-		e := fmt.Errorf("login flag cannot be used with a non-interactive terminal")
-		fatalIf(probe.NewError(e), "unable to read from STDIN")
-	}
+    isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+    if !isTerminal {
+        e := fmt.Errorf("login flag cannot be used with a non-interactive terminal")
+        fatalIf(probe.NewError(e), "unable to read from STDIN")
+    }
 
-	client, opts := loginLDAPAccesskey(ctx)
+    client, opts := loginLDAPAccesskey(ctx)
 
-	res, e := client.AddServiceAccountLDAP(globalContext, opts)
-	fatalIf(probe.NewError(e), "unable to add service account")
+    res, e := client.AddServiceAccountLDAP(globalContext, opts)
+    fatalIf(probe.NewError(e), "unable to add service account")
 
-	m := accesskeyMessage{
-		op:          "create",
-		Status:      "success",
-		AccessKey:   res.AccessKey,
-		SecretKey:   res.SecretKey,
-		Expiration:  &res.Expiration,
-		Name:        opts.Name,
-		Description: opts.Description,
-	}
-	printMsg(m)
+    m := accesskeyMessage{
+        op:          "create",
+        Status:      "success",
+        AccessKey:   res.AccessKey,
+        SecretKey:   res.SecretKey,
+        Expiration:  &res.Expiration,
+        Name:        opts.Name,
+        Description: opts.Description,
+    }
+    printMsg(m)
 
-	return nil
+    return nil
 }
 
 func loginLDAPAccesskey(ctx *cli.Context) (*madmin.AdminClient, madmin.AddServiceAccountReq) {
-	urlStr := ctx.Args().First()
+    urlStr := ctx.Args().First()
 
-	u, e := url.Parse(urlStr)
-	fatalIf(probe.NewError(e), "unable to parse server URL")
+    u, e := url.Parse(urlStr)
+    fatalIf(probe.NewError(e), "unable to parse server URL")
 
-	console.SetColor(cred, color.New(color.FgYellow, color.Italic))
-	reader := bufio.NewReader(os.Stdin)
+    console.SetColor(cred, color.New(color.FgYellow, color.Italic))
+    reader := bufio.NewReader(os.Stdin)
 
-	username := ctx.String("ldap-username")
-	if username == "" {
-		fmt.Printf("%s", console.Colorize(cred, "Enter LDAP Username: "))
-		value, _, e := reader.ReadLine()
-		fatalIf(probe.NewError(e), "unable to read username")
-		username = string(value)
-	}
+    username := ctx.String("ldap-username")
+    if username == "" {
+        fmt.Printf("%s", console.Colorize(cred, "Enter LDAP Username: "))
+        value, _, e := reader.ReadLine()
+        fatalIf(probe.NewError(e), "unable to read username")
+        username = string(value)
+    }
 
-	password := ctx.String("ldap-password")
-	if password == "" {
-		fmt.Printf("%s", console.Colorize(cred, "Enter LDAP Password: "))
-		bytePassword, e := term.ReadPassword(int(os.Stdin.Fd()))
-		fatalIf(probe.NewError(e), "unable to read password")
-		fmt.Printf("\n")
-		password = string(bytePassword)
-	}
+    password := ctx.String("ldap-password")
+    if password == "" {
+        fmt.Printf("%s", console.Colorize(cred, "Enter LDAP Password: "))
+        bytePassword, e := term.ReadPassword(int(os.Stdin.Fd()))
+        fatalIf(probe.NewError(e), "unable to read password")
+        fmt.Printf("\n")
+        password = string(bytePassword)
+    }
 
-	stsCreds, e := credentials.NewLDAPIdentity(urlStr, username, password)
-	fatalIf(probe.NewError(e), "unable to initialize LDAP identity")
+    stsCreds, e := credentials.NewLDAPIdentity(urlStr, username, password)
+    fatalIf(probe.NewError(e), "unable to initialize LDAP identity")
 
-	tempCreds, e := stsCreds.GetWithContext(&credentials.CredContext{
-		Client: http.DefaultClient,
-	})
-	fatalIf(probe.NewError(e), "unable to create a temporary account from LDAP identity")
+    tempCreds, e := stsCreds.GetWithContext(&credentials.CredContext{
+        Client: http.DefaultClient,
+    })
+    fatalIf(probe.NewError(e), "unable to create a temporary account from LDAP identity")
 
-	client, e := madmin.NewWithOptions(u.Host, &madmin.Options{
-		Creds:  stsCreds,
-		Secure: u.Scheme == "https",
-	})
-	fatalIf(probe.NewError(e), "unable to initialize admin connection")
+    client, e := madmin.NewWithOptions(u.Host, &madmin.Options{
+        Creds:  stsCreds,
+        Secure: u.Scheme == "https",
+    })
+    fatalIf(probe.NewError(e), "unable to initialize admin connection")
 
-	return client, accessKeyCreateOpts(ctx, tempCreds.AccessKeyID)
+    return client, accessKeyCreateOpts(ctx, tempCreds.AccessKeyID)
 }

@@ -20,25 +20,25 @@ package cmd
 import "github.com/minio/cli"
 
 var ilmRuleSubcommands = []cli.Command{
-	ilmAddCmd,
-	ilmEditCmd,
-	ilmLsCmd,
-	ilmRmCmd,
-	ilmExportCmd,
-	ilmImportCmd,
+    ilmAddCmd,
+    ilmEditCmd,
+    ilmLsCmd,
+    ilmRmCmd,
+    ilmExportCmd,
+    ilmImportCmd,
 }
 
 var ilmRuleCmd = cli.Command{
-	Name:            "rule",
-	Usage:           "manage bucket lifecycle rules",
-	Before:          setGlobalsFromContext,
-	Action:          mainILMRule,
-	Subcommands:     ilmRuleSubcommands,
-	Flags:           globalFlags,
-	HideHelpCommand: true,
+    Name:            "rule",
+    Usage:           "manage bucket lifecycle rules",
+    Before:          setGlobalsFromContext,
+    Action:          mainILMRule,
+    Subcommands:     ilmRuleSubcommands,
+    Flags:           globalFlags,
+    HideHelpCommand: true,
 }
 
 func mainILMRule(ctx *cli.Context) error {
-	commandNotFound(ctx, ilmRuleSubcommands)
-	return nil
+    commandNotFound(ctx, ilmRuleSubcommands)
+    return nil
 }

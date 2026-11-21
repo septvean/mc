@@ -18,23 +18,23 @@
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminRebalanceStopCmd = cli.Command{
-	Name:         "stop",
-	Usage:        "stop an ongoing rebalance operation",
-	Action:       mainAdminRebalanceStop,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "stop",
+    Usage:        "stop an ongoing rebalance operation",
+    Action:       mainAdminRebalanceStop,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -50,40 +50,40 @@ EXAMPLES:
 }
 
 type rebalanceStopMsg struct {
-	Status string `json:"status"`
-	Target string `json:"url"`
+    Status string `json:"status"`
+    Target string `json:"url"`
 }
 
 func (r rebalanceStopMsg) JSON() string {
-	r.Status = "success"
-	b, e := json.MarshalIndent(r, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal to JSON")
-	return string(b)
+    r.Status = "success"
+    b, e := json.MarshalIndent(r, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal to JSON")
+    return string(b)
 }
 
 func (r rebalanceStopMsg) String() string {
-	return console.Colorize("rebalanceStopMsg", fmt.Sprintf("Rebalance stopped for %s", r.Target))
+    return console.Colorize("rebalanceStopMsg", fmt.Sprintf("Rebalance stopped for %s", r.Target))
 }
 
 func mainAdminRebalanceStop(ctx *cli.Context) error {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1)
+    }
 
-	console.SetColor("rebalanceStopMsg", color.New(color.FgGreen))
+    console.SetColor("rebalanceStopMsg", color.New(color.FgGreen))
 
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err.Trace(aliasedURL), "Unable to initialize admin client")
 
-	fatalIf(probe.NewError(client.RebalanceStop(globalContext)), "Unable to stop rebalance operation")
+    fatalIf(probe.NewError(client.RebalanceStop(globalContext)), "Unable to stop rebalance operation")
 
-	printMsg(rebalanceStopMsg{
-		Target: aliasedURL,
-	})
+    printMsg(rebalanceStopMsg{
+        Target: aliasedURL,
+    })
 
-	return nil
+    return nil
 }

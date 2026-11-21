@@ -18,20 +18,20 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var quotaInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "show bucket quota",
-	Action:       mainQuotaInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "show bucket quota",
+    Action:       mainQuotaInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -48,40 +48,40 @@ EXAMPLES:
 
 // checkQuotaInfoSyntax - validate all the passed arguments
 func checkQuotaInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainQuotaInfo is the handler for "mc quota info" command.
 func mainQuotaInfo(ctx *cli.Context) error {
-	checkQuotaInfoSyntax(ctx)
+    checkQuotaInfoSyntax(ctx)
 
-	console.SetColor("QuotaMessage", color.New(color.FgGreen))
-	console.SetColor("QuotaInfo", color.New(color.FgCyan))
+    console.SetColor("QuotaMessage", color.New(color.FgGreen))
+    console.SetColor("QuotaInfo", color.New(color.FgCyan))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	_, targetURL := url2Alias(args[0])
-	qCfg, e := client.GetBucketQuota(globalContext, targetURL)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to get bucket quota")
-	sz := qCfg.Quota
-	if qCfg.Size > 0 {
-		sz = qCfg.Size
-	}
-	printMsg(quotaMessage{
-		op:        ctx.Command.Name,
-		Bucket:    targetURL,
-		Quota:     sz,
-		QuotaType: string(qCfg.Type),
-		Status:    "success",
-	})
+    _, targetURL := url2Alias(args[0])
+    qCfg, e := client.GetBucketQuota(globalContext, targetURL)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to get bucket quota")
+    sz := qCfg.Quota
+    if qCfg.Size > 0 {
+        sz = qCfg.Size
+    }
+    printMsg(quotaMessage{
+        op:        ctx.Command.Name,
+        Bucket:    targetURL,
+        Quota:     sz,
+        QuotaType: string(qCfg.Type),
+        Status:    "success",
+    })
 
-	return nil
+    return nil
 }

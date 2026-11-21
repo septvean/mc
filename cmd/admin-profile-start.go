@@ -18,22 +18,22 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminProfileStartCmd = cli.Command{
-	Name:               "start",
-	Usage:              "start recording profile data",
-	Action:             mainAdminProfileStart,
-	OnUsageError:       onUsageError,
-	Before:             setGlobalsFromContext,
-	HideHelpCommand:    true,
-	Hidden:             true,
-	CustomHelpTemplate: "Please use 'mc support profile start'",
+    Name:               "start",
+    Usage:              "start recording profile data",
+    Action:             mainAdminProfileStart,
+    OnUsageError:       onUsageError,
+    Before:             setGlobalsFromContext,
+    HideHelpCommand:    true,
+    Hidden:             true,
+    CustomHelpTemplate: "Please use 'mc support profile start'",
 }
 
 // mainAdminProfileStart - the entry function of profile command
 func mainAdminProfileStart(_ *cli.Context) error {
-	deprecatedError("mc support profile start")
-	return nil
+    deprecatedError("mc support profile start")
+    return nil
 }

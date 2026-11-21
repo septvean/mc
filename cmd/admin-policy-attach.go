@@ -18,34 +18,34 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 const (
-	errCodeChangeAlreadyApplied = "XMinioAdminPolicyChangeAlreadyApplied"
+    errCodeChangeAlreadyApplied = "XMinioAdminPolicyChangeAlreadyApplied"
 )
 
 var adminAttachPolicyFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "user, u",
-		Usage: "attach policy to user",
-	},
-	cli.StringFlag{
-		Name:  "group, g",
-		Usage: "attach policy to group",
-	},
+    cli.StringFlag{
+        Name:  "user, u",
+        Usage: "attach policy to user",
+    },
+    cli.StringFlag{
+        Name:  "group, g",
+        Usage: "attach policy to group",
+    },
 }
 
 var adminPolicyAttachCmd = cli.Command{
-	Name:         "attach",
-	Usage:        "attach an IAM policy to a user or group",
-	Action:       mainAdminPolicyAttach,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(adminAttachPolicyFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "attach",
+    Usage:        "attach an IAM policy to a user or group",
+    Action:       mainAdminPolicyAttach,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(adminAttachPolicyFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -69,63 +69,63 @@ EXAMPLES:
 
 // mainAdminPolicyAttach is the handler for "mc admin policy attach" command.
 func mainAdminPolicyAttach(ctx *cli.Context) error {
-	return userAttachOrDetachPolicy(ctx, true)
+    return userAttachOrDetachPolicy(ctx, true)
 }
 
 func userAttachOrDetachPolicy(ctx *cli.Context, attach bool) error {
-	if len(ctx.Args()) < 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
-	user := ctx.String("user")
-	group := ctx.String("group")
+    if len(ctx.Args()) < 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
+    user := ctx.String("user")
+    group := ctx.String("group")
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	policies := args[1:]
-	req := madmin.PolicyAssociationReq{
-		User:     user,
-		Group:    group,
-		Policies: policies,
-	}
+    policies := args[1:]
+    req := madmin.PolicyAssociationReq{
+        User:     user,
+        Group:    group,
+        Policies: policies,
+    }
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	var e error
-	var res madmin.PolicyAssociationResp
-	if attach {
-		res, e = client.AttachPolicy(globalContext, req)
-	} else {
-		res, e = client.DetachPolicy(globalContext, req)
-	}
+    var e error
+    var res madmin.PolicyAssociationResp
+    if attach {
+        res, e = client.AttachPolicy(globalContext, req)
+    } else {
+        res, e = client.DetachPolicy(globalContext, req)
+    }
 
-	if e != nil && madmin.ToErrorResponse(e).Code != errCodeChangeAlreadyApplied {
-		fatalIf(probe.NewError(e), "Unable to make user/group policy association")
-	}
+    if e != nil && madmin.ToErrorResponse(e).Code != errCodeChangeAlreadyApplied {
+        fatalIf(probe.NewError(e), "Unable to make user/group policy association")
+    }
 
-	var emptyResp madmin.PolicyAssociationResp
-	if res.UpdatedAt.Equal(emptyResp.UpdatedAt) {
-		// Older minio does not send a result, so we populate res manually to
-		// simulate a result. TODO(aditya): remove this after newer minio is
-		// released in a few months (Older API Deprecated in Jun 2023)
-		if attach {
-			res.PoliciesAttached = policies
-		} else {
-			res.PoliciesDetached = policies
-		}
-	}
+    var emptyResp madmin.PolicyAssociationResp
+    if res.UpdatedAt.Equal(emptyResp.UpdatedAt) {
+        // Older minio does not send a result, so we populate res manually to
+        // simulate a result. TODO(aditya): remove this after newer minio is
+        // released in a few months (Older API Deprecated in Jun 2023)
+        if attach {
+            res.PoliciesAttached = policies
+        } else {
+            res.PoliciesDetached = policies
+        }
+    }
 
-	m := policyAssociationMessage{
-		attach:           attach,
-		Status:           "success",
-		PoliciesAttached: res.PoliciesAttached,
-		PoliciesDetached: res.PoliciesDetached,
-		User:             user,
-		Group:            group,
-	}
-	printMsg(m)
-	return nil
+    m := policyAssociationMessage{
+        attach:           attach,
+        Status:           "success",
+        PoliciesAttached: res.PoliciesAttached,
+        PoliciesDetached: res.PoliciesDetached,
+        User:             user,
+        Group:            group,
+    }
+    printMsg(m)
+    return nil
 }

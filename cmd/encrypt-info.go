@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var encryptInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "show bucket encryption status",
-	Action:       mainEncryptInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "show bucket encryption status",
+    Action:       mainEncryptInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,65 +52,65 @@ EXAMPLES:
 
 // checkversionInfoSyntax - validate all the passed arguments
 func checkEncryptInfoSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 type encryptInfoMessage struct {
-	Op         string `json:"op"`
-	Status     string `json:"status"`
-	URL        string `json:"url"`
-	Encryption struct {
-		Algorithm string `json:"algorithm,omitempty"`
-		KeyID     string `json:"keyId,omitempty"`
-	} `json:"encryption,omitempty"`
+    Op         string `json:"op"`
+    Status     string `json:"status"`
+    URL        string `json:"url"`
+    Encryption struct {
+        Algorithm string `json:"algorithm,omitempty"`
+        KeyID     string `json:"keyId,omitempty"`
+    }   `json:"encryption,omitempty"`
 }
 
 func (v encryptInfoMessage) JSON() string {
-	v.Status = "success"
-	jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(jsonMessageBytes)
+    v.Status = "success"
+    jsonMessageBytes, e := json.MarshalIndent(v, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(jsonMessageBytes)
 }
 
 func (v encryptInfoMessage) String() string {
-	msg := ""
-	switch v.Encryption.Algorithm {
-	case "":
-		msg = fmt.Sprintf("Auto encryption is not enabled for %s ", v.URL)
-	default:
-		msg = "Auto encryption 'sse-s3' is enabled"
-	}
-	if v.Encryption.KeyID != "" {
-		msg = fmt.Sprintf("Auto encryption 'sse-kms' is enabled with KeyID: %s", v.Encryption.KeyID)
-	}
-	return console.Colorize("encryptInfoMessage", msg)
+    msg := ""
+    switch v.Encryption.Algorithm {
+    case "":
+        msg = fmt.Sprintf("Auto encryption is not enabled for %s ", v.URL)
+    default:
+        msg = "Auto encryption 'sse-s3' is enabled"
+    }
+    if v.Encryption.KeyID != "" {
+        msg = fmt.Sprintf("Auto encryption 'sse-kms' is enabled with KeyID: %s", v.Encryption.KeyID)
+    }
+    return console.Colorize("encryptInfoMessage", msg)
 }
 
 func mainEncryptInfo(cliCtx *cli.Context) error {
-	ctx, cancelEncryptInfo := context.WithCancel(globalContext)
-	defer cancelEncryptInfo()
+    ctx, cancelEncryptInfo := context.WithCancel(globalContext)
+    defer cancelEncryptInfo()
 
-	console.SetColor("encryptInfoMessage", color.New(color.FgGreen))
+    console.SetColor("encryptInfoMessage", color.New(color.FgGreen))
 
-	checkEncryptInfoSyntax(cliCtx)
+    checkEncryptInfoSyntax(cliCtx)
 
-	// Get the alias parameter from cli
-	args := cliCtx.Args()
-	aliasedURL := args.Get(0)
-	// Create a new Client
-	client, err := newClient(aliasedURL)
-	fatalIf(err, "Unable to initialize connection.")
-	algorithm, keyID, e := client.GetEncryption(ctx)
-	fatalIf(e, "Unable to get encryption info")
-	msg := encryptInfoMessage{
-		Op:     cliCtx.Command.Name,
-		Status: "success",
-		URL:    aliasedURL,
-	}
-	msg.Encryption.Algorithm = algorithm
-	msg.Encryption.KeyID = keyID
-	printMsg(msg)
-	return nil
+    // Get the alias parameter from cli
+    args := cliCtx.Args()
+    aliasedURL := args.Get(0)
+    // Create a new Client
+    client, err := newClient(aliasedURL)
+    fatalIf(err, "Unable to initialize connection.")
+    algorithm, keyID, e := client.GetEncryption(ctx)
+    fatalIf(e, "Unable to get encryption info")
+    msg := encryptInfoMessage{
+        Op:     cliCtx.Command.Name,
+        Status: "success",
+        URL:    aliasedURL,
+    }
+    msg.Encryption.Algorithm = algorithm
+    msg.Encryption.KeyID = keyID
+    printMsg(msg)
+    return nil
 }

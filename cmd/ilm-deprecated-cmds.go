@@ -20,24 +20,24 @@ package cmd
 import "github.com/minio/cli"
 
 var ilmDepCmds = []cli.Command{
-	ilmDepAddCmd,
-	ilmDepEditCmd,
-	ilmDepLsCmd,
-	ilmDepRmCmd,
-	ilmDepExportCmd,
-	ilmDepImportCmd,
+    ilmDepAddCmd,
+    ilmDepEditCmd,
+    ilmDepLsCmd,
+    ilmDepRmCmd,
+    ilmDepExportCmd,
+    ilmDepImportCmd,
 }
 
 var (
-	ilmDepAddCmd = cli.Command{
-		Name:         "add",
-		Usage:        "add a lifecycle configuration rule for a bucket",
-		Action:       mainILMAdd,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(ilmAddFlags, globalFlags...),
-		CustomHelpTemplate: `NAME:
+    ilmDepAddCmd = cli.Command{
+        Name:         "add",
+        Usage:        "add a lifecycle configuration rule for a bucket",
+        Action:       mainILMAdd,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(ilmAddFlags, globalFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -69,16 +69,16 @@ EXAMPLES:
      {{.Prompt}} {{.HelpName}} --prefix "doc/" --expire-days "300" --noncurrent-expire-days "100" \
           myminio/mybucket/
 `,
-	}
-	ilmDepRmCmd = cli.Command{
-		Name:         "rm",
-		Usage:        "remove (if any) existing lifecycle configuration rule",
-		Action:       mainILMRemove,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(ilmRemoveFlags, globalFlags...),
-		CustomHelpTemplate: `NAME:
+    }
+    ilmDepRmCmd = cli.Command{
+        Name:         "rm",
+        Usage:        "remove (if any) existing lifecycle configuration rule",
+        Action:       mainILMRemove,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(ilmRemoveFlags, globalFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -99,17 +99,17 @@ EXAMPLES:
      Because the result is complete removal, the use of --force flag is enforced.
      {{.Prompt}} {{.HelpName}} --all --force myminio/mybucket
 `,
-	}
+    }
 
-	ilmDepEditCmd = cli.Command{
-		Name:         "edit",
-		Usage:        "modify a lifecycle configuration rule with given id",
-		Action:       mainILMEdit,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(ilmEditFlags, globalFlags...),
-		CustomHelpTemplate: `NAME:
+    ilmDepEditCmd = cli.Command{
+        Name:         "edit",
+        Usage:        "modify a lifecycle configuration rule with given id",
+        Action:       mainILMEdit,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(ilmEditFlags, globalFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -133,17 +133,17 @@ EXAMPLES:
      {{.Prompt}} {{.HelpName}} --id "rHTY.a123" --disable s3/mybucket
 
 `,
-	}
+    }
 
-	ilmDepLsCmd = cli.Command{
-		Name:         "ls",
-		Usage:        "lists lifecycle configuration rules set on a bucket",
-		Action:       mainILMList,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        append(ilmListFlags, globalFlags...),
-		CustomHelpTemplate: `NAME:
+    ilmDepLsCmd = cli.Command{
+        Name:         "ls",
+        Usage:        "lists lifecycle configuration rules set on a bucket",
+        Action:       mainILMList,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        append(ilmListFlags, globalFlags...),
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -168,17 +168,17 @@ EXAMPLES:
   4. List the lifecycle management rules in JSON format for mybucket on alias 'myminio'.
      {{.Prompt}} {{.HelpName}} --json myminio/mybucket
 `,
-	}
+    }
 
-	ilmDepExportCmd = cli.Command{
-		Name:         "export",
-		Usage:        "export lifecycle configuration in JSON format",
-		Action:       mainILMExport,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    ilmDepExportCmd = cli.Command{
+        Name:         "export",
+        Usage:        "export lifecycle configuration in JSON format",
+        Action:       mainILMExport,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -194,17 +194,17 @@ EXAMPLES:
   2. Print lifecycle configuration for 'mybucket' to STDOUT.
      {{.Prompt}} {{.HelpName}} play/mybucket
 `,
-	}
+    }
 
-	ilmDepImportCmd = cli.Command{
-		Name:         "import",
-		Usage:        "import lifecycle configuration in JSON format",
-		Action:       mainILMImport,
-		Hidden:       true, // to avoid being listed in `mc ilm`
-		OnUsageError: onUsageError,
-		Before:       setGlobalsFromContext,
-		Flags:        globalFlags,
-		CustomHelpTemplate: `NAME:
+    ilmDepImportCmd = cli.Command{
+        Name:         "import",
+        Usage:        "import lifecycle configuration in JSON format",
+        Action:       mainILMImport,
+        Hidden:       true, // to avoid being listed in `mc ilm`
+        OnUsageError: onUsageError,
+        Before:       setGlobalsFromContext,
+        Flags:        globalFlags,
+        CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -220,5 +220,5 @@ EXAMPLES:
   2. Set lifecycle configuration for the mybucket on alias 'myminio'. User is expected to enter the JSON contents on STDIN
      {{.Prompt}} {{.HelpName}} myminio/mybucket
 `,
-	}
+    }
 )

@@ -18,29 +18,29 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var licenseSubcommands = []cli.Command{
-	licenseRegisterCmd,
-	licenseInfoCmd,
-	licenseUpdateCmd,
-	licenseUnregisterCmd,
+    licenseRegisterCmd,
+    licenseInfoCmd,
+    licenseUpdateCmd,
+    licenseUnregisterCmd,
 }
 
 var licenseCmd = cli.Command{
-	Name:            "license",
-	Usage:           "license related commands",
-	Action:          mainlicense,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     licenseSubcommands,
-	HideHelpCommand: true,
+    Name:            "license",
+    Usage:           "license related commands",
+    Action:          mainlicense,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     licenseSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainlicense is the handle for "mc license" command.
 func mainlicense(ctx *cli.Context) error {
-	commandNotFound(ctx, licenseSubcommands)
-	return nil
-	// Sub-commands like "register", "info" have their own main.
+    commandNotFound(ctx, licenseSubcommands)
+    return nil
+    // Sub-commands like "register", "info" have their own main.
 }

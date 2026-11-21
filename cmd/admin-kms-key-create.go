@@ -18,24 +18,24 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
-	"golang.org/x/term"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
+    "golang.org/x/term"
 )
 
 var adminKMSCreateKeyCmd = cli.Command{
-	Name:         "create",
-	Usage:        "creates a new master KMS key",
-	Action:       mainAdminKMSCreateKey,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "create",
+    Usage:        "creates a new master KMS key",
+    Action:       mainAdminKMSCreateKey,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -52,19 +52,19 @@ EXAMPLES:
 
 // adminKMSCreateKeyCmd is the handler for the "mc admin kms key create" command.
 func mainAdminKMSCreateKey(ctx *cli.Context) error {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	client, err := newAdminClient(ctx.Args().Get(0))
-	fatalIf(err, "Cannot get a configured admin connection.")
+    client, err := newAdminClient(ctx.Args().Get(0))
+    fatalIf(err, "Cannot get a configured admin connection.")
 
-	keyID := ctx.Args().Get(1)
-	e := client.CreateKey(globalContext, keyID)
-	fatalIf(probe.NewError(e), "Failed to create master key")
+    keyID := ctx.Args().Get(1)
+    e := client.CreateKey(globalContext, keyID)
+    fatalIf(probe.NewError(e), "Failed to create master key")
 
-	if term.IsTerminal(int(os.Stdout.Fd())) {
-		console.Println(color.GreenString(fmt.Sprintf("Created master key `%s` successfully", keyID)))
-	}
-	return nil
+    if term.IsTerminal(int(os.Stdout.Fd())) {
+        console.Println(color.GreenString(fmt.Sprintf("Created master key `%s` successfully", keyID)))
+    }
+    return nil
 }

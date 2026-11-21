@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var batchDescribeCmd = cli.Command{
-	Name:         "describe",
-	Usage:        "describe job definition for a job",
-	Action:       mainBatchDescribe,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "describe",
+    Usage:        "describe job definition for a job",
+    Action:       mainBatchDescribe,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,30 +49,30 @@ EXAMPLES:
 
 // checkBatchDescribeSyntax - validate all the passed arguments
 func checkBatchDescribeSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainBatchDescribe is the handle for "mc batch create" command.
 func mainBatchDescribe(ctx *cli.Context) error {
-	checkBatchDescribeSyntax(ctx)
+    checkBatchDescribeSyntax(ctx)
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	jobID := args.Get(1)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    jobID := args.Get(1)
 
-	// Start a new MinIO Admin Client
-	adminClient, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Start a new MinIO Admin Client
+    adminClient, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	ctxt, cancel := context.WithCancel(globalContext)
-	defer cancel()
+    ctxt, cancel := context.WithCancel(globalContext)
+    defer cancel()
 
-	job, e := adminClient.DescribeBatchJob(ctxt, jobID)
-	fatalIf(probe.NewError(e), "Unable to fetch the job definition")
+    job, e := adminClient.DescribeBatchJob(ctxt, jobID)
+    fatalIf(probe.NewError(e), "Unable to fetch the job definition")
 
-	fmt.Println(job)
-	return nil
+    fmt.Println(job)
+    return nil
 }

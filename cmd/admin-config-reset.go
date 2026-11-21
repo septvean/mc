@@ -18,31 +18,31 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminConfigEnvFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "env",
-		Usage: "list all the env only help",
-	},
+    cli.BoolFlag{
+        Name:  "env",
+        Usage: "list all the env only help",
+    },
 }
 
 var adminConfigResetCmd = cli.Command{
-	Name:         "reset",
-	Usage:        "interactively reset a config key parameters",
-	Before:       setGlobalsFromContext,
-	Action:       mainAdminConfigReset,
-	OnUsageError: onUsageError,
-	Flags:        append(adminConfigEnvFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "reset",
+    Usage:        "interactively reset a config key parameters",
+    Before:       setGlobalsFromContext,
+    Action:       mainAdminConfigReset,
+    OnUsageError: onUsageError,
+    Flags:        append(adminConfigEnvFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -63,90 +63,90 @@ EXAMPLES:
 
 // configResetMessage container to hold locks information.
 type configResetMessage struct {
-	Status      string `json:"status"`
-	targetAlias string
-	key         string
-	restart     bool
+    Status      string `json:"status"`
+    targetAlias string
+    key         string
+    restart     bool
 }
 
 // String colorized service status message.
 func (u configResetMessage) String() (msg string) {
-	msg += console.Colorize("ResetConfigSuccess",
-		fmt.Sprintf("'%s' is successfully reset.", u.key))
-	if u.restart {
-		suggestion := fmt.Sprintf("mc admin service restart %s", u.targetAlias)
-		msg += console.Colorize("ResetConfigSuccess",
-			fmt.Sprintf("\nPlease restart your server with `%s`.", suggestion))
-	}
-	return
+    msg += console.Colorize("ResetConfigSuccess",
+        fmt.Sprintf("'%s' is successfully reset.", u.key))
+    if u.restart {
+        suggestion := fmt.Sprintf("mc admin service restart %s", u.targetAlias)
+        msg += console.Colorize("ResetConfigSuccess",
+            fmt.Sprintf("\nPlease restart your server with `%s`.", suggestion))
+    }
+    return
 }
 
 // JSON jsonified service status message.
 func (u configResetMessage) JSON() string {
-	u.Status = "success"
-	statusJSONBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    u.Status = "success"
+    statusJSONBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
 
-	return string(statusJSONBytes)
+    return string(statusJSONBytes)
 }
 
 // checkAdminConfigResetSyntax - validate all the passed arguments
 func checkAdminConfigResetSyntax(ctx *cli.Context) {
-	if !ctx.Args().Present() {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if !ctx.Args().Present() {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // main config set function
 func mainAdminConfigReset(ctx *cli.Context) error {
-	// Check command arguments
-	checkAdminConfigResetSyntax(ctx)
+    // Check command arguments
+    checkAdminConfigResetSyntax(ctx)
 
-	// Reset color preference of command outputs
-	console.SetColor("ResetConfigSuccess", color.New(color.FgGreen, color.Bold))
-	console.SetColor("ResetConfigFailure", color.New(color.FgRed, color.Bold))
+    // Reset color preference of command outputs
+    console.SetColor("ResetConfigSuccess", color.New(color.FgGreen, color.Bold))
+    console.SetColor("ResetConfigFailure", color.New(color.FgRed, color.Bold))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	if len(ctx.Args()) == 1 {
-		// Call get config API
-		hr, e := client.HelpConfigKV(globalContext, "", "", ctx.Bool("env"))
-		fatalIf(probe.NewError(e), "Unable to get help for the sub-system")
+    if len(ctx.Args()) == 1 {
+        // Call get config API
+        hr, e := client.HelpConfigKV(globalContext, "", "", ctx.Bool("env"))
+        fatalIf(probe.NewError(e), "Unable to get help for the sub-system")
 
-		// Print
-		printMsg(configHelpMessage{
-			Value:   hr,
-			envOnly: ctx.Bool("env"),
-		})
+        // Print
+        printMsg(configHelpMessage{
+            Value:   hr,
+            envOnly: ctx.Bool("env"),
+        })
 
-		return nil
-	}
+        return nil
+    }
 
-	input := strings.Join(args.Tail(), " ")
-	// Check if user has attempted to set values
-	for _, k := range args.Tail() {
-		if strings.Contains(k, "=") {
-			e := fmt.Errorf("new settings may not be provided for sub-system keys")
-			fatalIf(probe.NewError(e), "Unable to reset '%s' on the server", args.Tail()[0])
-		}
-	}
+    input := strings.Join(args.Tail(), " ")
+    // Check if user has attempted to set values
+    for _, k := range args.Tail() {
+        if strings.Contains(k, "=") {
+            e := fmt.Errorf("new settings may not be provided for sub-system keys")
+            fatalIf(probe.NewError(e), "Unable to reset '%s' on the server", args.Tail()[0])
+        }
+    }
 
-	// Call reset config API
-	restart, e := client.DelConfigKV(globalContext, input)
-	fatalIf(probe.NewError(e), "Unable to reset '%s' on the server", input)
+    // Call reset config API
+    restart, e := client.DelConfigKV(globalContext, input)
+    fatalIf(probe.NewError(e), "Unable to reset '%s' on the server", input)
 
-	// Print set config result
-	printMsg(configResetMessage{
-		targetAlias: aliasedURL,
-		restart:     restart,
-		key:         input,
-	})
+    // Print set config result
+    printMsg(configResetMessage{
+        targetAlias: aliasedURL,
+        restart:     restart,
+        key:         input,
+    })
 
-	return nil
+    return nil
 }

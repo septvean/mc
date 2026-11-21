@@ -18,40 +18,40 @@
 package cmd
 
 import (
-	"context"
-	"errors"
-	"os"
-	"time"
+    "context"
+    "errors"
+    "os"
+    "time"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/cmd/ilm"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7/pkg/lifecycle"
+    "github.com/jedib0t/go-pretty/v6/table"
+    "github.com/jedib0t/go-pretty/v6/text"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/cmd/ilm"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7/pkg/lifecycle"
 )
 
 var ilmListFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "expiry",
-		Usage: "display only expiration fields",
-	},
-	cli.BoolFlag{
-		Name:  "transition",
-		Usage: "display only transition fields",
-	},
+    cli.BoolFlag{
+        Name:  "expiry",
+        Usage: "display only expiration fields",
+    },
+    cli.BoolFlag{
+        Name:  "transition",
+        Usage: "display only transition fields",
+    },
 }
 
 var ilmLsCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "lists lifecycle configuration rules set on a bucket",
-	Action:       mainILMList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(ilmListFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "lists lifecycle configuration rules set on a bucket",
+    Action:       mainILMList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(ilmListFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -79,111 +79,111 @@ EXAMPLES:
 }
 
 type ilmListMessage struct {
-	Status    string                   `json:"status"`
-	Target    string                   `json:"target"`
-	Context   *cli.Context             `json:"-"`
-	Config    *lifecycle.Configuration `json:"config"`
-	UpdatedAt time.Time                `json:"updatedAt,omitempty"`
+    Status    string                   `json:"status"`
+    Target    string                   `json:"target"`
+    Context   *cli.Context             `json:"-"`
+    Config    *lifecycle.Configuration `json:"config"`
+    UpdatedAt time.Time                `json:"updatedAt,omitempty"`
 }
 
 func (i ilmListMessage) String() string {
-	// We don't use this method to display ilm-ls output. This is here to
-	// implement the interface required by printMsg
-	return ""
+    // We don't use this method to display ilm-ls output. This is here to
+    // implement the interface required by printMsg
+    return ""
 }
 
 func (i ilmListMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(i, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(i, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 // validateILMListFlagSet - validates ilm list flags
 func validateILMListFlagSet(ctx *cli.Context) bool {
-	expiryOnly := ctx.Bool("expiry")
-	transitionOnly := ctx.Bool("transition")
-	// Only one of expiry or transition rules can be filtered
-	if expiryOnly && transitionOnly {
-		return false
-	}
-	return true
+    expiryOnly := ctx.Bool("expiry")
+    transitionOnly := ctx.Bool("transition")
+    // Only one of expiry or transition rules can be filtered
+    if expiryOnly && transitionOnly {
+        return false
+    }
+    return true
 }
 
 // checkILMListSyntax - validate arguments passed by a user
 func checkILMListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, globalErrorExitStatus)
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, globalErrorExitStatus)
+    }
 
-	if !validateILMListFlagSet(ctx) {
-		fatalIf(errInvalidArgument(), "only one display field flag is allowed per ls command. Refer mc "+ctx.Command.FullName()+" --help.")
-	}
+    if !validateILMListFlagSet(ctx) {
+        fatalIf(errInvalidArgument(), "only one display field flag is allowed per ls command. Refer mc "+ctx.Command.FullName()+" --help.")
+    }
 }
 
 func mainILMList(cliCtx *cli.Context) error {
-	ctx, cancelILMList := context.WithCancel(globalContext)
-	defer cancelILMList()
+    ctx, cancelILMList := context.WithCancel(globalContext)
+    defer cancelILMList()
 
-	checkILMListSyntax(cliCtx)
-	setILMDisplayColorScheme()
+    checkILMListSyntax(cliCtx)
+    setILMDisplayColorScheme()
 
-	args := cliCtx.Args()
-	urlStr := args.Get(0)
+    args := cliCtx.Args()
+    urlStr := args.Get(0)
 
-	// Note: validateILMListFlagsSet ensures we deal with only valid
-	// combinations here.
-	var filter ilm.LsFilter
-	if v := cliCtx.Bool("expiry"); v {
-		filter = ilm.ExpiryOnly
-	}
-	if v := cliCtx.Bool("transition"); v {
-		filter = ilm.TransitionOnly
-	}
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
+    // Note: validateILMListFlagsSet ensures we deal with only valid
+    // combinations here.
+    var filter ilm.LsFilter
+    if v := cliCtx.Bool("expiry"); v {
+        filter = ilm.ExpiryOnly
+    }
+    if v := cliCtx.Bool("transition"); v {
+        filter = ilm.TransitionOnly
+    }
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
 
-	ilmCfg, updatedAt, err := client.GetLifecycle(ctx)
-	fatalIf(err.Trace(args...), "Unable to get lifecycle")
+    ilmCfg, updatedAt, err := client.GetLifecycle(ctx)
+    fatalIf(err.Trace(args...), "Unable to get lifecycle")
 
-	if len(ilmCfg.Rules) == 0 {
-		fatalIf(probe.NewError(errors.New("lifecycle configuration not set")).Trace(urlStr),
-			"Unable to ls lifecycle configuration")
-	}
+    if len(ilmCfg.Rules) == 0 {
+        fatalIf(probe.NewError(errors.New("lifecycle configuration not set")).Trace(urlStr),
+            "Unable to ls lifecycle configuration")
+    }
 
-	// applies listing filter on ILM rules
-	ilmCfg.Rules = filter.Apply(ilmCfg.Rules)
+    // applies listing filter on ILM rules
+    ilmCfg.Rules = filter.Apply(ilmCfg.Rules)
 
-	if globalJSON {
-		printMsg(ilmListMessage{
-			Status:    "success",
-			Target:    urlStr,
-			Context:   cliCtx,
-			Config:    ilmCfg,
-			UpdatedAt: updatedAt,
-		})
-		return nil
-	}
+    if globalJSON {
+        printMsg(ilmListMessage{
+            Status:    "success",
+            Target:    urlStr,
+            Context:   cliCtx,
+            Config:    ilmCfg,
+            UpdatedAt: updatedAt,
+        })
+        return nil
+    }
 
-	for _, tbl := range ilm.ToTables(ilmCfg) {
-		rows := tbl.Rows()
-		if len(rows) == 0 {
-			continue
-		}
-		t := table.NewWriter()
-		t.SetOutputMirror(os.Stdout)
-		var colCfgs []table.ColumnConfig
-		for i := 0; i < len(rows[0]); i++ {
-			colCfgs = append(colCfgs, table.ColumnConfig{
-				Align: text.AlignCenter,
-			})
-		}
-		t.SetColumnConfigs(colCfgs)
-		t.SetTitle(tbl.Title())
-		t.AppendHeader(tbl.ColumnHeaders())
-		t.AppendRows(rows)
-		t.SetStyle(table.StyleLight)
-		t.Render()
-	}
+    for _, tbl := range ilm.ToTables(ilmCfg) {
+        rows := tbl.Rows()
+        if len(rows) == 0 {
+            continue
+        }
+        t := table.NewWriter()
+        t.SetOutputMirror(os.Stdout)
+        var colCfgs []table.ColumnConfig
+        for i := 0; i < len(rows[0]); i++ {
+            colCfgs = append(colCfgs, table.ColumnConfig{
+                Align: text.AlignCenter,
+            })
+        }
+        t.SetColumnConfigs(colCfgs)
+        t.SetTitle(tbl.Title())
+        t.AppendHeader(tbl.ColumnHeaders())
+        t.AppendRows(rows)
+        t.SetStyle(table.StyleLight)
+        t.Render()
+    }
 
-	return nil
+    return nil
 }

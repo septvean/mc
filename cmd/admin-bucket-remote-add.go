@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminBucketRemoteAddCmd = cli.Command{
-	Name:         "add",
-	Usage:        "add a new remote target",
-	Action:       mainAdminBucketRemoteAdd,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	HideHelp:     true,
+    Name:         "add",
+    Usage:        "add a new remote target",
+    Action:       mainAdminBucketRemoteAdd,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    HideHelp:     true,
 }
 
 // mainAdminBucketRemoteAdd is the handle for "mc admin bucket remote set" command.
 func mainAdminBucketRemoteAdd(_ *cli.Context) error {
-	deprecatedError("mc replicate add")
-	return nil
+    deprecatedError("mc replicate add")
+    return nil
 }

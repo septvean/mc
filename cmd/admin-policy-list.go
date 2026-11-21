@@ -18,21 +18,21 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var adminPolicyListCmd = cli.Command{
-	Name:         "list",
-	ShortName:    "ls",
-	Usage:        "list all IAM policies",
-	Action:       mainAdminPolicyList,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "list",
+    ShortName:    "ls",
+    Usage:        "list all IAM policies",
+    Action:       mainAdminPolicyList,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -49,33 +49,33 @@ EXAMPLES:
 
 // checkAdminPolicyListSyntax - validate all the passed arguments
 func checkAdminPolicyListSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainAdminPolicyList is the handle for "mc admin policy add" command.
 func mainAdminPolicyList(ctx *cli.Context) error {
-	checkAdminPolicyListSyntax(ctx)
+    checkAdminPolicyListSyntax(ctx)
 
-	console.SetColor("PolicyName", color.New(color.FgBlue))
+    console.SetColor("PolicyName", color.New(color.FgBlue))
 
-	// Get the alias parameter from cli
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
+    // Get the alias parameter from cli
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
 
-	// Create a new MinIO Admin Client
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	policies, e := client.ListCannedPolicies(globalContext)
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to list policy")
+    policies, e := client.ListCannedPolicies(globalContext)
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to list policy")
 
-	for k := range policies {
-		printMsg(userPolicyMessage{
-			op:     ctx.Command.Name,
-			Policy: k,
-		})
-	}
-	return nil
+    for k := range policies {
+        printMsg(userPolicyMessage{
+            op:     ctx.Command.Name,
+            Policy: k,
+        })
+    }
+    return nil
 }

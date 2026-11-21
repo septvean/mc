@@ -20,22 +20,22 @@ package cmd
 import "github.com/minio/cli"
 
 var adminReplicateResyncSubcommands = []cli.Command{
-	adminReplicateResyncStartCmd,
-	adminReplicateResyncStatusCmd,
-	adminReplicateResyncCancelCmd,
+    adminReplicateResyncStartCmd,
+    adminReplicateResyncStatusCmd,
+    adminReplicateResyncCancelCmd,
 }
 
 var adminReplicateResyncCmd = cli.Command{
-	Name:            "resync",
-	Usage:           "resync content to site",
-	Action:          mainAdminReplicateResync,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminReplicateResyncSubcommands,
-	HideHelpCommand: true,
+    Name:            "resync",
+    Usage:           "resync content to site",
+    Action:          mainAdminReplicateResync,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminReplicateResyncSubcommands,
+    HideHelpCommand: true,
 }
 
 func mainAdminReplicateResync(ctx *cli.Context) error {
-	commandNotFound(ctx, adminReplicateResyncSubcommands)
-	return nil
+    commandNotFound(ctx, adminReplicateResyncSubcommands)
+    return nil
 }

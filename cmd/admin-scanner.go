@@ -20,22 +20,22 @@ package cmd
 import "github.com/minio/cli"
 
 var adminScannerSubcommands = []cli.Command{
-	adminScannerInfo,
-	adminScannerTraceCmd,
+    adminScannerInfo,
+    adminScannerTraceCmd,
 }
 
 var adminScannerCmd = cli.Command{
-	Name:            "scanner",
-	Usage:           "provide MinIO scanner info",
-	Action:          mainAdminScanner,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     adminScannerSubcommands,
-	HideHelpCommand: true,
+    Name:            "scanner",
+    Usage:           "provide MinIO scanner info",
+    Action:          mainAdminScanner,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     adminScannerSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainAdminScanner is the handle for "mc admin scanner" command.
 func mainAdminScanner(ctx *cli.Context) error {
-	commandNotFound(ctx, adminScannerSubcommands)
-	return nil
+    commandNotFound(ctx, adminScannerSubcommands)
+    return nil
 }

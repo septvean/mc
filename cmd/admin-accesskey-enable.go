@@ -18,17 +18,17 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
+    "github.com/minio/cli"
 )
 
 var adminAccesskeyEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "enable an access key",
-	Action:       mainAdminAccesskeyEnable,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "enable an access key",
+    Action:       mainAdminAccesskeyEnable,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -44,5 +44,5 @@ EXAMPLES:
 }
 
 func mainAdminAccesskeyEnable(ctx *cli.Context) error {
-	return enableDisableAccesskey(ctx, true)
+    return enableDisableAccesskey(ctx, true)
 }

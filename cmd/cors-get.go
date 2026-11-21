@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/pkg/v3/console"
 )
 
 var corsGetCmd = cli.Command{
-	Name:         "get",
-	Usage:        "get a bucket CORS configuration",
-	Action:       mainCorsGet,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	CustomHelpTemplate: `NAME:
+    Name:         "get",
+    Usage:        "get a bucket CORS configuration",
+    Action:       mainCorsGet,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -47,38 +47,38 @@ EXAMPLES:
 
 // checkCorsGetSyntax - validate all the passed arguments
 func checkCorsGetSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 1 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 1 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // mainCorsGet is the handle for "mc cors get" command.
 func mainCorsGet(ctx *cli.Context) error {
-	checkCorsGetSyntax(ctx)
+    checkCorsGetSyntax(ctx)
 
-	console.SetColor("CorsMessage", color.New(color.FgGreen))
-	console.SetColor("CorsNotFound", color.New(color.FgYellow))
+    console.SetColor("CorsMessage", color.New(color.FgGreen))
+    console.SetColor("CorsNotFound", color.New(color.FgYellow))
 
-	// args[0] is the ALIAS/BUCKET argument.
-	args := ctx.Args()
-	urlStr := args.Get(0)
+    // args[0] is the ALIAS/BUCKET argument.
+    args := ctx.Args()
+    urlStr := args.Get(0)
 
-	client, err := newClient(urlStr)
-	fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
+    client, err := newClient(urlStr)
+    fatalIf(err.Trace(urlStr), "Unable to initialize client for "+urlStr)
 
-	corsCfg, err := client.GetBucketCors(globalContext)
-	fatalIf(err.Trace(urlStr), "Unable to get bucket CORS configuration for "+urlStr)
+    corsCfg, err := client.GetBucketCors(globalContext)
+    fatalIf(err.Trace(urlStr), "Unable to get bucket CORS configuration for "+urlStr)
 
-	status := "success"
-	if corsCfg == nil {
-		status = "not found"
-	}
+    status := "success"
+    if corsCfg == nil {
+        status = "not found"
+    }
 
-	printMsg(corsMessage{
-		op:      "get",
-		Status:  status,
-		CorsCfg: corsCfg,
-	})
+    printMsg(corsMessage{
+        op:      "get",
+        Status:  status,
+        CorsCfg: corsCfg,
+    })
 
-	return nil
+    return nil
 }

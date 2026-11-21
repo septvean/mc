@@ -18,47 +18,47 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"path/filepath"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "path/filepath"
+    "strings"
+    "time"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/pkg/v3/console"
 )
 
 var lhInfoFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:  "recursive, r",
-		Usage: "show legal hold status recursively",
-	},
-	cli.StringFlag{
-		Name:  "version-id, vid",
-		Usage: "show legal hold status of a specific object version",
-	},
-	cli.StringFlag{
-		Name:  "rewind",
-		Usage: "show legal hold status of an object version at specified time",
-	},
-	cli.BoolFlag{
-		Name:  "versions",
-		Usage: "show legal hold status of multiple versions of object(s)",
-	},
+    cli.BoolFlag{
+        Name:  "recursive, r",
+        Usage: "show legal hold status recursively",
+    },
+    cli.StringFlag{
+        Name:  "version-id, vid",
+        Usage: "show legal hold status of a specific object version",
+    },
+    cli.StringFlag{
+        Name:  "rewind",
+        Usage: "show legal hold status of an object version at specified time",
+    },
+    cli.BoolFlag{
+        Name:  "versions",
+        Usage: "show legal hold status of multiple versions of object(s)",
+    },
 }
 
 var legalHoldInfoCmd = cli.Command{
-	Name:         "info",
-	Usage:        "show legal hold info for object(s)",
-	Action:       mainLegalHoldInfo,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(lhInfoFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "info",
+    Usage:        "show legal hold info for object(s)",
+    Action:       mainLegalHoldInfo,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(lhInfoFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -85,165 +85,165 @@ EXAMPLES:
 
 // Structured message depending on the type of console.
 type legalHoldInfoMessage struct {
-	LegalHold minio.LegalHoldStatus `json:"legalhold"`
-	URLPath   string                `json:"urlpath"`
-	Key       string                `json:"key"`
-	VersionID string                `json:"versionID"`
-	Status    string                `json:"status"`
-	Err       error                 `json:"error,omitempty"`
+    LegalHold minio.LegalHoldStatus `json:"legalhold"`
+    URLPath   string                `json:"urlpath"`
+    Key       string                `json:"key"`
+    VersionID string                `json:"versionID"`
+    Status    string                `json:"status"`
+    Err       error                 `json:"error,omitempty"`
 }
 
 // Colorized message for console printing.
 func (l legalHoldInfoMessage) String() string {
-	if l.Err != nil {
-		return console.Colorize("LegalHoldMessageFailure", "Unable to get object legal hold status `"+l.Key+"`. "+l.Err.Error())
-	}
-	var msg string
+    if l.Err != nil {
+        return console.Colorize("LegalHoldMessageFailure", "Unable to get object legal hold status `"+l.Key+"`. "+l.Err.Error())
+    }
+    var msg string
 
-	var legalhold string
-	switch l.LegalHold {
-	case "":
-		legalhold = console.Colorize("LegalHoldNotSet", "Not set")
-	case minio.LegalHoldEnabled:
-		legalhold = console.Colorize("LegalHoldOn", l.LegalHold)
-	case minio.LegalHoldDisabled:
-		legalhold = console.Colorize("LegalHoldOff", l.LegalHold)
-	}
+    var legalhold string
+    switch l.LegalHold {
+    case "":
+        legalhold = console.Colorize("LegalHoldNotSet", "Not set")
+    case minio.LegalHoldEnabled:
+        legalhold = console.Colorize("LegalHoldOn", l.LegalHold)
+    case minio.LegalHoldDisabled:
+        legalhold = console.Colorize("LegalHoldOff", l.LegalHold)
+    }
 
-	msg += "[ " + centerText(legalhold, 8) + " ] "
+    msg += "[ " + centerText(legalhold, 8) + " ] "
 
-	if l.VersionID != "" {
-		msg += " " + console.Colorize("LegalHoldVersion", l.VersionID) + " "
-	}
+    if l.VersionID != "" {
+        msg += " " + console.Colorize("LegalHoldVersion", l.VersionID) + " "
+    }
 
-	msg += " "
-	msg += l.Key
-	return msg
+    msg += " "
+    msg += l.Key
+    return msg
 }
 
 // JSON'ified message for scripting.
 func (l legalHoldInfoMessage) JSON() string {
-	msgBytes, e := json.MarshalIndent(l, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(msgBytes)
+    msgBytes, e := json.MarshalIndent(l, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(msgBytes)
 }
 
 // showLegalHoldInfo - show legalhold for one or many objects within a given prefix, with or without versioning
 func showLegalHoldInfo(ctx context.Context, urlStr, versionID string, timeRef time.Time, withVersions, recursive bool) error {
-	clnt, err := newClient(urlStr)
-	if err != nil {
-		fatalIf(err.Trace(), "Unable to parse the provided url.")
-	}
+    clnt, err := newClient(urlStr)
+    if err != nil {
+        fatalIf(err.Trace(), "Unable to parse the provided url.")
+    }
 
-	prefixPath := clnt.GetURL().Path
-	prefixPath = filepath.ToSlash(prefixPath)
-	if !strings.HasSuffix(prefixPath, "/") {
-		prefixPath = prefixPath[:strings.LastIndex(prefixPath, "/")+1]
-	}
-	prefixPath = strings.TrimPrefix(prefixPath, "./")
+    prefixPath := clnt.GetURL().Path
+    prefixPath = filepath.ToSlash(prefixPath)
+    if !strings.HasSuffix(prefixPath, "/") {
+        prefixPath = prefixPath[:strings.LastIndex(prefixPath, "/")+1]
+    }
+    prefixPath = strings.TrimPrefix(prefixPath, "./")
 
-	if !recursive && !withVersions {
-		lhold, err := clnt.GetObjectLegalHold(ctx, versionID)
-		if err != nil {
-			fatalIf(err.Trace(urlStr), "Failed to show legal hold information of `"+urlStr+"`.")
-		} else {
-			contentURL := filepath.ToSlash(clnt.GetURL().Path)
-			key := strings.TrimPrefix(contentURL, prefixPath)
+    if !recursive && !withVersions {
+        lhold, err := clnt.GetObjectLegalHold(ctx, versionID)
+        if err != nil {
+            fatalIf(err.Trace(urlStr), "Failed to show legal hold information of `"+urlStr+"`.")
+        } else {
+            contentURL := filepath.ToSlash(clnt.GetURL().Path)
+            key := strings.TrimPrefix(contentURL, prefixPath)
 
-			printMsg(legalHoldInfoMessage{
-				LegalHold: lhold,
-				Status:    "success",
-				URLPath:   clnt.GetURL().String(),
-				Key:       key,
-				VersionID: versionID,
-			})
-		}
-		return nil
-	}
+            printMsg(legalHoldInfoMessage{
+                LegalHold: lhold,
+                Status:    "success",
+                URLPath:   clnt.GetURL().String(),
+                Key:       key,
+                VersionID: versionID,
+            })
+        }
+        return nil
+    }
 
-	alias, _, _ := mustExpandAlias(urlStr)
-	var cErr error
-	errorsFound := false
-	objectsFound := false
-	lstOptions := ListOptions{Recursive: recursive, ShowDir: DirNone}
-	if !timeRef.IsZero() {
-		lstOptions.WithOlderVersions = withVersions
-		lstOptions.TimeRef = timeRef
-	}
-	for content := range clnt.List(ctx, lstOptions) {
-		if content.Err != nil {
-			errorIf(content.Err.Trace(clnt.GetURL().String()), "Unable to list folder.")
-			cErr = exitStatus(globalErrorExitStatus) // Set the exit status.
-			continue
-		}
+    alias, _, _ := mustExpandAlias(urlStr)
+    var cErr error
+    errorsFound := false
+    objectsFound := false
+    lstOptions := ListOptions{Recursive: recursive, ShowDir: DirNone}
+    if !timeRef.IsZero() {
+        lstOptions.WithOlderVersions = withVersions
+        lstOptions.TimeRef = timeRef
+    }
+    for content := range clnt.List(ctx, lstOptions) {
+        if content.Err != nil {
+            errorIf(content.Err.Trace(clnt.GetURL().String()), "Unable to list folder.")
+            cErr = exitStatus(globalErrorExitStatus) // Set the exit status.
+            continue
+        }
 
-		if !recursive && getStandardizedURL(alias+getKey(content)) != getStandardizedURL(urlStr) {
-			break
-		}
+        if !recursive && getStandardizedURL(alias+getKey(content)) != getStandardizedURL(urlStr) {
+            break
+        }
 
-		objectsFound = true
-		newClnt, perr := newClientFromAlias(alias, content.URL.String())
-		if perr != nil {
-			errorIf(content.Err.Trace(clnt.GetURL().String()), "Invalid URL")
-			continue
-		}
-		lhold, probeErr := newClnt.GetObjectLegalHold(ctx, content.VersionID)
-		if probeErr != nil {
-			errorsFound = true
-			errorIf(probeErr.Trace(content.URL.Path), "Failed to get legal hold information on `%s`", content.URL.Path)
-		} else {
-			if !globalJSON {
+        objectsFound = true
+        newClnt, perr := newClientFromAlias(alias, content.URL.String())
+        if perr != nil {
+            errorIf(content.Err.Trace(clnt.GetURL().String()), "Invalid URL")
+            continue
+        }
+        lhold, probeErr := newClnt.GetObjectLegalHold(ctx, content.VersionID)
+        if probeErr != nil {
+            errorsFound = true
+            errorIf(probeErr.Trace(content.URL.Path), "Failed to get legal hold information on `%s`", content.URL.Path)
+        } else {
+            if !globalJSON {
 
-				contentURL := filepath.ToSlash(content.URL.Path)
-				key := strings.TrimPrefix(contentURL, prefixPath)
+                contentURL := filepath.ToSlash(content.URL.Path)
+                key := strings.TrimPrefix(contentURL, prefixPath)
 
-				printMsg(legalHoldInfoMessage{
-					LegalHold: lhold,
-					Status:    "success",
-					URLPath:   content.URL.String(),
-					Key:       key,
-					VersionID: content.VersionID,
-				})
-			}
-		}
-	}
+                printMsg(legalHoldInfoMessage{
+                    LegalHold: lhold,
+                    Status:    "success",
+                    URLPath:   content.URL.String(),
+                    Key:       key,
+                    VersionID: content.VersionID,
+                })
+            }
+        }
+    }
 
-	if cErr == nil && !globalJSON {
-		switch {
-		case errorsFound:
-			console.Print(console.Colorize("LegalHoldPartialFailure", fmt.Sprintf("Errors found while getting legal hold status on objects with prefix `%s`. \n", urlStr)))
-		case !objectsFound:
-			console.Print(console.Colorize("LegalHoldMessageFailure", fmt.Sprintf("No objects/versions found while getting legal hold status with prefix `%s`. \n", urlStr)))
-		}
-	}
-	return cErr
+    if cErr == nil && !globalJSON {
+        switch {
+        case errorsFound:
+            console.Print(console.Colorize("LegalHoldPartialFailure", fmt.Sprintf("Errors found while getting legal hold status on objects with prefix `%s`. \n", urlStr)))
+        case !objectsFound:
+            console.Print(console.Colorize("LegalHoldMessageFailure", fmt.Sprintf("No objects/versions found while getting legal hold status with prefix `%s`. \n", urlStr)))
+        }
+    }
+    return cErr
 }
 
 // main for legalhold info command.
 func mainLegalHoldInfo(cliCtx *cli.Context) error {
-	console.SetColor("LegalHoldSuccess", color.New(color.FgGreen, color.Bold))
-	console.SetColor("LegalHoldNotSet", color.New(color.FgYellow))
-	console.SetColor("LegalHoldOn", color.New(color.FgGreen, color.Bold))
-	console.SetColor("LegalHoldOff", color.New(color.FgRed, color.Bold))
-	console.SetColor("LegalHoldVersion", color.New(color.FgGreen))
-	console.SetColor("LegalHoldPartialFailure", color.New(color.FgRed, color.Bold))
-	console.SetColor("LegalHoldMessageFailure", color.New(color.FgYellow))
+    console.SetColor("LegalHoldSuccess", color.New(color.FgGreen, color.Bold))
+    console.SetColor("LegalHoldNotSet", color.New(color.FgYellow))
+    console.SetColor("LegalHoldOn", color.New(color.FgGreen, color.Bold))
+    console.SetColor("LegalHoldOff", color.New(color.FgRed, color.Bold))
+    console.SetColor("LegalHoldVersion", color.New(color.FgGreen))
+    console.SetColor("LegalHoldPartialFailure", color.New(color.FgRed, color.Bold))
+    console.SetColor("LegalHoldMessageFailure", color.New(color.FgYellow))
 
-	targetURL, versionID, timeRef, recursive, withVersions := parseLegalHoldArgs(cliCtx)
-	if timeRef.IsZero() && withVersions {
-		timeRef = time.Now().UTC()
-	}
+    targetURL, versionID, timeRef, recursive, withVersions := parseLegalHoldArgs(cliCtx)
+    if timeRef.IsZero() && withVersions {
+        timeRef = time.Now().UTC()
+    }
 
-	ctx, cancelLegalHold := context.WithCancel(globalContext)
-	defer cancelLegalHold()
+    ctx, cancelLegalHold := context.WithCancel(globalContext)
+    defer cancelLegalHold()
 
-	enabled, err := isBucketLockEnabled(ctx, targetURL)
-	if err != nil {
-		fatalIf(err, "Unable to get legalhold info of `%s`", targetURL)
-	}
-	if !enabled {
-		fatalIf(errDummy().Trace(), "Bucket lock needs to be enabled in order to use this feature.")
-	}
+    enabled, err := isBucketLockEnabled(ctx, targetURL)
+    if err != nil {
+        fatalIf(err, "Unable to get legalhold info of `%s`", targetURL)
+    }
+    if !enabled {
+        fatalIf(errDummy().Trace(), "Bucket lock needs to be enabled in order to use this feature.")
+    }
 
-	return showLegalHoldInfo(ctx, targetURL, versionID, timeRef, withVersions, recursive)
+    return showLegalHoldInfo(ctx, targetURL, versionID, timeRef, withVersions, recursive)
 }

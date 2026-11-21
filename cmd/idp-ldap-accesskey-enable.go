@@ -18,19 +18,19 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var idpLdapAccesskeyEnableCmd = cli.Command{
-	Name:         "enable",
-	Usage:        "enable an access key",
-	Action:       mainIDPLdapAccesskeyEnable,
-	Before:       setGlobalsFromContext,
-	Flags:        globalFlags,
-	OnUsageError: onUsageError,
-	CustomHelpTemplate: `NAME:
+    Name:         "enable",
+    Usage:        "enable an access key",
+    Action:       mainIDPLdapAccesskeyEnable,
+    Before:       setGlobalsFromContext,
+    Flags:        globalFlags,
+    OnUsageError: onUsageError,
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -46,39 +46,39 @@ EXAMPLES:
 }
 
 func mainIDPLdapAccesskeyEnable(ctx *cli.Context) error {
-	return enableDisableAccesskey(ctx, true)
+    return enableDisableAccesskey(ctx, true)
 }
 
 func enableDisableAccesskey(ctx *cli.Context, enable bool) error {
-	if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) == 0 || len(ctx.Args()) > 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 
-	args := ctx.Args()
-	aliasedURL := args.Get(0)
-	accessKey := args.Get(1)
+    args := ctx.Args()
+    aliasedURL := args.Get(0)
+    accessKey := args.Get(1)
 
-	client, err := newAdminClient(aliasedURL)
-	fatalIf(err, "Unable to initialize admin connection.")
+    client, err := newAdminClient(aliasedURL)
+    fatalIf(err, "Unable to initialize admin connection.")
 
-	op := "disable"
-	status := "off"
-	if enable {
-		op = "enable"
-		status = "on"
-	}
+    op := "disable"
+    status := "off"
+    if enable {
+        op = "enable"
+        status = "on"
+    }
 
-	e := client.UpdateServiceAccount(globalContext, accessKey, madmin.UpdateServiceAccountReq{
-		NewStatus: status,
-	})
-	fatalIf(probe.NewError(e), "Unable to add service account.")
+    e := client.UpdateServiceAccount(globalContext, accessKey, madmin.UpdateServiceAccountReq{
+        NewStatus: status,
+    })
+    fatalIf(probe.NewError(e), "Unable to add service account.")
 
-	m := accesskeyMessage{
-		op:        op,
-		Status:    "success",
-		AccessKey: accessKey,
-	}
-	printMsg(m)
+    m := accesskeyMessage{
+        op:        op,
+        Status:    "success",
+        AccessKey: accessKey,
+    }
+    printMsg(m)
 
-	return nil
+    return nil
 }

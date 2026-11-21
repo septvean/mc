@@ -18,64 +18,64 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"sync"
+    "context"
+    "fmt"
+    "sync"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 // mv command flags.
 var (
-	mvFlags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "recursive, r",
-			Usage: "move recursively",
-		},
-		cli.StringFlag{
-			Name:  "older-than",
-			Usage: "move objects older than value in duration string (e.g. 7d10h31s)",
-		},
-		cli.StringFlag{
-			Name:  "newer-than",
-			Usage: "move objects newer than value in duration string (e.g. 7d10h31s)",
-		},
-		cli.StringFlag{
-			Name:  "storage-class, sc",
-			Usage: "set storage class for new object(s) on target",
-		},
-		cli.StringFlag{
-			Name:  "attr",
-			Usage: "add custom metadata for the object",
-		},
-		cli.BoolFlag{
-			Name:  "preserve, a",
-			Usage: "preserve filesystem attributes (mode, ownership, timestamps)",
-		},
-		cli.BoolFlag{
-			Name:  "disable-multipart",
-			Usage: "disable multipart upload feature",
-		},
-		cli.StringFlag{
-			Name:  "tags",
-			Usage: "apply one or more tags to the uploaded objects",
-		},
-		checksumFlag,
-	}
+    mvFlags = []cli.Flag{
+        cli.BoolFlag{
+            Name:  "recursive, r",
+            Usage: "move recursively",
+        },
+        cli.StringFlag{
+            Name:  "older-than",
+            Usage: "move objects older than value in duration string (e.g. 7d10h31s)",
+        },
+        cli.StringFlag{
+            Name:  "newer-than",
+            Usage: "move objects newer than value in duration string (e.g. 7d10h31s)",
+        },
+        cli.StringFlag{
+            Name:  "storage-class, sc",
+            Usage: "set storage class for new object(s) on target",
+        },
+        cli.StringFlag{
+            Name:  "attr",
+            Usage: "add custom metadata for the object",
+        },
+        cli.BoolFlag{
+            Name:  "preserve, a",
+            Usage: "preserve filesystem attributes (mode, ownership, timestamps)",
+        },
+        cli.BoolFlag{
+            Name:  "disable-multipart",
+            Usage: "disable multipart upload feature",
+        },
+        cli.StringFlag{
+            Name:  "tags",
+            Usage: "apply one or more tags to the uploaded objects",
+        },
+        checksumFlag,
+    }
 )
 
 // Move command.
 var mvCmd = cli.Command{
-	Name:         "mv",
-	Usage:        "move objects",
-	Action:       mainMove,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(append(mvFlags, encFlags...), globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "mv",
+    Usage:        "move objects",
+    Action:       mainMove,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(append(mvFlags, encFlags...), globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -144,98 +144,98 @@ EXAMPLES:
 }
 
 type removeClientInfo struct {
-	client    Client
-	contentCh chan *ClientContent
-	resultCh  <-chan RemoveResult
+    client    Client
+    contentCh chan *ClientContent
+    resultCh  <-chan RemoveResult
 }
 
 type removeManager struct {
-	removeMap      map[string]*removeClientInfo
-	removeMapMutex sync.RWMutex
-	wg             sync.WaitGroup
+    removeMap      map[string]*removeClientInfo
+    removeMapMutex sync.RWMutex
+    wg             sync.WaitGroup
 }
 
 func (rm *removeManager) readErrors(resultCh <-chan RemoveResult, targetURL string) {
-	rm.wg.Add(1)
-	go func() {
-		defer rm.wg.Done()
-		for result := range resultCh {
-			if result.Err != nil {
-				errorIf(result.Err.Trace(targetURL), "Failed to remove in `%s`.", targetURL)
-			}
-		}
-	}()
+    rm.wg.Add(1)
+    go func() {
+        defer rm.wg.Done()
+        for result := range resultCh {
+            if result.Err != nil {
+                errorIf(result.Err.Trace(targetURL), "Failed to remove in `%s`.", targetURL)
+            }
+        }
+    }()
 }
 
 // This function should be parallel-safe because it is executed by ParallelManager
 // If targetAlias is empty, it means we will target local FS contents
 func (rm *removeManager) add(ctx context.Context, targetAlias, targetURL string) {
-	rm.removeMapMutex.Lock()
-	clientInfo := rm.removeMap[targetAlias]
-	if clientInfo == nil {
-		client, pErr := newClientFromAlias(targetAlias, targetURL)
-		if pErr != nil {
-			errorIf(pErr.Trace(targetURL), "Invalid argument `%s`.", targetURL)
-			return
-		}
+    rm.removeMapMutex.Lock()
+    clientInfo := rm.removeMap[targetAlias]
+    if clientInfo == nil {
+        client, pErr := newClientFromAlias(targetAlias, targetURL)
+        if pErr != nil {
+            errorIf(pErr.Trace(targetURL), "Invalid argument `%s`.", targetURL)
+            return
+        }
 
-		contentCh := make(chan *ClientContent, 10000)
-		resultCh := client.Remove(ctx, false, false, false, false, contentCh)
-		rm.readErrors(resultCh, targetURL)
+        contentCh := make(chan *ClientContent, 10000)
+        resultCh := client.Remove(ctx, false, false, false, false, contentCh)
+        rm.readErrors(resultCh, targetURL)
 
-		clientInfo = &removeClientInfo{
-			client:    client,
-			contentCh: contentCh,
-			resultCh:  resultCh,
-		}
+        clientInfo = &removeClientInfo{
+            client:    client,
+            contentCh: contentCh,
+            resultCh:  resultCh,
+        }
 
-		rm.removeMap[targetAlias] = clientInfo
-	}
-	rm.removeMapMutex.Unlock()
+        rm.removeMap[targetAlias] = clientInfo
+    }
+    rm.removeMapMutex.Unlock()
 
-	clientInfo.contentCh <- &ClientContent{URL: *newClientURL(targetURL)}
+    clientInfo.contentCh <- &ClientContent{URL: *newClientURL(targetURL)}
 }
 
 func (rm *removeManager) close() {
-	for _, clientInfo := range rm.removeMap {
-		close(clientInfo.contentCh)
-	}
+    for _, clientInfo := range rm.removeMap {
+        close(clientInfo.contentCh)
+    }
 
-	// Wait until all on-going client.Remove() operations to finish
-	rm.wg.Wait()
+    // Wait until all on-going client.Remove() operations to finish
+    rm.wg.Wait()
 }
 
 var rmManager = &removeManager{
-	removeMap: make(map[string]*removeClientInfo),
+    removeMap: make(map[string]*removeClientInfo),
 }
 
 // mainMove is the entry point for mv command.
 func mainMove(cliCtx *cli.Context) error {
-	ctx, cancelMove := context.WithCancel(globalContext)
-	defer cancelMove()
+    ctx, cancelMove := context.WithCancel(globalContext)
+    defer cancelMove()
 
-	checkCopySyntax(cliCtx)
-	console.SetColor("Copy", color.New(color.FgGreen, color.Bold))
+    checkCopySyntax(cliCtx)
+    console.SetColor("Copy", color.New(color.FgGreen, color.Bold))
 
-	if cliCtx.NArg() == 2 {
-		args := cliCtx.Args()
-		srcURL := args.Get(0)
-		dstURL := args.Get(1)
-		if isURLPrefix(srcURL, dstURL) {
-			fatalIf(errDummy().Trace(), fmt.Sprintf("The source %v and destination %v cannot be subdirectories of each other", srcURL, dstURL))
-			return nil
-		}
-	}
+    if cliCtx.NArg() == 2 {
+        args := cliCtx.Args()
+        srcURL := args.Get(0)
+        dstURL := args.Get(1)
+        if isURLPrefix(srcURL, dstURL) {
+            fatalIf(errDummy().Trace(), fmt.Sprintf("The source %v and destination %v cannot be subdirectories of each other", srcURL, dstURL))
+            return nil
+        }
+    }
 
-	var err *probe.Error
+    var err *probe.Error
 
-	encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
-	fatalIf(err, "Unable to parse encryption keys.")
+    encKeyDB, err := validateAndCreateEncryptionKeys(cliCtx)
+    fatalIf(err, "Unable to parse encryption keys.")
 
-	e := doCopySession(ctx, cancelMove, cliCtx, encKeyDB, true)
+    e := doCopySession(ctx, cancelMove, cliCtx, encKeyDB, true)
 
-	console.Colorize("Copy", "Waiting for move operations to complete")
-	rmManager.close()
+    console.Colorize("Copy", "Waiting for move operations to complete")
+    rmManager.close()
 
-	return e
+    return e
 }

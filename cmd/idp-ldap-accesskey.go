@@ -20,28 +20,28 @@ package cmd
 import "github.com/minio/cli"
 
 var idpLdapAccesskeySubcommands = []cli.Command{
-	idpLdapAccesskeyListCmd,
-	idpLdapAccesskeyRemoveCmd,
-	idpLdapAccesskeyInfoCmd,
-	idpLdapAccesskeyCreateCmd,
-	idpLdapAccesskeyCreateWithLoginCmd,
-	idpLdapAccesskeyEditCmd,
-	idpLdapAccesskeyEnableCmd,
-	idpLdapAccesskeyDisableCmd,
-	idpLdapAccesskeySTSRevokeCmd,
+    idpLdapAccesskeyListCmd,
+    idpLdapAccesskeyRemoveCmd,
+    idpLdapAccesskeyInfoCmd,
+    idpLdapAccesskeyCreateCmd,
+    idpLdapAccesskeyCreateWithLoginCmd,
+    idpLdapAccesskeyEditCmd,
+    idpLdapAccesskeyEnableCmd,
+    idpLdapAccesskeyDisableCmd,
+    idpLdapAccesskeySTSRevokeCmd,
 }
 
 var idpLdapAccesskeyCmd = cli.Command{
-	Name:            "accesskey",
-	Usage:           "manage LDAP access key pairs",
-	Action:          mainIDPLDAPAccesskey,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     idpLdapAccesskeySubcommands,
-	HideHelpCommand: true,
+    Name:            "accesskey",
+    Usage:           "manage LDAP access key pairs",
+    Action:          mainIDPLDAPAccesskey,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     idpLdapAccesskeySubcommands,
+    HideHelpCommand: true,
 }
 
 func mainIDPLDAPAccesskey(ctx *cli.Context) error {
-	commandNotFound(ctx, idpLdapAccesskeySubcommands)
-	return nil
+    commandNotFound(ctx, idpLdapAccesskeySubcommands)
+    return nil
 }

@@ -20,28 +20,28 @@ package cmd
 import "github.com/minio/cli"
 
 var batchSubcommands = []cli.Command{
-	batchGenerateCmd,
-	batchStartCmd,
-	batchListCmd,
-	batchStatusCmd,
-	batchDescribeCmd,
-	// batchSuspendResumeCmd,
-	batchCancelCmd,
+    batchGenerateCmd,
+    batchStartCmd,
+    batchListCmd,
+    batchStatusCmd,
+    batchDescribeCmd,
+    // batchSuspendResumeCmd,
+    batchCancelCmd,
 }
 
 var batchCmd = cli.Command{
-	Name:            "batch",
-	Usage:           "manage batch jobs",
-	Action:          mainBatch,
-	Before:          setGlobalsFromContext,
-	Flags:           globalFlags,
-	Subcommands:     batchSubcommands,
-	HideHelpCommand: true,
+    Name:            "batch",
+    Usage:           "manage batch jobs",
+    Action:          mainBatch,
+    Before:          setGlobalsFromContext,
+    Flags:           globalFlags,
+    Subcommands:     batchSubcommands,
+    HideHelpCommand: true,
 }
 
 // mainBatch is the handle for "mc batch" command.
 func mainBatch(ctx *cli.Context) error {
-	commandNotFound(ctx, batchSubcommands)
-	return nil
-	// Sub-commands like "generate", "list", "info" have their own main.
+    commandNotFound(ctx, batchSubcommands)
+    return nil
+    // Sub-commands like "generate", "list", "info" have their own main.
 }

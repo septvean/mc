@@ -18,44 +18,44 @@
 package cmd
 
 import (
-	"context"
-	"strings"
+    "context"
+    "strings"
 
-	"github.com/fatih/color"
-	"github.com/minio/cli"
-	json "github.com/minio/colorjson"
-	"github.com/minio/mc/pkg/probe"
-	"github.com/minio/pkg/v3/console"
+    "github.com/fatih/color"
+    "github.com/minio/cli"
+    json "github.com/minio/colorjson"
+    "github.com/minio/mc/pkg/probe"
+    "github.com/minio/pkg/v3/console"
 )
 
 var eventAddFlags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "event",
-		Value: "put,delete,get",
-		Usage: "filter specific type of event. Defaults to all event",
-	},
-	cli.StringFlag{
-		Name:  "prefix",
-		Usage: "filter event associated to the specified prefix",
-	},
-	cli.StringFlag{
-		Name:  "suffix",
-		Usage: "filter event associated to the specified suffix",
-	},
-	cli.BoolFlag{
-		Name:  "ignore-existing, p",
-		Usage: "ignore if event already exists",
-	},
+    cli.StringFlag{
+        Name:  "event",
+        Value: "put,delete,get",
+        Usage: "filter specific type of event. Defaults to all event",
+    },
+    cli.StringFlag{
+        Name:  "prefix",
+        Usage: "filter event associated to the specified prefix",
+    },
+    cli.StringFlag{
+        Name:  "suffix",
+        Usage: "filter event associated to the specified suffix",
+    },
+    cli.BoolFlag{
+        Name:  "ignore-existing, p",
+        Usage: "ignore if event already exists",
+    },
 }
 
 var eventAddCmd = cli.Command{
-	Name:         "add",
-	Usage:        "add a new bucket notification",
-	Action:       mainEventAdd,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(eventAddFlags, globalFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "add",
+    Usage:        "add a new bucket notification",
+    Action:       mainEventAdd,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(eventAddFlags, globalFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -81,68 +81,68 @@ EXAMPLES:
 
 // checkEventAddSyntax - validate all the passed arguments
 func checkEventAddSyntax(ctx *cli.Context) {
-	if len(ctx.Args()) != 2 {
-		showCommandHelpAndExit(ctx, 1) // last argument is exit code
-	}
+    if len(ctx.Args()) != 2 {
+        showCommandHelpAndExit(ctx, 1) // last argument is exit code
+    }
 }
 
 // eventAddMessage container
 type eventAddMessage struct {
-	ARN    string   `json:"arn"`
-	Event  []string `json:"event"`
-	Prefix string   `json:"prefix"`
-	Suffix string   `json:"suffix"`
-	Status string   `json:"status"`
+    ARN    string   `json:"arn"`
+    Event  []string `json:"event"`
+    Prefix string   `json:"prefix"`
+    Suffix string   `json:"suffix"`
+    Status string   `json:"status"`
 }
 
 // JSON jsonified update message.
 func (u eventAddMessage) JSON() string {
-	u.Status = "success"
-	eventAddMessageJSONBytes, e := json.MarshalIndent(u, "", " ")
-	fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
-	return string(eventAddMessageJSONBytes)
+    u.Status = "success"
+    eventAddMessageJSONBytes, e := json.MarshalIndent(u, "", " ")
+    fatalIf(probe.NewError(e), "Unable to marshal into JSON.")
+    return string(eventAddMessageJSONBytes)
 }
 
 func (u eventAddMessage) String() string {
-	msg := console.Colorize("Event", "Successfully added "+u.ARN)
-	return msg
+    msg := console.Colorize("Event", "Successfully added "+u.ARN)
+    return msg
 }
 
 func mainEventAdd(cliCtx *cli.Context) error {
-	ctx, cancelEventAdd := context.WithCancel(globalContext)
-	defer cancelEventAdd()
+    ctx, cancelEventAdd := context.WithCancel(globalContext)
+    defer cancelEventAdd()
 
-	console.SetColor("Event", color.New(color.FgGreen, color.Bold))
+    console.SetColor("Event", color.New(color.FgGreen, color.Bold))
 
-	checkEventAddSyntax(cliCtx)
+    checkEventAddSyntax(cliCtx)
 
-	args := cliCtx.Args()
-	path := args[0]
-	arn := args[1]
-	ignoreExisting := cliCtx.Bool("p")
+    args := cliCtx.Args()
+    path := args[0]
+    arn := args[1]
+    ignoreExisting := cliCtx.Bool("p")
 
-	event := strings.Split(cliCtx.String("event"), ",")
-	prefix := cliCtx.String("prefix")
-	suffix := cliCtx.String("suffix")
+    event := strings.Split(cliCtx.String("event"), ",")
+    prefix := cliCtx.String("prefix")
+    suffix := cliCtx.String("suffix")
 
-	client, err := newClient(path)
-	if err != nil {
-		fatalIf(err.Trace(), "Unable to parse the provided url.")
-	}
+    client, err := newClient(path)
+    if err != nil {
+        fatalIf(err.Trace(), "Unable to parse the provided url.")
+    }
 
-	s3Client, ok := client.(*S3Client)
-	if !ok {
-		fatalIf(errDummy().Trace(), "The provided url doesn't point to a S3 server.")
-	}
+    s3Client, ok := client.(*S3Client)
+    if !ok {
+        fatalIf(errDummy().Trace(), "The provided url doesn't point to a S3 server.")
+    }
 
-	err = s3Client.AddNotificationConfig(ctx, arn, event, prefix, suffix, ignoreExisting)
-	fatalIf(err, "Unable to enable notification on the specified bucket.")
-	printMsg(eventAddMessage{
-		ARN:    arn,
-		Event:  event,
-		Prefix: prefix,
-		Suffix: suffix,
-	})
+    err = s3Client.AddNotificationConfig(ctx, arn, event, prefix, suffix, ignoreExisting)
+    fatalIf(err, "Unable to enable notification on the specified bucket.")
+    printMsg(eventAddMessage{
+        ARN:    arn,
+        Event:  event,
+        Prefix: prefix,
+        Suffix: suffix,
+    })
 
-	return nil
+    return nil
 }

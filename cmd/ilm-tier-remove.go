@@ -18,33 +18,33 @@
 package cmd
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/madmin-go/v3"
-	"github.com/minio/mc/pkg/probe"
+    "github.com/minio/cli"
+    "github.com/minio/madmin-go/v3"
+    "github.com/minio/mc/pkg/probe"
 )
 
 var adminTierRmFlags = []cli.Flag{
-	cli.BoolFlag{
-		Name:   "force",
-		Usage:  "forcefully remove the specified tier",
-		Hidden: true,
-	},
-	cli.BoolFlag{
-		Name:   "dangerous",
-		Usage:  "additional flag to be required in addition to force flag",
-		Hidden: true,
-	},
+    cli.BoolFlag{
+        Name:   "force",
+        Usage:  "forcefully remove the specified tier",
+        Hidden: true,
+    },
+    cli.BoolFlag{
+        Name:   "dangerous",
+        Usage:  "additional flag to be required in addition to force flag",
+        Hidden: true,
+    },
 }
 
 var adminTierRmCmd = cli.Command{
-	Name:         "remove",
-	ShortName:    "rm",
-	Usage:        "remove an empty remote tier",
-	Action:       mainAdminTierRm,
-	OnUsageError: onUsageError,
-	Before:       setGlobalsFromContext,
-	Flags:        append(globalFlags, adminTierRmFlags...),
-	CustomHelpTemplate: `NAME:
+    Name:         "remove",
+    ShortName:    "rm",
+    Usage:        "remove an empty remote tier",
+    Action:       mainAdminTierRm,
+    OnUsageError: onUsageError,
+    Before:       setGlobalsFromContext,
+    Flags:        append(globalFlags, adminTierRmFlags...),
+    CustomHelpTemplate: `NAME:
   {{.HelpName}} - {{.Usage}}
 
 USAGE:
@@ -63,37 +63,37 @@ EXAMPLES:
 }
 
 func mainAdminTierRm(ctx *cli.Context) error {
-	args := ctx.Args()
-	nArgs := len(args)
-	if nArgs < 2 {
-		showCommandHelpAndExit(ctx, 1)
-	}
-	if nArgs != 2 {
-		fatalIf(errInvalidArgument().Trace(args.Tail()...),
-			"Incorrect number of arguments for tier remove command.")
-	}
+    args := ctx.Args()
+    nArgs := len(args)
+    if nArgs < 2 {
+        showCommandHelpAndExit(ctx, 1)
+    }
+    if nArgs != 2 {
+        fatalIf(errInvalidArgument().Trace(args.Tail()...),
+            "Incorrect number of arguments for tier remove command.")
+    }
 
-	aliasedURL := args.Get(0)
-	tierName := args.Get(1)
-	if tierName == "" {
-		fatalIf(errInvalidArgument(), "Tier name can't be empty")
-	}
+    aliasedURL := args.Get(0)
+    tierName := args.Get(1)
+    if tierName == "" {
+        fatalIf(errInvalidArgument(), "Tier name can't be empty")
+    }
 
-	if ctx.Bool("force") && !ctx.Bool("dangerous") {
-		fatalIf(errInvalidArgument(), "This operation results in an irreversible disconnection from the specified remote tier. If you are really sure, retry this command with ‘--force’ and ‘--dangerous’ flags.")
-	}
+    if ctx.Bool("force") && !ctx.Bool("dangerous") {
+        fatalIf(errInvalidArgument(), "This operation results in an irreversible disconnection from the specified remote tier. If you are really sure, retry this command with ‘--force’ and ‘--dangerous’ flags.")
+    }
 
-	// Create a new MinIO Admin Client
-	client, cerr := newAdminClient(aliasedURL)
-	fatalIf(cerr, "Unable to initialize admin connection.")
+    // Create a new MinIO Admin Client
+    client, cerr := newAdminClient(aliasedURL)
+    fatalIf(cerr, "Unable to initialize admin connection.")
 
-	e := client.RemoveTierV2(globalContext, tierName, madmin.RemoveTierOpts{Force: ctx.Bool("force")})
-	fatalIf(probe.NewError(e).Trace(args...), "Unable to remove remote tier target")
+    e := client.RemoveTierV2(globalContext, tierName, madmin.RemoveTierOpts{Force: ctx.Bool("force")})
+    fatalIf(probe.NewError(e).Trace(args...), "Unable to remove remote tier target")
 
-	printMsg(&tierMessage{
-		op:       ctx.Command.Name,
-		Status:   "success",
-		TierName: tierName,
-	})
-	return nil
+    printMsg(&tierMessage{
+        op:       ctx.Command.Name,
+        Status:   "success",
+        TierName: tierName,
+    })
+    return nil
 }
